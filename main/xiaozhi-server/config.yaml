@@ -301,9 +301,15 @@ Memory:
     # 智谱AI(免费): https://bigmodel.cn/usercenter/proj-mgmt/apikeys
     llm_api_key: 你的LLM API密钥
     llm_model: qwen-plus
+    # llm_base_url: https://dashscope.aliyuncs.com/api/v1  # 可选，自定义LLM服务地址
     # 嵌入模型配置 (使用通义千问为例)
     embedding_api_key: 你的嵌入模型API密钥
-    embedding_model: text-embedding-v3
+    embedding_model: text-embedding-v4
+    embedding_openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1 # OpenAI兼容的嵌入服务地址
+    # embedding_base_url: https://dashscope.aliyuncs.com/api/v1  # 可选，自定义嵌入模型服务地址
+    # 或使用独立的base_url配置（优先级更高）:
+    # embedding_openai_base_url: https://api.openai.com/v1  # OpenAI兼容的嵌入服务地址
+    # embedding_dashscope_base_url: https://dashscope.aliyuncs.com/api/v1  # 阿里云灵积嵌入服务地址
   nomem:
     # 不想使用记忆功能，可以使用nomem
     type: nomem

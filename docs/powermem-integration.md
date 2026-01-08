@@ -59,7 +59,9 @@ Memory:
     llm_model: qwen-plus
     # 嵌入模型配置
     embedding_api_key: 你的嵌入模型API密钥
-    embedding_model: text-embedding-v3
+    embedding_model: text-embedding-v4
+    # 可选：自定义嵌入服务地址（OpenAI兼容模式）
+    # embedding_openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
 
 ### 配置参数详解
@@ -72,10 +74,21 @@ Memory:
 | `embedding_provider` | 嵌入模型提供商 | `qwen` | `qwen`, `zhipu`, `openai`, 等 |
 | `llm_api_key` | LLM API 密钥 | - | - |
 | `llm_model` | LLM 模型名称 | - | 根据提供商选择 |
-| `llm_base_url` | LLM API 地址（可选） | - | - |
+| `llm_base_url` | LLM API 地址（可选） | - | 根据provider自动选择参数名 |
 | `embedding_api_key` | 嵌入模型 API 密钥 | - | - |
 | `embedding_model` | 嵌入模型名称 | - | 根据提供商选择 |
-| `embedding_base_url` | 嵌入模型 API 地址（可选） | - | - |
+| `embedding_base_url` | 嵌入模型 API 地址（可选） | - | 通用配置，根据provider自动选择 |
+| `embedding_openai_base_url` | OpenAI兼容的嵌入服务地址（可选） | - | 优先级高于 embedding_base_url |
+| `embedding_dashscope_base_url` | 阿里云灵积嵌入服务地址（可选） | - | 优先级高于 embedding_base_url |
+
+#### Base URL 配置优先级
+
+| 配置项 | 优先级 | 适用 Provider |
+|--------|--------|---------------|
+| `embedding_openai_base_url` | 最高 | openai |
+| `embedding_dashscope_base_url` | 最高 | qwen |
+| `embedding_base_url` | 中 | 通用，根据 provider 自动选择 |
+| 默认值 | 最低 | 使用 provider 的默认服务地址 |
 
 ### 记忆模式说明
 
@@ -102,7 +115,9 @@ Memory:
     llm_api_key: sk-xxxxxxxxxxxxxxxx
     llm_model: qwen-plus
     embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-v3
+    embedding_model: text-embedding-v4
+    # 可选：使用 OpenAI 兼容模式的服务地址
+    embedding_openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
 
 ### 使用智谱免费 LLM（完全免费方案）
@@ -118,14 +133,14 @@ Memory:
   powermem:
     type: powermem
     database_provider: sqlite
-    llm_provider: zhipu
-    embedding_provider: zhipu
+    llm_provider: openai  # 使用 openai 兼容模式
+    embedding_provider: openai  # 使用 openai 兼容模式
     llm_api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
     llm_model: glm-4-flash
     llm_base_url: https://open.bigmodel.cn/api/paas/v4/
     embedding_api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
     embedding_model: embedding-3
-    embedding_base_url: https://open.bigmodel.cn/api/paas/v4/
+    embedding_openai_base_url: https://open.bigmodel.cn/api/paas/v4/
 ```
 
 ### 使用 OpenAI
@@ -142,7 +157,7 @@ Memory:
     llm_base_url: https://api.openai.com/v1
     embedding_api_key: sk-xxxxxxxxxxxxxxxx
     embedding_model: text-embedding-3-small
-    embedding_base_url: https://api.openai.com/v1
+    embedding_openai_base_url: https://api.openai.com/v1
 ```
 
 ### 使用 OceanBase（最佳性能方案）
@@ -164,7 +179,8 @@ Memory:
     llm_api_key: sk-xxxxxxxxxxxxxxxx
     llm_model: qwen-plus
     embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-v3
+    embedding_model: text-embedding-v4
+    embedding_openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     # OceanBase 数据库连接配置
     vector_store:
       provider: oceanbase
@@ -198,10 +214,11 @@ Memory:
         model: qwen-plus
     # 嵌入模型配置
     embedder:
-      provider: qwen
+      provider: openai  # 使用 OpenAI 兼容模式
       config:
         api_key: sk-xxxxxxxxxxxxxxxx
-        model: text-embedding-v3
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 ```
 
 ## 设备记忆隔离
@@ -231,7 +248,8 @@ Memory:
     llm_api_key: sk-xxxxxxxxxxxxxxxx
     llm_model: qwen-plus
     embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-v3
+    embedding_model: text-embedding-v4
+    embedding_openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     # OceanBase 数据库连接配置
     vector_store:
       provider: oceanbase
