@@ -17,6 +17,8 @@
 ## 功能特性
 
 - **本地总结**：通过 LLM 在本地进行记忆总结和提取
+- **用户画像**：通过 `UserMemory` 自动提取用户信息（姓名、职业、兴趣等），持续更新用户画像
+- **智能遗忘**：基于艾宾浩斯遗忘曲线，自动"遗忘"过时噪声信息
 - **多种存储后端**：支持 OceanBase（推荐，最佳性能）、SeekDB（推荐，AI应用存储一体）、PostgreSQL、SQLite（轻量备选）
 - **多种 LLM 支持**：通义千问、智谱（glm-4-flash 免费）、OpenAI 等
 - **智能检索**：基于向量搜索的语义检索能力
@@ -44,6 +46,8 @@ selected_module:
 Memory:
   powermem:
     type: powermem
+    # 是否启用用户画像功能（需要OceanBase）
+    enable_user_profile: false
     # 数据库提供者: oceanbase(推荐,最佳性能), seekdb, postgres, sqlite(轻量备选)
     database_provider: sqlite  # 资源充足时建议使用 oceanbase 或 seekdb
     # LLM提供者: qwen(默认), openai, 等
@@ -62,6 +66,7 @@ Memory:
 
 | 参数 | 说明 | 默认值 | 可选值 |
 |------|------|--------|--------|
+| `enable_user_profile` | 启用用户画像模式 | `false` | `true`(需OceanBase), `false` |
 | `database_provider` | 存储后端类型 | `sqlite` | `oceanbase`(推荐), `seekdb`, `postgres`, `sqlite`(轻量) |
 | `llm_provider` | LLM 提供商 | `qwen` | `qwen`, `zhipu`(免费), `openai`, 等 |
 | `embedding_provider` | 嵌入模型提供商 | `qwen` | `qwen`, `zhipu`, `openai`, 等 |
@@ -71,6 +76,15 @@ Memory:
 | `embedding_api_key` | 嵌入模型 API 密钥 | - | - |
 | `embedding_model` | 嵌入模型名称 | - | 根据提供商选择 |
 | `embedding_base_url` | 嵌入模型 API 地址（可选） | - | - |
+
+### 记忆模式说明
+
+PowerMem 支持两种记忆模式：
+
+| 模式 | 配置 | 功能 | 存储要求 |
+|------|------|------|----------|
+| **普通记忆** | `enable_user_profile: false` | 对话记忆存储与检索 | 支持所有数据库 |
+| **用户画像** | `enable_user_profile: true` | 记忆 + 自动提取用户画像 | 仅支持 OceanBase |
 
 ### 使用通义千问（推荐）
 
@@ -198,6 +212,54 @@ PowerMem 会自动使用设备 ID（`device_id`）作为 `user_id` 进行记忆�
 - 不同设备之间的记忆完全隔离
 - 同一设备的多次对话可以共享记忆上下文
 
+## 用户画像（UserMemory）
+
+PowerMem 提供 `UserMemory` 类，可自动从对话中提取用户画像信息。
+
+### 启用用户画像
+
+在配置中设置 `enable_user_profile: true` 即可启用：
+
+```yaml
+Memory:
+  powermem:
+    type: powermem
+    enable_user_profile: true  # 启用用户画像
+    database_provider: oceanbase  # 必须使用 OceanBase
+    llm_provider: qwen
+    embedding_provider: qwen
+    llm_api_key: sk-xxxxxxxxxxxxxxxx
+    llm_model: qwen-plus
+    embedding_api_key: sk-xxxxxxxxxxxxxxxx
+    embedding_model: text-embedding-v3
+    # OceanBase 数据库连接配置
+    vector_store:
+      provider: oceanbase
+      config:
+        host: 127.0.0.1
+        port: 2881
+        user: root@test
+        password: your_password
+        database: powermem
+```
+
+### 用户画像能力
+
+| 能力 | 说明 |
+|------|------|
+| **信息提取** | 自动从对话中提取姓名、年龄、职业、兴趣等 |
+| **持续更新** | 随着对话进行，不断完善用户画像 |
+| **画像检索** | 将用户画像与记忆搜索结合，提升检索相关性 |
+| **智能遗忘** | 基于艾宾浩斯遗忘曲线，淡化过时信息 |
+
+### 工作原理
+
+启用用户画像后，小智在查询记忆时会自动返回：
+1. **用户画像**：用户的基本信息、兴趣爱好等
+2. **相关记忆**：与当前对话相关的历史记忆
+
+> ⚠️ **注意**：`UserMemory` 功能需要 OceanBase 作为存储后端，其他数据库暂不支持。
+
 ## 与其他记忆组件的对比
 
 | 特性 | PowerMem | mem0ai | mem_local_short |
@@ -206,6 +268,8 @@ PowerMem 会自动使用设备 ID（`device_id`）作为 `user_id` 进行记忆�
 | 存储位置 | 本地/云端DB | 云端 | 本地YAML |
 | 费用 | 取决于LLM和DB | 1000次/月免费 | 完全免费 |
 | 智能检索 | ✅ 向量搜索 | ✅ 向量搜索 | ❌ 全量返回 |
+| 用户画像 | ✅ UserMemory | ❌ | ❌ |
+| 智能遗忘 | ✅ 遗忘曲线 | ❌ | ❌ |
 | 私有部署 | ✅ 支持 | ❌ 仅云端 | ✅ 支持 |
 | 数据库支持 | OceanBase(推荐)/SeekDB/PostgreSQL/SQLite | - | YAML 文件 |
 
@@ -239,6 +303,9 @@ source .venv/bin/activate
 
 # 测试 PowerMem 导入
 python -c "from powermem import AsyncMemory; print('PowerMem 导入成功')"
+
+# 测试 UserMemory 导入（用户画像功能）
+python -c "from powermem import UserMemory; print('UserMemory 导入成功')"
 ```
 
 ## 更多资源

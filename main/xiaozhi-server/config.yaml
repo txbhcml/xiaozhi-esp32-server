@@ -284,8 +284,13 @@ Memory:
     # 官网: https://www.powermem.ai/
     # 使用示例: https://github.com/oceanbase/powermem/tree/main/examples
     type: powermem
+    # 是否启用用户画像功能（需要OceanBase作为存储后端）
+    # - false: 使用普通记忆模式(AsyncMemory)，支持所有数据库
+    # - true: 使用用户画像模式(UserMemory)，自动提取用户信息，仅支持OceanBase
+    enable_user_profile: false
     # 数据库提供者: oceanbase(推荐,最佳性能), seekdb(推荐,AI应用存储一体), postgres, sqlite(轻量备选)
     # 资源充足时建议使用 oceanbase 或 seekdb
+    # 注意：用户画像功能(enable_user_profile: true)仅支持oceanbase
     database_provider: sqlite
     # LLM提供者: qwen(默认), zhipu(免费glm-4-flash), openai, 等
     llm_provider: qwen

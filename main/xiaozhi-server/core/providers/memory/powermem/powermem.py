@@ -7,13 +7,13 @@
        PowerMem is an open-source agent memory component from OceanBase
        GitHub: https://github.com/oceanbase/powermem
        Website: https://www.powermem.ai/
+@Author: wayyoungboy
 """
 
 import traceback
 from typing import Optional, Dict, Any
 
 from ..base import MemoryProviderBase, logger
-from powermem import AsyncMemory
 
 TAG = __name__
 
@@ -27,18 +27,36 @@ class MemoryProvider(MemoryProviderBase):
     
     Supports multiple storage backends (sqlite, oceanbase, postgres),
     LLM providers (qwen, openai, etc.) and embedding providers.
+    
+    Config options:
+        - enable_user_profile: bool - Enable UserMemory for user profiling (requires OceanBase)
+        - database_provider: str - Storage backend (sqlite, oceanbase, postgres)
+        - llm_provider: str - LLM provider (qwen, openai, etc.)
+        - embedding_provider: str - Embedding provider (qwen, openai, etc.)
     """
 
     def __init__(self, config: Dict[str, Any], summary_memory: Optional[str] = None):
         super().__init__(config)
         self.use_powermem = False
         self.memory_client = None
+        self.enable_user_profile = False
         
-        try:            
+        try:
+            # Check if user profile mode is enabled
+            self.enable_user_profile = config.get("enable_user_profile", False)
+            
             # Get configuration parameters
             database_provider = config.get("database_provider", "sqlite")
             llm_provider = config.get("llm_provider", "qwen")
             embedding_provider = config.get("embedding_provider", "qwen")
+            
+            # UserMemory requires OceanBase
+            if self.enable_user_profile and database_provider not in ["oceanbase"]:
+                logger.bind(tag=TAG).warning(
+                    f"UserMemory requires OceanBase as storage backend, but got {database_provider}. "
+                    "Falling back to AsyncMemory mode."
+                )
+                self.enable_user_profile = False
             
             # Build powermem configuration dict
             # PowerMem supports two config styles:
@@ -89,13 +107,21 @@ class MemoryProvider(MemoryProviderBase):
                     "config": embedder_config
                 }
             
-            # Initialize AsyncMemory client
-            self.memory_client = AsyncMemory(config=powermem_config)
+            # Initialize memory client based on mode
+            if self.enable_user_profile:
+                from powermem import UserMemory
+                self.memory_client = UserMemory(config=powermem_config)
+                memory_mode = "UserMemory (用户画像模式)"
+            else:
+                from powermem import AsyncMemory
+                self.memory_client = AsyncMemory(config=powermem_config)
+                memory_mode = "AsyncMemory (普通记忆模式)"
+            
             self.use_powermem = True
             
             logger.bind(tag=TAG).info(
-                f"PowerMem initialized successfully with database={database_provider}, "
-                f"llm={llm_provider}, embedding={embedding_provider}"
+                f"PowerMem initialized successfully: mode={memory_mode}, "
+                f"database={database_provider}, llm={llm_provider}, embedding={embedding_provider}"
             )
             
         except ImportError as e:
@@ -167,6 +193,14 @@ class MemoryProvider(MemoryProviderBase):
                 logger.bind(tag=TAG).debug("No role_id set, returning empty memory")
                 return ""
 
+            result_parts = []
+            
+            # If user profile mode is enabled, include user profile in results
+            if self.enable_user_profile:
+                profile = await self.get_user_profile()
+                if profile:
+                    result_parts.append(f"【用户画像】\n{profile}")
+
             # Search memories using PowerMem SDK
             results = await self.memory_client.search(
                 query=query,
@@ -174,51 +208,89 @@ class MemoryProvider(MemoryProviderBase):
                 limit=30
             )
                     
-            if not results or "results" not in results:
-                logger.bind(tag=TAG).debug("No memory results found")
-                return ""
-
-            # Format each memory entry with its update time
-            memories = []
-            for entry in results.get("results", []):
-                # Get timestamp from updated_at or created_at
-                timestamp = ""
-                if "updated_at" in entry and entry["updated_at"]:
-                    timestamp = str(entry["updated_at"])
-                elif "created_at" in entry and entry["created_at"]:
-                    timestamp = str(entry["created_at"])
-                    
-                if timestamp:
-                    try:
-                        # Parse and reformat the timestamp (remove milliseconds if present)
-                        if "." in timestamp:
-                            dt = timestamp.split(".")[0]
-                        else:
-                            dt = timestamp
-                        formatted_time = dt.replace("T", " ")
-                    except Exception:
-                        formatted_time = timestamp
-                else:
-                    formatted_time = ""
-                    
-                memory = entry.get("memory", "") or entry.get("content", "")
-                if memory:
-                    if formatted_time:
-                        # Store tuple of (timestamp, formatted_string) for sorting
-                        memories.append((timestamp, f"[{formatted_time}] {memory}"))
+            if results and "results" in results:
+                # Format each memory entry with its update time
+                memories = []
+                for entry in results.get("results", []):
+                    # Get timestamp from updated_at or created_at
+                    timestamp = ""
+                    if "updated_at" in entry and entry["updated_at"]:
+                        timestamp = str(entry["updated_at"])
+                    elif "created_at" in entry and entry["created_at"]:
+                        timestamp = str(entry["created_at"])
+                        
+                    if timestamp:
+                        try:
+                            # Parse and reformat the timestamp (remove milliseconds if present)
+                            if "." in timestamp:
+                                dt = timestamp.split(".")[0]
+                            else:
+                                dt = timestamp
+                            formatted_time = dt.replace("T", " ")
+                        except Exception:
+                            formatted_time = timestamp
                     else:
-                        memories.append(("", memory))
+                        formatted_time = ""
+                        
+                    memory = entry.get("memory", "") or entry.get("content", "")
+                    if memory:
+                        if formatted_time:
+                            # Store tuple of (timestamp, formatted_string) for sorting
+                            memories.append((timestamp, f"[{formatted_time}] {memory}"))
+                        else:
+                            memories.append(("", memory))
 
-            # Sort by timestamp in descending order (newest first)
-            memories.sort(key=lambda x: x[0], reverse=True)
+                # Sort by timestamp in descending order (newest first)
+                memories.sort(key=lambda x: x[0], reverse=True)
 
-            # Extract only the formatted strings
-            memories_str = "\n".join(f"- {memory[1]}" for memory in memories)
-            logger.bind(tag=TAG).debug(f"Query results: {memories_str}")
-            return memories_str
+                # Extract only the formatted strings
+                if memories:
+                    memories_str = "\n".join(f"- {memory[1]}" for memory in memories)
+                    result_parts.append(f"【相关记忆】\n{memories_str}")
+
+            final_result = "\n\n".join(result_parts)
+            logger.bind(tag=TAG).debug(f"Query results: {final_result}")
+            return final_result
             
         except Exception as e:
             logger.bind(tag=TAG).error(f"Error querying memory: {str(e)}")
+            logger.bind(tag=TAG).debug(f"Detailed error: {traceback.format_exc()}")
+            return ""
+
+    async def get_user_profile(self) -> str:
+        """
+        Get user profile from PowerMem (only available in UserMemory mode).
+        
+        Returns:
+            Formatted user profile string or empty string if not available
+        """
+        if not self.use_powermem or self.memory_client is None:
+            return ""
+            
+        if not self.enable_user_profile:
+            logger.bind(tag=TAG).debug("User profile mode is not enabled")
+            return ""
+            
+        try:
+            if not getattr(self, "role_id", None):
+                return ""
+                
+            # Get user profile using UserMemory SDK
+            profile = await self.memory_client.get_profile(user_id=self.role_id)
+            
+            if not profile:
+                return ""
+            
+            # Format profile as readable string
+            profile_parts = []
+            for key, value in profile.items():
+                if value:
+                    profile_parts.append(f"- {key}: {value}")
+            
+            return "\n".join(profile_parts)
+            
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"Error getting user profile: {str(e)}")
             logger.bind(tag=TAG).debug(f"Detailed error: {traceback.format_exc()}")
             return ""
 
