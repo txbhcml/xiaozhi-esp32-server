@@ -275,6 +275,30 @@ Memory:
     # https://app.mem0.ai/dashboard/api-keys
     # 每月有1000次免费调用
     api_key: 你的mem0ai api key
+  powermem:
+    # PowerMem是OceanBase开源的agent记忆组件，通过本地LLM进行记忆总结
+    # 费用说明：PowerMem本身免费，实际费用取决于所选LLM和数据库
+    # - 使用sqlite + 免费LLM(如glm-4-flash) = 完全免费
+    # - 使用云端LLM或云端数据库 = 按对应服务收费
+    # GitHub: https://github.com/oceanbase/powermem
+    # 官网: https://www.powermem.ai/
+    # 使用示例: https://github.com/oceanbase/powermem/tree/main/examples
+    type: powermem
+    # 数据库提供者: oceanbase(推荐,最佳性能), seekdb(推荐,AI应用存储一体), postgres, sqlite(轻量备选)
+    # 资源充足时建议使用 oceanbase 或 seekdb
+    database_provider: sqlite
+    # LLM提供者: qwen(默认), zhipu(免费glm-4-flash), openai, 等
+    llm_provider: qwen
+    # 嵌入模型提供者: qwen(默认), zhipu, openai, 等
+    embedding_provider: qwen
+    # LLM配置 (使用通义千问为例)
+    # 通义千问: https://bailian.console.aliyun.com/?apiKey=1#/api-key
+    # 智谱AI(免费): https://bigmodel.cn/usercenter/proj-mgmt/apikeys
+    llm_api_key: 你的LLM API密钥
+    llm_model: qwen-plus
+    # 嵌入模型配置 (使用通义千问为例)
+    embedding_api_key: 你的嵌入模型API密钥
+    embedding_model: text-embedding-v3
   nomem:
     # 不想使用记忆功能，可以使用nomem
     type: nomem
