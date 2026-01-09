@@ -230,11 +230,21 @@ class MemoryProvider(MemoryProviderBase):
                     result_parts.append(f"【用户画像】\n{profile}")
 
             # Search memories using PowerMem SDK
-            results = await self.memory_client.search(
-                query=query,
-                user_id=self.role_id,
-                limit=30
-            )
+            if self.enable_user_profile:
+                # UserMemory uses sync search
+                results = await asyncio.to_thread(
+                    self.memory_client.search,
+                    query=query,
+                    user_id=self.role_id,
+                    limit=30
+                )
+            else:
+                # AsyncMemory uses async search
+                results = await self.memory_client.search(
+                    query=query,
+                    user_id=self.role_id,
+                    limit=30
+                )
 
             if results and "results" in results:
                 # Format each memory entry with its update time
