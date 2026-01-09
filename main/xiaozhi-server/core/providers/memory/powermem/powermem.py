@@ -308,6 +308,3 @@ class MemoryProvider(MemoryProviderBase):
 
         return ""
 
-
-# Register the memory provider instance
-powermem = MemoryProvider({})
