@@ -1,3 +1,4 @@
+import json
 import traceback
 
 from ..base import MemoryProviderBase, logger
@@ -56,7 +57,16 @@ class MemoryProvider(MemoryProviderBase):
 
             filters = {"user_id": self.role_id}
 
-            results = self.client.search(query, filters=filters)
+            search_query = query
+            try:
+                if query.strip().startswith("{") and query.strip().endswith("}"):
+                    data = json.loads(query)
+                    if "content" in data:
+                        search_query = data["content"]
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+            results = self.client.search(search_query, filters=filters)
             if not results or "results" not in results:
                 return ""
 

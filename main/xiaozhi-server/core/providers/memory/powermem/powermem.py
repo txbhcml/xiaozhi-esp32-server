@@ -11,6 +11,7 @@
 """
 
 import asyncio
+import json
 import traceback
 from typing import Optional, Dict, Any
 
@@ -207,7 +208,7 @@ class MemoryProvider(MemoryProviderBase):
         Query memories from PowerMem based on similarity search.
 
         Args:
-            query: The search query string
+            query: The search query string (may be JSON format with metadata)
 
         Returns:
             Formatted string of relevant memories or empty string if none found
@@ -220,6 +221,17 @@ class MemoryProvider(MemoryProviderBase):
             if not getattr(self, "role_id", None):
                 logger.bind(tag=TAG).debug("No role_id set, returning empty memory")
                 return ""
+
+            # Extract content from JSON format if present (for ASR with emotion/language tags)
+            search_query = query
+            try:
+                if query.strip().startswith("{") and query.strip().endswith("}"):
+                    data = json.loads(query)
+                    if "content" in data:
+                        search_query = data["content"]
+            except (json.JSONDecodeError, KeyError):
+                # If parsing fails, use original query
+                pass
 
             result_parts = []
 
@@ -234,14 +246,14 @@ class MemoryProvider(MemoryProviderBase):
                 # UserMemory uses sync search
                 results = await asyncio.to_thread(
                     self.memory_client.search,
-                    query=query,
+                    query=search_query,
                     user_id=self.role_id,
                     limit=30
                 )
             else:
                 # AsyncMemory uses async search
                 results = await self.memory_client.search(
-                    query=query,
+                    query=search_query,
                     user_id=self.role_id,
                     limit=30
                 )
