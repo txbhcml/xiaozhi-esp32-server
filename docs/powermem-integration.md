@@ -46,36 +46,58 @@ selected_module:
 Memory:
   powermem:
     type: powermem
-    # 是否启用用户画像功能（需要OceanBase）
-    enable_user_profile: false
-    # 数据库提供者: oceanbase(推荐,最佳性能), seekdb, postgres, sqlite(轻量备选)
-    database_provider: sqlite  # 资源充足时建议使用 oceanbase 或 seekdb
-    # LLM提供者: qwen(默认), openai, 等
-    llm_provider: qwen
-    # 嵌入模型提供者: qwen(默认), openai, 等
-    embedding_provider: qwen
-    # LLM配置
-    llm_api_key: 你的LLM API密钥
-    llm_model: qwen-plus
-    # 嵌入模型配置
-    embedding_api_key: 你的嵌入模型API密钥
-    embedding_model: text-embedding-v3
+    # 是否启用用户画像功能
+    # 用户画像支持: oceanbase、seekdb、sqlite (powermem 0.3.0+)
+    enable_user_profile: true
+    
+    # ========== LLM 配置 ==========
+    llm:
+      provider: openai  # 可选: qwen, openai, zhipu 等
+      config:
+        api_key: 你的LLM API密钥
+        model: qwen-plus
+        # openai_base_url: https://api.openai.com/v1  # 可选，自定义服务地址
+    
+    # ========== Embedding 配置 ==========
+    embedder:
+      provider: openai  # 可选: qwen, openai 等
+      config:
+        api_key: 你的嵌入模型API密钥
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    
+    # ========== Database 配置 ==========
+    vector_store:
+      provider: sqlite  # 可选: oceanbase(推荐), seekdb(推荐), postgres, sqlite(轻量)
+      config: {}  # SQLite 无需额外配置
 ```
 
 ### 配置参数详解
 
-| 参数 | 说明 | 默认值 | 可选值 |
-|------|------|--------|--------|
-| `enable_user_profile` | 启用用户画像模式 | `false` | `true`(需OceanBase), `false` |
-| `database_provider` | 存储后端类型 | `sqlite` | `oceanbase`(推荐), `seekdb`, `postgres`, `sqlite`(轻量) |
-| `llm_provider` | LLM 提供商 | `qwen` | `qwen`, `zhipu`(免费), `openai`, 等 |
-| `embedding_provider` | 嵌入模型提供商 | `qwen` | `qwen`, `zhipu`, `openai`, 等 |
-| `llm_api_key` | LLM API 密钥 | - | - |
-| `llm_model` | LLM 模型名称 | - | 根据提供商选择 |
-| `llm_base_url` | LLM API 地址（可选） | - | - |
-| `embedding_api_key` | 嵌入模型 API 密钥 | - | - |
-| `embedding_model` | 嵌入模型名称 | - | 根据提供商选择 |
-| `embedding_base_url` | 嵌入模型 API 地址（可选） | - | - |
+#### LLM 配置
+
+| 参数 | 说明 | 可选值 |
+|------|------|--------|
+| `llm.provider` | LLM 提供商 | `qwen`, `openai`, `zhipu` 等 |
+| `llm.config.api_key` | API 密钥 | - |
+| `llm.config.model` | 模型名称 | 根据提供商选择 |
+| `llm.config.openai_base_url` | 自定义服务地址（可选） | - |
+
+#### Embedding 配置
+
+| 参数 | 说明 | 可选值 |
+|------|------|--------|
+| `embedder.provider` | 嵌入模型提供商 | `qwen`, `openai` 等 |
+| `embedder.config.api_key` | API 密钥 | - |
+| `embedder.config.model` | 模型名称 | 根据提供商选择 |
+| `embedder.config.openai_base_url` | 自定义服务地址（可选） | - |
+
+#### Database 配置
+
+| 参数 | 说明 | 可选值 |
+|------|------|--------|
+| `vector_store.provider` | 存储后端类型 | `oceanbase`(推荐), `seekdb`(推荐), `postgres`, `sqlite`(轻量) |
+| `vector_store.config` | 数据库连接配置 | 根据 provider 设置 |
 
 ### 记忆模式说明
 
@@ -84,7 +106,9 @@ PowerMem 支持两种记忆模式：
 | 模式 | 配置 | 功能 | 存储要求 |
 |------|------|------|----------|
 | **普通记忆** | `enable_user_profile: false` | 对话记忆存储与检索 | 支持所有数据库 |
-| **用户画像** | `enable_user_profile: true` | 记忆 + 自动提取用户画像 | 仅支持 OceanBase |
+| **用户画像** | `enable_user_profile: true` | 记忆 + 自动提取用户画像 | oceanbase、seekdb、sqlite |
+
+> 📌 **版本说明**：PowerMem 0.3.0+ 版本，用户画像功能支持 OceanBase、SeekDB、SQLite 三种存储后端。
 
 ### 使用通义千问（推荐）
 
@@ -96,13 +120,21 @@ PowerMem 支持两种记忆模式：
 Memory:
   powermem:
     type: powermem
-    database_provider: sqlite
-    llm_provider: qwen
-    embedding_provider: qwen
-    llm_api_key: sk-xxxxxxxxxxxxxxxx
-    llm_model: qwen-plus
-    embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-v3
+    enable_user_profile: true
+    llm:
+      provider: qwen
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: qwen-plus
+    embedder:
+      provider: openai
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    vector_store:
+      provider: sqlite
+      config: {}
 ```
 
 ### 使用智谱免费 LLM（完全免费方案）
@@ -117,15 +149,22 @@ Memory:
 Memory:
   powermem:
     type: powermem
-    database_provider: sqlite
-    llm_provider: zhipu
-    embedding_provider: zhipu
-    llm_api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
-    llm_model: glm-4-flash
-    llm_base_url: https://open.bigmodel.cn/api/paas/v4/
-    embedding_api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
-    embedding_model: embedding-3
-    embedding_base_url: https://open.bigmodel.cn/api/paas/v4/
+    enable_user_profile: true
+    llm:
+      provider: openai  # 使用 openai 兼容模式
+      config:
+        api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
+        model: glm-4-flash
+        openai_base_url: https://open.bigmodel.cn/api/paas/v4/
+    embedder:
+      provider: openai
+      config:
+        api_key: xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx
+        model: embedding-3
+        openai_base_url: https://open.bigmodel.cn/api/paas/v4/
+    vector_store:
+      provider: sqlite
+      config: {}
 ```
 
 ### 使用 OpenAI
@@ -134,15 +173,22 @@ Memory:
 Memory:
   powermem:
     type: powermem
-    database_provider: sqlite
-    llm_provider: openai
-    embedding_provider: openai
-    llm_api_key: sk-xxxxxxxxxxxxxxxx
-    llm_model: gpt-4o-mini
-    llm_base_url: https://api.openai.com/v1
-    embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-3-small
-    embedding_base_url: https://api.openai.com/v1
+    enable_user_profile: true
+    llm:
+      provider: openai
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: gpt-4o-mini
+        openai_base_url: https://api.openai.com/v1
+    embedder:
+      provider: openai
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: text-embedding-3-small
+        openai_base_url: https://api.openai.com/v1
+    vector_store:
+      provider: sqlite
+      config: {}
 ```
 
 ### 使用 OceanBase（最佳性能方案）
@@ -158,14 +204,18 @@ OceanBase 是 PowerMem 的最佳搭档，可实现最大性能释放：
 Memory:
   powermem:
     type: powermem
-    database_provider: oceanbase
-    llm_provider: qwen
-    embedding_provider: qwen
-    llm_api_key: sk-xxxxxxxxxxxxxxxx
-    llm_model: qwen-plus
-    embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-v3
-    # OceanBase 数据库连接配置
+    enable_user_profile: true
+    llm:
+      provider: qwen
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: qwen-plus
+    embedder:
+      provider: openai
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     vector_store:
       provider: oceanbase
       config:
@@ -173,35 +223,9 @@ Memory:
         port: 2881
         user: root@test
         password: your_password
-        database: powermem
-```
-
-
-### 高级配置
-
-如果需要更精细的控制，可以使用完整的配置结构：
-
-```yaml
-Memory:
-  powermem:
-    type: powermem
-    # 向量存储配置
-    vector_store:
-      provider: sqlite
-      config:
-        path: ./data/powermem.db
-    # LLM 配置
-    llm:
-      provider: qwen
-      config:
-        api_key: sk-xxxxxxxxxxxxxxxx
-        model: qwen-plus
-    # 嵌入模型配置
-    embedder:
-      provider: qwen
-      config:
-        api_key: sk-xxxxxxxxxxxxxxxx
-        model: text-embedding-v3
+        db_name: powermem
+        collection_name: memories  # 默认值
+        embedding_model_dims: 1536  # 嵌入向量维度，必需参数
 ```
 
 ## 设备记忆隔离
@@ -216,6 +240,8 @@ PowerMem 会自动使用设备 ID（`device_id`）作为 `user_id` 进行记忆�
 
 PowerMem 提供 `UserMemory` 类，可自动从对话中提取用户画像信息。
 
+> 📌 **版本说明**：PowerMem 0.3.0+ 版本，用户画像功能支持 OceanBase、SeekDB、SQLite 三种存储后端。
+
 ### 启用用户画像
 
 在配置中设置 `enable_user_profile: true` 即可启用：
@@ -225,22 +251,20 @@ Memory:
   powermem:
     type: powermem
     enable_user_profile: true  # 启用用户画像
-    database_provider: oceanbase  # 必须使用 OceanBase
-    llm_provider: qwen
-    embedding_provider: qwen
-    llm_api_key: sk-xxxxxxxxxxxxxxxx
-    llm_model: qwen-plus
-    embedding_api_key: sk-xxxxxxxxxxxxxxxx
-    embedding_model: text-embedding-v3
-    # OceanBase 数据库连接配置
-    vector_store:
-      provider: oceanbase
+    llm:
+      provider: qwen
       config:
-        host: 127.0.0.1
-        port: 2881
-        user: root@test
-        password: your_password
-        database: powermem
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: qwen-plus
+    embedder:
+      provider: openai
+      config:
+        api_key: sk-xxxxxxxxxxxxxxxx
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    vector_store:
+      provider: sqlite  # 用户画像支持: oceanbase、seekdb、sqlite
+      config: {}
 ```
 
 ### 用户画像能力
@@ -258,7 +282,7 @@ Memory:
 1. **用户画像**：用户的基本信息、兴趣爱好等
 2. **相关记忆**：与当前对话相关的历史记忆
 
-> ⚠️ **注意**：`UserMemory` 功能需要 OceanBase 作为存储后端，其他数据库暂不支持。
+> ✅ **版本说明**：PowerMem 0.3.0+ 版本，用户画像功能支持 OceanBase、SeekDB、SQLite 三种存储后端。
 
 ## 与其他记忆组件的对比
 
