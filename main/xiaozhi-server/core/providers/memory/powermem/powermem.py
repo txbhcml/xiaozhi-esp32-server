@@ -46,7 +46,7 @@ class MemoryProvider(MemoryProviderBase):
         try:
             # Check if user profile mode is enabled
             self.enable_user_profile = config.get("enable_user_profile", False)
-
+            
             # Get configuration parameters
             database_provider = config.get("database_provider", "sqlite")
             llm_provider = config.get("llm_provider", "qwen")
@@ -134,12 +134,12 @@ class MemoryProvider(MemoryProviderBase):
                 memory_mode = "AsyncMemory (普通记忆模式)"
 
             self.use_powermem = True
-
+            
             logger.bind(tag=TAG).info(
                 f"PowerMem initialized successfully: mode={memory_mode}, "
                 f"database={database_provider}, llm={llm_provider}, embedding={embedding_provider}"
             )
-
+            
         except ImportError as e:
             logger.bind(tag=TAG).error(
                 f"PowerMem not installed. Please install with: pip install powermem. Error: {e}"
@@ -150,12 +150,14 @@ class MemoryProvider(MemoryProviderBase):
             logger.bind(tag=TAG).debug(f"Detailed error: {traceback.format_exc()}")
             self.use_powermem = False
 
-    async def save_memory(self, msgs):
+    async def save_memory(self, msgs, session_id=None):
         """
         Save conversation messages to PowerMem.
 
         Args:
             msgs: List of message objects with 'role' and 'content' attributes
+
+            session_id: Session identifier (optional, for compatibility)
 
         Returns:
             Result from PowerMem API or None if failed
@@ -186,13 +188,13 @@ class MemoryProvider(MemoryProviderBase):
                 result = await result
 
             logger.bind(tag=TAG).debug(f"Save memory result: {result}")
-            
+
             # Cache user profile if UserMemory mode and profile was extracted
             if self.enable_user_profile and result:
                 if result.get('profile_extracted'):
                     self.last_profile_content = result.get('profile_content', '')
                     logger.bind(tag=TAG).debug(f"User profile extracted: {self.last_profile_content}")
-            
+
             return result
 
         except Exception as e:
@@ -306,3 +308,6 @@ class MemoryProvider(MemoryProviderBase):
 
         return ""
 
+
+# Register the memory provider instance
+powermem = MemoryProvider({})
