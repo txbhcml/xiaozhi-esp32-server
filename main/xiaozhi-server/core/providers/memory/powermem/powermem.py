@@ -10,6 +10,7 @@
 @Author: wayyoungboy
 """
 
+import asyncio
 import traceback
 from typing import Optional, Dict, Any
 
@@ -40,6 +41,7 @@ class MemoryProvider(MemoryProviderBase):
         self.use_powermem = False
         self.memory_client = None
         self.enable_user_profile = False
+        self.last_profile_content = ""  # Cache for user profile from UserMemory
 
         try:
             # Check if user profile mode is enabled
@@ -49,14 +51,6 @@ class MemoryProvider(MemoryProviderBase):
             database_provider = config.get("database_provider", "sqlite")
             llm_provider = config.get("llm_provider", "qwen")
             embedding_provider = config.get("embedding_provider", "qwen")
-
-            # UserMemory requires OceanBase
-            if self.enable_user_profile and database_provider not in ["oceanbase"]:
-                logger.bind(tag=TAG).warning(
-                    f"UserMemory requires OceanBase as storage backend, but got {database_provider}. "
-                    "Falling back to AsyncMemory mode."
-                )
-                self.enable_user_profile = False
 
             # Build powermem configuration dict
             # PowerMem supports two config styles:
@@ -183,12 +177,22 @@ class MemoryProvider(MemoryProviderBase):
             ]
 
             # Add memory using PowerMem SDK
-            result = await self.memory_client.add(
+            result = self.memory_client.add(
                 messages=messages,
                 user_id=self.role_id
             )
+            # Handle both sync and async returns
+            if asyncio.iscoroutine(result):
+                result = await result
 
             logger.bind(tag=TAG).debug(f"Save memory result: {result}")
+            
+            # Cache user profile if UserMemory mode and profile was extracted
+            if self.enable_user_profile and result:
+                if result.get('profile_extracted'):
+                    self.last_profile_content = result.get('profile_content', '')
+                    logger.bind(tag=TAG).debug(f"User profile extracted: {self.last_profile_content}")
+            
             return result
 
         except Exception as e:
@@ -282,6 +286,9 @@ class MemoryProvider(MemoryProviderBase):
     async def get_user_profile(self) -> str:
         """
         Get user profile from PowerMem (only available in UserMemory mode).
+        
+        In PowerMem 0.3.0+, user profile is automatically extracted during add()
+        and cached in last_profile_content.
 
         Returns:
             Formatted user profile string or empty string if not available
@@ -293,26 +300,9 @@ class MemoryProvider(MemoryProviderBase):
             logger.bind(tag=TAG).debug("User profile mode is not enabled")
             return ""
 
-        try:
-            if not getattr(self, "role_id", None):
-                return ""
+        # Return cached profile content from last add() operation
+        if self.last_profile_content:
+            return self.last_profile_content
 
-            # Get user profile using UserMemory SDK
-            profile = await self.memory_client.get_profile(user_id=self.role_id)
-
-            if not profile:
-                return ""
-
-            # Format profile as readable string
-            profile_parts = []
-            for key, value in profile.items():
-                if value:
-                    profile_parts.append(f"- {key}: {value}")
-
-            return "\n".join(profile_parts)
-
-        except Exception as e:
-            logger.bind(tag=TAG).error(f"Error getting user profile: {str(e)}")
-            logger.bind(tag=TAG).debug(f"Detailed error: {traceback.format_exc()}")
-            return ""
+        return ""
 

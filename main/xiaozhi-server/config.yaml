@@ -284,32 +284,46 @@ Memory:
     # 官网: https://www.powermem.ai/
     # 使用示例: https://github.com/oceanbase/powermem/tree/main/examples
     type: powermem
-    # 是否启用用户画像功能（需要OceanBase作为存储后端）
-    # - false: 使用普通记忆模式(AsyncMemory)，支持所有数据库
-    # - true: 使用用户画像模式(UserMemory)，自动提取用户信息，仅支持OceanBase
-    enable_user_profile: false
-    # 数据库提供者: oceanbase(推荐,最佳性能), seekdb(推荐,AI应用存储一体), postgres, sqlite(轻量备选)
-    # 资源充足时建议使用 oceanbase 或 seekdb
-    # 注意：用户画像功能(enable_user_profile: true)仅支持oceanbase
-    database_provider: sqlite
-    # LLM提供者: qwen(默认), zhipu(免费glm-4-flash), openai, 等
-    llm_provider: qwen
-    # 嵌入模型提供者: qwen(默认), zhipu, openai, 等
-    embedding_provider: qwen
-    # LLM配置 (使用通义千问为例)
+    # 是否启用用户画像功能
+    # - false: 使用普通记忆模式(AsyncMemory)
+    # - true: 使用用户画像模式(UserMemory)，自动提取用户信息
+    # 用户画像功能支持: oceanbase、seekdb、sqlite (powermem 0.3.0+)
+    enable_user_profile: true
+    
+    # ========== LLM 配置 ==========
     # 通义千问: https://bailian.console.aliyun.com/?apiKey=1#/api-key
     # 智谱AI(免费): https://bigmodel.cn/usercenter/proj-mgmt/apikeys
-    llm_api_key: 你的LLM API密钥
-    llm_model: qwen-plus
-    # llm_base_url: https://dashscope.aliyuncs.com/api/v1  # 可选，自定义LLM服务地址
-    # 嵌入模型配置 (使用通义千问为例)
-    embedding_api_key: 你的嵌入模型API密钥
-    embedding_model: text-embedding-v4
-    embedding_openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1 # OpenAI兼容的嵌入服务地址
-    # embedding_base_url: https://dashscope.aliyuncs.com/api/v1  # 可选，自定义嵌入模型服务地址
-    # 或使用独立的base_url配置（优先级更高）:
-    # embedding_openai_base_url: https://api.openai.com/v1  # OpenAI兼容的嵌入服务地址
-    # embedding_dashscope_base_url: https://dashscope.aliyuncs.com/api/v1  # 阿里云灵积嵌入服务地址
+    llm:
+      provider: openai  # 可选: qwen, openai, zhipu 等
+      config:
+        api_key: 你的LLM API密钥
+        model: qwen-plus
+        # openai_base_url: https://api.openai.com/v1  # 可选，自定义服务地址
+    
+    # ========== Embedding 配置 ==========
+    embedder:
+      provider: openai  # 可选: qwen, openai 等
+      config:
+        api_key: 你的嵌入模型API密钥
+        model: text-embedding-v4
+        openai_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    
+    # ========== Database 配置 ==========
+    # oceanbase(推荐,最佳性能), seekdb(推荐,AI应用存储一体), postgres, sqlite(轻量备选)
+    # 用户画像功能支持: oceanbase、seekdb、sqlite
+    vector_store:
+      provider: sqlite
+      config: {}  # SQLite 无需额外配置
+      # OceanBase 配置示例:
+      # provider: oceanbase
+      # config:
+      #   host: 127.0.0.1
+      #   port: 2881
+      #   user: root@test
+      #   password: your_password
+      #   db_name: powermem
+      #   collection_name: memories  # 默认值
+      #   embedding_model_dims: 1536  # 嵌入向量维度，必需参数
   nomem:
     # 不想使用记忆功能，可以使用nomem
     type: nomem
