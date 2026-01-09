@@ -134,13 +134,14 @@ class MemoryProvider(MemoryProviderBase):
             logger.bind(tag=TAG).debug(f"Detailed error: {traceback.format_exc()}")
             self.use_powermem = False
 
-    async def save_memory(self, msgs):
+    async def save_memory(self, msgs, session_id=None):
         """
         Save conversation messages to PowerMem.
-        
+
         Args:
             msgs: List of message objects with 'role' and 'content' attributes
-            
+            session_id: Session identifier (optional, for compatibility)
+
         Returns:
             Result from PowerMem API or None if failed
         """
@@ -293,7 +294,3 @@ class MemoryProvider(MemoryProviderBase):
             logger.bind(tag=TAG).error(f"Error getting user profile: {str(e)}")
             logger.bind(tag=TAG).debug(f"Detailed error: {traceback.format_exc()}")
             return ""
-
-
-# Register the memory provider instance
-powermem = MemoryProvider({})
