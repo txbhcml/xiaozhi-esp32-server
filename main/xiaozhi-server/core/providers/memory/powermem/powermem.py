@@ -135,11 +135,11 @@ class MemoryProvider(MemoryProviderBase):
                 memory_mode = "AsyncMemory (普通记忆模式)"
 
             self.use_powermem = True
-            
+
             logger.bind(tag=TAG).info(
                 f"PowerMem initialized successfully: mode={memory_mode}, "
-                f"database={database_provider}, llm={llm_provider}, embedding={embedding_provider}"
-            )
+                f"database={powermem_config['vector_store']['provider']}, llm={powermem_config['llm']['provider']}, embedding={powermem_config['embedder']['provider']}"
+            )            
             
         except ImportError as e:
             logger.bind(tag=TAG).error(
