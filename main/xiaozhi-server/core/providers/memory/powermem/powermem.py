@@ -173,11 +173,25 @@ class MemoryProvider(MemoryProviderBase):
 
         try:
             # Format the content as a message list for PowerMem
-            messages = [
-                {"role": message.role, "content": message.content}
-                for message in msgs
-                if message.role != "system"
-            ]
+            messages = []
+            for message in msgs:
+                if message.role == "system":
+                    continue
+
+                content = message.content
+
+                # Extract content from JSON format if present (for ASR with emotion/language tags)
+                # Same logic as in query_memory method
+                try:
+                    if content and content.strip().startswith("{") and content.strip().endswith("}"):
+                        data = json.loads(content)
+                        if "content" in data:
+                            content = data["content"]
+                except (json.JSONDecodeError, KeyError, TypeError):
+                    # If parsing fails, use original content
+                    pass
+
+                messages.append({"role": message.role, "content": content})
 
             # Add memory using PowerMem SDK
             result = self.memory_client.add(
