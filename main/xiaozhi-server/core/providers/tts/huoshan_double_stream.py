@@ -171,9 +171,7 @@ class TTSProvider(TTSProviderBase):
         enable_ws_reuse_value = config.get("enable_ws_reuse", True)
         self.enable_ws_reuse = False if str(enable_ws_reuse_value).lower() == 'false' else True
         self.tts_text = ""
-        self.opus_encoder = opus_encoder_utils.OpusEncoderUtils(
-            sample_rate=16000, channels=1, frame_size_ms=60
-        )
+
         model_key_msg = check_model_key("TTS", self.access_token)
         if model_key_msg:
             logger.bind(tag=TAG).error(model_key_msg)
@@ -646,11 +644,10 @@ class TTSProvider(TTSProviderBase):
         text="",
         speaker="",
         audio_format="pcm",
-        audio_sample_rate=16000,
     ):
         audio_params = {
             "format": audio_format,
-            "sample_rate": audio_sample_rate,
+            "sample_rate": self.conn.sample_rate,
             "speech_rate": self.speech_rate,
             "loudness_rate": self.loudness_rate
         }
