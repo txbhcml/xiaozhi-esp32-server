@@ -333,6 +333,11 @@ class UIController {
     // 连接成功后开始对话
     startAIChatSession() {
         this.addChatMessage('连接成功，开始聊天吧~🙂', false);
+        // 开启录音
+        const recordBtn = document.getElementById('recordBtn');
+        if (recordBtn) {
+            recordBtn.click();
+        }
     }
 
     // 处理连接按钮点击
