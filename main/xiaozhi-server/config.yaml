@@ -715,13 +715,31 @@ TTS:
     speaker: zh_female_wanwanxiaohe_moon_bigtts
     # 开启WebSocket连接复用，默认复用（注意：复用后设备处于聆听状态时空闲链接会占并发数）
     enable_ws_reuse: True
-    speech_rate: 0
-    loudness_rate: 0
-    pitch: 0
-    # 多情感音色参数，注意：当前仅部分音色支持设置情感。
-    # 相关音色列表：https://www.volcengine.com/docs/6561/1257544
-    emotion: "neutral"  # 情感类型，可选值为：neutral、happy、sad、angry、fearful、disgusted、surprised
-    emotion_scale: 4  # 情感强度，可选值为：1~5，默认值为4
+    # 相关参数文档：https://www.volcengine.com/docs/6561/1329505
+    # 音频输出配置（audio_params）- 用户可自定义添加火山引擎支持的任何音频参数
+    audio_params:
+      speech_rate: 0  # 语速(-50~100)
+      loudness_rate: 0  # 音量(-50~100)
+      # 多情感音色参数，注意：当前仅部分音色支持设置情感。
+      # 相关音色列表：https://www.volcengine.com/docs/6561/1257544
+      # emotion: "neutral"  # 情感类型（仅部分音色支持）：neutral、happy、sad、angry、fearful、disgusted、surprised
+      # emotion_scale: 4  # 情感强度(1~5)
+    # 高级文本处理配置（additions）- 用户可自定义添加火山引擎支持的任何高级参数
+    additions:
+      post_process:
+        pitch: 0  # 音高(-12~12)
+      # aigc_metadata: {}  # AIGC元数据配置
+      # cache_config: {}  # 缓存配置
+    # 混音控制配置（mix_speaker）- 多音色混合（仅 TTS 1.0）
+    # 混音功能主要适用于豆包语音合成模型1.0的音色，使用时需要将req_params.speaker设置为custom_mix_bigtts
+    # mix_speaker:
+    #   speakers:
+    #     - source_speaker: zh_male_bvlazysheep
+    #       mix_factor: 0.3
+    #     - source_speaker: BV120_streaming
+    #       mix_factor: 0.3
+    #     - source_speaker: zh_male_ahu_conversation_wvae_bigtts
+    #       mix_factor: 0.4
   CosyVoiceSiliconflow:
     type: siliconflow
     # 硅基流动TTS
