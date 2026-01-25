@@ -39,28 +39,18 @@ class ASRProvider(ASRProviderBase):
             logger.bind(tag=TAG).warning("音频数据为空！")
             return None, None
 
-        file_path = None
         try:
             # 检查配置是否已设置
             if not self.secret_id or not self.secret_key:
                 logger.bind(tag=TAG).error("腾讯云语音识别配置未设置，无法进行识别")
-                return None, file_path
+                return None, None
 
-            # 将Opus音频数据解码为PCM
-            if audio_format == "pcm":
-                pcm_data = opus_data
-            else:
-                pcm_data = self.decode_opus(opus_data)
-            combined_pcm_data = b"".join(pcm_data)
-
-            # 判断是否保存为WAV文件
-            if self.delete_audio_file:
-                pass
-            else:
-                self.save_audio_to_file(pcm_data, session_id)
+            artifacts = self.get_current_artifacts()
+            if artifacts is None:
+                return "", None
 
             # 将音频数据转换为Base64编码
-            base64_audio = base64.b64encode(combined_pcm_data).decode("utf-8")
+            base64_audio = base64.b64encode(artifacts.pcm_bytes).decode("utf-8")
 
             # 构建请求体
             request_body = self._build_request_body(base64_audio)
@@ -77,11 +67,11 @@ class ASRProvider(ASRProviderBase):
                     f"腾讯云语音识别耗时: {time.time() - start_time:.3f}s | 结果: {result}"
                 )
 
-            return result, file_path
+            return result, artifacts.file_path
 
         except Exception as e:
             logger.bind(tag=TAG).error(f"处理音频时发生错误！{e}", exc_info=True)
-            return None, file_path
+            return None, None
 
     def _build_request_body(self, base64_audio: str) -> str:
         """构建请求体"""
