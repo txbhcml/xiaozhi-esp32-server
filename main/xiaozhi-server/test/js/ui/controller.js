@@ -242,7 +242,6 @@ class UIController {
         // Update record button state
         if (recordBtn) {
             const microphoneAvailable = window.microphoneAvailable !== false;
-            
             if (isConnected && microphoneAvailable) {
                 recordBtn.disabled = false;
                 recordBtn.title = '开始录音';
@@ -252,9 +251,7 @@ class UIController {
             } else {
                 recordBtn.disabled = true;
                 if (!microphoneAvailable) {
-                    recordBtn.title = window.isHttpNonLocalhost 
-                        ? '当前由于是http访问，无法录音，只能用文字交互'
-                        : '麦克风不可用';
+                    recordBtn.title = window.isHttpNonLocalhost ? '当前由于是http访问，无法录音，只能用文字交互' : '麦克风不可用';
                 } else {
                     recordBtn.title = '请先连接服务器';
                 }
@@ -277,8 +274,7 @@ class UIController {
                 recordBtn.classList.remove('recording');
             }
             // Only enable button when microphone is available
-            const microphoneAvailable = window.microphoneAvailable !== false;
-            recordBtn.disabled = !microphoneAvailable;
+            recordBtn.disabled = window.microphoneAvailable === false;
         }
     }
 
@@ -289,19 +285,13 @@ class UIController {
      */
     updateMicrophoneAvailability(isAvailable, isHttpNonLocalhost) {
         const recordBtn = document.getElementById('recordBtn');
-        
         if (!recordBtn) return;
-        
         if (!isAvailable) {
             // Disable record button
             recordBtn.disabled = true;
-            
             // Update button text and title
             recordBtn.querySelector('.btn-text').textContent = '录音';
-            recordBtn.title = isHttpNonLocalhost 
-                ? '当前由于是http访问，无法录音，只能用文字交互'
-                : '麦克风不可用';
-            
+            recordBtn.title = isHttpNonLocalhost ? '当前由于是http访问，无法录音，只能用文字交互' : '麦克风不可用';
             // Display notification message in chat
             if (isHttpNonLocalhost) {
                 this.addChatMessage('⚠️ 当前由于是http访问，无法录音，只能用文字交互', false);
