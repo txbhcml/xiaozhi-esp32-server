@@ -85,7 +85,7 @@ class ConnectionHandler:
         self.max_output_size = 0
         self.chat_history_conf = 0
         self.audio_format = "opus"
-        self.sample_rate = 16000  # 默认采样率，从客户端 hello 消息中动态更新
+        self.sample_rate = 24000  # 默认采样率，从客户端 hello 消息中动态更新
 
         # 客户端状态相关
         self.client_abort = False
