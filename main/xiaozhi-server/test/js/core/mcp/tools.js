@@ -216,7 +216,7 @@ function setupMcpEventListeners() {
     toggleBtn.addEventListener('click', () => {
         const isExpanded = panel.classList.contains('expanded');
         panel.classList.toggle('expanded');
-        toggleBtn.textContent = isExpanded ? '展开' : '收起';
+        toggleBtn.textContent = isExpanded ? '收起' : '展开';
     });
     
     // 确保面板默认展开
@@ -425,6 +425,74 @@ export function getMcpTools() {
 }
 
 /**
+ * 执行Live2D动作
+ * @param {string} toolName - 工具名称，如 'live2d.smile', 'live2d.wave', 'live2d.action'
+ * @param {Object} toolArgs - 工具参数，对于 'live2d.action' 工具，应包含 'action' 字段
+ * @returns {Object} 执行结果，包含 success, message, action, tool 等字段
+ */
+function executeLive2DAction(toolName, toolArgs) {
+    try {
+        const live2dManager = window.chatApp?.live2dManager;
+        if (!live2dManager) {
+            log('Live2D管理器未初始化', 'error');
+            return {
+                success: false,
+                error: 'Live2D管理器未初始化'
+            };
+        }
+
+        // 动作映射：工具名称到Live2D动作名称
+        const actionMap = {
+            'live2d.smile': 'FlickUp',
+            'live2d.wave': 'Tap',
+            'live2d.happy': 'FlickUp',
+            'live2d.sad': 'FlickDown',
+            'live2d.tap': 'Tap',
+            'live2d.tapBody': 'Tap@Body',
+            'live2d.flick': 'Flick',
+            'live2d.flickBody': 'Flick@Body',
+            'live2d.flickUp': 'FlickUp',
+            'live2d.flickDown': 'FlickDown'
+        };
+
+        let motionName;
+        if (toolName === 'live2d.action' && toolArgs?.action) {
+            // 通用动作工具，使用指定的动作名称
+            motionName = toolArgs.action;
+        } else {
+            // 使用映射表查找对应动作名称
+            motionName = actionMap[toolName];
+        }
+
+        if (!motionName) {
+            log(`未知的动作: ${toolName}`, 'error');
+            return {
+                success: false,
+                error: `未知的动作: ${toolName}`
+            };
+        }
+
+        // 触发Live2D动作
+        live2dManager.motion(motionName);
+        
+        log(`Live2D动作已触发: ${motionName}`, 'success');
+        
+        return {
+            success: true,
+            message: `虚拟人已执行动作: ${motionName}`,
+            action: motionName,
+            tool: toolName
+        };
+    } catch (error) {
+        log(`执行Live2D动作失败: ${error.message}`, 'error');
+        return {
+            success: false,
+            error: `执行动作失败: ${error.message}`
+        };
+    }
+}
+
+/**
  * 执行工具调用
  */
 export function executeMcpTool(toolName, toolArgs) {
@@ -436,6 +504,11 @@ export function executeMcpTool(toolName, toolArgs) {
             success: false,
             error: `未知工具: ${toolName}`
         };
+    }
+
+    // 处理Live2D动作工具
+    if (toolName.startsWith('live2d.')) {
+        return executeLive2DAction(toolName, toolArgs);
     }
 
     // 如果有模拟返回结果，使用它

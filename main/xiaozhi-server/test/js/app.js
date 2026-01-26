@@ -4,6 +4,7 @@ import { checkOpusLoaded, initOpusEncoder } from './core/audio/opus-codec.js';
 import { uiController } from './ui/controller.js';
 import { getAudioPlayer } from './core/audio/player.js';
 import { initMcpTools } from './core/mcp/tools.js';
+import { checkMicrophoneAvailability, isHttpNonLocalhost } from './core/audio/recorder.js';
 
 // 应用类
 class App {
@@ -33,6 +34,9 @@ class App {
 
         // 初始化MCP工具
         initMcpTools();
+
+        // 检查麦克风可用性
+        await this.checkMicrophoneAvailability();
 
         // 初始化Live2D
         await this.initLive2D();
@@ -79,6 +83,36 @@ class App {
         const modelLoading = document.getElementById('modelLoading');
         if (modelLoading) {
             modelLoading.style.display = isLoading ? 'flex' : 'none';
+        }
+    }
+
+    /**
+     * 检查麦克风可用性
+     * 在应用初始化时调用，检查麦克风是否可用并更新UI状态
+     */
+    async checkMicrophoneAvailability() {
+        try {
+            const isAvailable = await checkMicrophoneAvailability();
+            const isHttp = isHttpNonLocalhost();
+
+            // 保存可用性状态到全局变量
+            window.microphoneAvailable = isAvailable;
+            window.isHttpNonLocalhost = isHttp;
+
+            // 更新UI
+            if (this.uiController) {
+                this.uiController.updateMicrophoneAvailability(isAvailable, isHttp);
+            }
+
+            log(`麦克风可用性检查完成: ${isAvailable ? '可用' : '不可用'}`, isAvailable ? 'success' : 'warning');
+        } catch (error) {
+            log(`检查麦克风可用性失败: ${error.message}`, 'error');
+            // 默认设置为不可用
+            window.microphoneAvailable = false;
+            window.isHttpNonLocalhost = isHttpNonLocalhost();
+            if (this.uiController) {
+                this.uiController.updateMicrophoneAvailability(false, window.isHttpNonLocalhost);
+            }
         }
     }
 }

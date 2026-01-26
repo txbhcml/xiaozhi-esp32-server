@@ -68,5 +68,37 @@
             "brightness": "${brightness}",
             "message": "亮度已设置为 ${brightness}"
         }
+    },
+    {
+        "name": "live2d.smile",
+        "description": "Make the virtual human perform a smiling action. Call this tool when the user says 'smile', 'smile once', 'give me a smile', 'smile please', etc.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    {
+        "name": "live2d.wave",
+        "description": "Make the virtual human perform a waving action. Call this tool when the user says 'wave to me', 'wave', 'say hello', 'wave please', etc.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    {
+        "name": "live2d.action",
+        "description": "Trigger a specified action for the virtual human. Supported actions include: FlickUp (swipe up), FlickDown (swipe down), Tap (tap), Tap@Body (body tap), Flick (swipe), Flick@Body (body swipe), etc. Call this tool when the user requests a specific virtual human action.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "description": "Action name, such as: FlickUp, FlickDown, Tap, Tap@Body, Flick, Flick@Body"
+                }
+            },
+            "required": [
+                "action"
+            ]
+        }
     }
 ]
