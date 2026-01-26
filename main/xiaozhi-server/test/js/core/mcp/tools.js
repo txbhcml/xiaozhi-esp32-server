@@ -40,7 +40,7 @@ export async function initMcpTools() {
     renderMcpTools();
     // Only setup event listeners if DOM elements exist
     if (document.getElementById('toggleMcpTools')) {
-        setupMcpEventListeners();
+    setupMcpEventListeners();
     }
 }
 
