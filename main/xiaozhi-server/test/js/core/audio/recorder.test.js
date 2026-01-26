@@ -3,54 +3,160 @@
  * Test microphone availability detection functionality
  */
 
-// Note: These are unit test examples showing how to test new features
-// In actual projects, you can use Jest, Mocha or other testing frameworks
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { checkMicrophoneAvailability, isHttpNonLocalhost } from './recorder.js';
 
 describe('Microphone Availability Detection', () => {
-    /**
-     * Test checkMicrophoneAvailability function
-     * Note: Actual tests need to mock navigator.mediaDevices
-     */
-    test('should detect microphone availability', async () => {
-        // Mock navigator.mediaDevices.getUserMedia
-        const mockStream = {
-            getTracks: () => [{ stop: jest.fn() }]
-        };
-        
-        global.navigator = {
-            mediaDevices: {
-                getUserMedia: jest.fn().mockResolvedValue(mockStream)
-            }
-        };
-
-        // Import function (needs to be adjusted according to actual module system)
-        // const { checkMicrophoneAvailability } = await import('./recorder.js');
-        // const result = await checkMicrophoneAvailability();
-        // expect(result).toBe(true);
+    beforeEach(() => {
+        // Reset mocks before each test
+        vi.clearAllMocks();
     });
 
     /**
-     * Test isHttpNonLocalhost function
+     * Test checkMicrophoneAvailability function - success case
      */
-    test('should detect HTTP non-localhost correctly', () => {
-        // Mock window.location
-        const originalLocation = window.location;
-        
-        // Test HTTP non-localhost
-        delete window.location;
-        window.location = {
-            protocol: 'http:',
-            hostname: '192.168.1.100'
+    test('should return true when microphone is available', async () => {
+        // Mock navigator.mediaDevices.getUserMedia to return a successful stream
+        const mockTrack = {
+            stop: vi.fn()
+        };
+        const mockStream = {
+            getTracks: () => [mockTrack]
         };
         
-        // const { isHttpNonLocalhost } = require('./recorder.js');
-        // expect(isHttpNonLocalhost()).toBe(true);
-        
-        // Test localhost (should return false)
-        window.location.hostname = 'localhost';
-        // expect(isHttpNonLocalhost()).toBe(false);
-        
-        // Restore original location
-        window.location = originalLocation;
+        global.navigator.mediaDevices.getUserMedia = vi.fn().mockResolvedValue(mockStream);
+
+        const result = await checkMicrophoneAvailability();
+
+        expect(result).toBe(true);
+        expect(global.navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                sampleRate: 16000,
+                channelCount: 1
+            }
+        });
+        expect(mockTrack.stop).toHaveBeenCalled();
+    });
+
+    /**
+     * Test checkMicrophoneAvailability function - failure case
+     */
+    test('should return false when microphone is not available', async () => {
+        // Mock getUserMedia to throw an error
+        const mockError = new Error('Permission denied');
+        global.navigator.mediaDevices.getUserMedia = vi.fn().mockRejectedValue(mockError);
+
+        const result = await checkMicrophoneAvailability();
+
+        expect(result).toBe(false);
+        expect(global.navigator.mediaDevices.getUserMedia).toHaveBeenCalled();
+    });
+
+    /**
+     * Test checkMicrophoneAvailability function - browser not supported
+     */
+    test('should return false when browser does not support getUserMedia', async () => {
+        // Mock navigator without mediaDevices
+        const originalMediaDevices = global.navigator.mediaDevices;
+        delete global.navigator.mediaDevices;
+
+        const result = await checkMicrophoneAvailability();
+
+        expect(result).toBe(false);
+
+        // Restore
+        global.navigator.mediaDevices = originalMediaDevices;
+    });
+
+    /**
+     * Test isHttpNonLocalhost function - HTTP non-localhost
+     */
+    test('should return true for HTTP non-localhost access', () => {
+        // Mock window.location for HTTP non-localhost
+        Object.defineProperty(window, 'location', {
+            value: {
+                protocol: 'http:',
+                hostname: 'example.com'
+            },
+            writable: true,
+            configurable: true
+        });
+
+        const result = isHttpNonLocalhost();
+        expect(result).toBe(true);
+    });
+
+    /**
+     * Test isHttpNonLocalhost function - localhost should return false
+     */
+    test('should return false for localhost', () => {
+        Object.defineProperty(window, 'location', {
+            value: {
+                protocol: 'http:',
+                hostname: 'localhost'
+            },
+            writable: true,
+            configurable: true
+        });
+
+        const result = isHttpNonLocalhost();
+        expect(result).toBe(false);
+    });
+
+    /**
+     * Test isHttpNonLocalhost function - 127.0.0.1 should return false
+     */
+    test('should return false for 127.0.0.1', () => {
+        Object.defineProperty(window, 'location', {
+            value: {
+                protocol: 'http:',
+                hostname: '127.0.0.1'
+            },
+            writable: true,
+            configurable: true
+        });
+
+        const result = isHttpNonLocalhost();
+        expect(result).toBe(false);
+    });
+
+    /**
+     * Test isHttpNonLocalhost function - private IP should return false
+     */
+    test('should return false for private IP addresses', () => {
+        const privateIPs = ['192.168.1.100', '10.0.0.1', '172.16.0.1'];
+
+        privateIPs.forEach(ip => {
+            Object.defineProperty(window, 'location', {
+                value: {
+                    protocol: 'http:',
+                    hostname: ip
+                },
+                writable: true,
+                configurable: true
+            });
+
+            const result = isHttpNonLocalhost();
+            expect(result).toBe(false);
+        });
+    });
+
+    /**
+     * Test isHttpNonLocalhost function - HTTPS should return false
+     */
+    test('should return false for HTTPS protocol', () => {
+        Object.defineProperty(window, 'location', {
+            value: {
+                protocol: 'https:',
+                hostname: 'example.com'
+            },
+            writable: true,
+            configurable: true
+        });
+
+        const result = isHttpNonLocalhost();
+        expect(result).toBe(false);
     });
 });

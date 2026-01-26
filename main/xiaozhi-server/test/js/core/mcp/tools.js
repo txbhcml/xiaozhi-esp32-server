@@ -38,7 +38,10 @@ export async function initMcpTools() {
     }
 
     renderMcpTools();
-    setupMcpEventListeners();
+    // Only setup event listeners if DOM elements exist
+    if (document.getElementById('toggleMcpTools')) {
+        setupMcpEventListeners();
+    }
 }
 
 /**
@@ -47,6 +50,10 @@ export async function initMcpTools() {
 function renderMcpTools() {
     const container = document.getElementById('mcpToolsContainer');
     const countSpan = document.getElementById('mcpToolsCount');
+
+    if (!container) {
+        return; // Container not found, skip rendering
+    }
 
     if (countSpan) {
         countSpan.textContent = `${mcpTools.length} 个工具`;
@@ -96,6 +103,10 @@ function renderMcpTools() {
  */
 function renderMcpProperties() {
     const container = document.getElementById('mcpPropertiesContainer');
+
+    if (!container) {
+        return; // Container not found, skip rendering
+    }
 
     if (mcpProperties.length === 0) {
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999; font-size: 14px;">暂无参数，点击下方按钮添加参数</div>';
@@ -212,6 +223,11 @@ function setupMcpEventListeners() {
     const cancelBtn = document.getElementById('cancelMcpBtn');
     const form = document.getElementById('mcpToolForm');
     const addPropertyBtn = document.getElementById('addMcpPropertyBtn');
+
+    // Return early if required elements don't exist (e.g., in test environment)
+    if (!toggleBtn || !panel || !addBtn || !modal || !closeBtn || !cancelBtn || !form || !addPropertyBtn) {
+        return;
+    }
 
     toggleBtn.addEventListener('click', () => {
         const isExpanded = panel.classList.contains('expanded');
