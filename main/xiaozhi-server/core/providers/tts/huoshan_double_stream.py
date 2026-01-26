@@ -177,7 +177,7 @@ class TTSProvider(TTSProviderBase):
         self.audio_params = {**default_audio_params, **config.get("audio_params", {})}
         self.additions = {**default_additions, **config.get("additions", {})}
         self.mix_speaker = {**default_mix_speaker, **config.get("mix_speaker", {})}
-        print(self.mix_speaker)
+
         self.ws_url = config.get("ws_url")
         self.authorization = config.get("authorization")
         self.header = {"Authorization": f"{self.authorization}{self.access_token}"}
