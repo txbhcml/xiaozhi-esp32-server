@@ -520,9 +520,9 @@ class UIController {
         toolDiv.className = 'properties-container';
         toolDiv.innerHTML = `
             <div class="property-item">
-                <input type="text" placeholder="σ╖Ñσà╖σÉìτº░" value="µû░σ╖Ñσà╖">
-                <input type="text" placeholder="σ╖Ñσà╖µÅÅΦ┐░" value="σ╖Ñσà╖µÅÅΦ┐░">
-                <button class="remove-property" onclick="uiController.removeMCPTool('${toolId}')">σêáΘÖñ</button>
+                <input type="text" placeholder="工具名称" value="新工具">
+                <input type="text" placeholder="工具描述" value="工具描述">
+                <button class="remove-property" onclick="uiController.removeMCPTool('${toolId}')">删除</button>
             </div>
         `;
 
