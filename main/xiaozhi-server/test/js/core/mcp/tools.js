@@ -62,7 +62,32 @@ function renderMcpTools() {
         const paramCount = tool.inputSchema.properties ? Object.keys(tool.inputSchema.properties).length : 0;
         const requiredCount = tool.inputSchema.required ? tool.inputSchema.required.length : 0;
         const hasMockResponse = tool.mockResponse && Object.keys(tool.mockResponse).length > 0;
-        return `<div class="mcp-tool-card"><div class="mcp-tool-header"><div class="mcp-tool-name">${tool.name}</div><div class="mcp-tool-actions"><button class="mcp-edit-btn" onclick="window.mcpModule.editMcpTool(${index})">✏️ 编辑</button><button class="mcp-delete-btn" onclick="window.mcpModule.deleteMcpTool(${index})">🗑️ 删除</button></div></div><div class="mcp-tool-description">${tool.description}</div><div class="mcp-tool-info"><div class="mcp-tool-info-row"><span class="mcp-tool-info-label">参数数量:</span><span class="mcp-tool-info-value">${paramCount} 个 ${requiredCount > 0 ? `(${requiredCount} 个必填)` : ''}</span></div><div class="mcp-tool-info-row"><span class="mcp-tool-info-label">模拟返回:</span><span class="mcp-tool-info-value">${hasMockResponse ? '✅ 已配置: ' + JSON.stringify(tool.mockResponse) : '⚪ 使用默认'}</span></div></div></div>`;
+        return `
+            <div class="mcp-tool-card">
+                <div class="mcp-tool-header">
+                    <div class="mcp-tool-name">${tool.name}</div>
+                    <div class="mcp-tool-actions">
+                        <button class="mcp-edit-btn" onclick="window.mcpModule.editMcpTool(${index})">
+                            ✏️ 编辑
+                        </button>
+                        <button class="mcp-delete-btn" onclick="window.mcpModule.deleteMcpTool(${index})">
+                            🗑️ 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="mcp-tool-description">${tool.description}</div>
+                <div class="mcp-tool-info">
+                    <div class="mcp-tool-info-row">
+                        <span class="mcp-tool-info-label">参数数量:</span>
+                        <span class="mcp-tool-info-value">${paramCount} 个 ${requiredCount > 0 ? `(${requiredCount} 个必填)` : ''}</span>
+                    </div>
+                    <div class="mcp-tool-info-row">
+                        <span class="mcp-tool-info-label">模拟返回:</span>
+                        <span class="mcp-tool-info-value">${hasMockResponse ? '✅ 已配置: ' + JSON.stringify(tool.mockResponse) : '⚪ 使用默认'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
     }).join('');
 }
 
@@ -78,7 +103,59 @@ function renderMcpProperties() {
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999; font-size: 14px;">暂无参数，点击下方按钮添加参数</div>';
         return;
     }
-    container.innerHTML = mcpProperties.map((prop, index) => `<div class="mcp-property-item"><div class="mcp-property-header"><span class="mcp-property-name">${prop.name}</span><button type="button" onclick="window.mcpModule.deleteMcpProperty(${index})" style="padding: 3px 8px; border: none; border-radius: 3px; background-color: #f44336; color: white; cursor: pointer; font-size: 11px;">删除</button></div><div class="mcp-property-row"><div><label class="mcp-small-label">参数名称 *</label><input type="text" class="mcp-small-input" value="${prop.name}" onchange="window.mcpModule.updateMcpProperty(${index}, 'name', this.value)" required></div><div><label class="mcp-small-label">数据类型 *</label><select class="mcp-small-input" onchange="window.mcpModule.updateMcpProperty(${index}, 'type', this.value)"><option value="string" ${prop.type === 'string' ? 'selected' : ''}>字符串</option><option value="integer" ${prop.type === 'integer' ? 'selected' : ''}>整数</option><option value="number" ${prop.type === 'number' ? 'selected' : ''}>数字</option><option value="boolean" ${prop.type === 'boolean' ? 'selected' : ''}>布尔值</option><option value="array" ${prop.type === 'array' ? 'selected' : ''}>数组</option><option value="object" ${prop.type === 'object' ? 'selected' : ''}>对象</option></select></div></div>${(prop.type === 'integer' || prop.type === 'number') ? `<div class="mcp-property-row"><div><label class="mcp-small-label">最小值</label><input type="number" class="mcp-small-input" value="${prop.minimum !== undefined ? prop.minimum : ''}" placeholder="可选" onchange="window.mcpModule.updateMcpProperty(${index}, 'minimum', this.value ? parseFloat(this.value) : undefined)"></div><div><label class="mcp-small-label">最大值</label><input type="number" class="mcp-small-input" value="${prop.maximum !== undefined ? prop.maximum : ''}" placeholder="可选" onchange="window.mcpModule.updateMcpProperty(${index}, 'maximum', this.value ? parseFloat(this.value) : undefined)"></div></div>` : ''}<div class="mcp-property-row-full"><label class="mcp-small-label">参数描述</label><input type="text" class="mcp-small-input" value="${prop.description || ''}" placeholder="可选" onchange="window.mcpModule.updateMcpProperty(${index}, 'description', this.value)"></div><label class="mcp-checkbox-label"><input type="checkbox" ${prop.required ? 'checked' : ''} onchange="window.mcpModule.updateMcpProperty(${index}, 'required', this.checked)">必填参数</label></div>`).join('');
+    container.innerHTML = mcpProperties.map((prop, index) => `
+        <div class="mcp-property-item">
+            <div class="mcp-property-header">
+                <span class="mcp-property-name">${prop.name}</span>
+                <button type="button" onclick="window.mcpModule.deleteMcpProperty(${index})"
+                    style="padding: 3px 8px; border: none; border-radius: 3px; background-color: #f44336; color: white; cursor: pointer; font-size: 11px;">
+                    删除
+                </button>
+            </div>
+            <div class="mcp-property-row">
+                <div>
+                    <label class="mcp-small-label">参数名称 *</label>
+                    <input type="text" class="mcp-small-input" value="${prop.name}"
+                        onchange="window.mcpModule.updateMcpProperty(${index}, 'name', this.value)" required>
+                </div>
+                <div>
+                    <label class="mcp-small-label">数据类型 *</label>
+                    <select class="mcp-small-input" onchange="window.mcpModule.updateMcpProperty(${index}, 'type', this.value)">
+                        <option value="string" ${prop.type === 'string' ? 'selected' : ''}>字符串</option>
+                        <option value="integer" ${prop.type === 'integer' ? 'selected' : ''}>整数</option>
+                        <option value="number" ${prop.type === 'number' ? 'selected' : ''}>数字</option>
+                        <option value="boolean" ${prop.type === 'boolean' ? 'selected' : ''}>布尔值</option>
+                        <option value="array" ${prop.type === 'array' ? 'selected' : ''}>数组</option>
+                        <option value="object" ${prop.type === 'object' ? 'selected' : ''}>对象</option>
+                    </select>
+                </div>
+            </div>
+            ${(prop.type === 'integer' || prop.type === 'number') ? `
+            <div class="mcp-property-row">
+                <div>
+                    <label class="mcp-small-label">最小值</label>
+                    <input type="number" class="mcp-small-input" value="${prop.minimum !== undefined ? prop.minimum : ''}"
+                        placeholder="可选" onchange="window.mcpModule.updateMcpProperty(${index}, 'minimum', this.value ? parseFloat(this.value) : undefined)">
+                </div>
+                <div>
+                    <label class="mcp-small-label">最大值</label>
+                    <input type="number" class="mcp-small-input" value="${prop.maximum !== undefined ? prop.maximum : ''}"
+                        placeholder="可选" onchange="window.mcpModule.updateMcpProperty(${index}, 'maximum', this.value ? parseFloat(this.value) : undefined)">
+                </div>
+            </div>
+            ` : ''}
+            <div class="mcp-property-row-full">
+                <label class="mcp-small-label">参数描述</label>
+                <input type="text" class="mcp-small-input" value="${prop.description || ''}"
+                    placeholder="可选" onchange="window.mcpModule.updateMcpProperty(${index}, 'description', this.value)">
+            </div>
+            <label class="mcp-checkbox-label">
+                <input type="checkbox" ${prop.required ? 'checked' : ''}
+                    onchange="window.mcpModule.updateMcpProperty(${index}, 'required', this.checked)">
+                必填参数
+            </label>
+        </div>
+    `).join('');
 }
 
 /**
@@ -173,7 +250,14 @@ function openMcpModal(index = null) {
         if (schema.properties) {
             Object.keys(schema.properties).forEach(key => {
                 const prop = schema.properties[key];
-                mcpProperties.push({ name: key, type: prop.type || 'string', minimum: prop.minimum, maximum: prop.maximum, description: prop.description || '', required: schema.required && schema.required.includes(key) });
+                mcpProperties.push({
+                    name: key,
+                    type: prop.type || 'string',
+                    minimum: prop.minimum,
+                    maximum: prop.maximum,
+                    description: prop.description || '',
+                    required: schema.required && schema.required.includes(key)
+                });
             });
         }
     } else {
