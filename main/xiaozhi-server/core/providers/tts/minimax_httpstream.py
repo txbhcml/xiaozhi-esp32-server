@@ -216,6 +216,18 @@ class TTSProvider(TTSProviderBase):
 
                             try:
                                 data = json.loads(json_str)
+
+                                # 检查业务层错误
+                                base_resp = data.get("base_resp", {})
+                                status_code = base_resp.get("status_code", 0)
+                                if status_code != 0:
+                                    status_msg = base_resp.get("status_msg", "未知错误")
+                                    logger.bind(tag=TAG).error(
+                                        f"TTS请求失败, 错误码:{status_code}, 错误消息:{status_msg}"
+                                    )
+                                    self.tts_audio_queue.put((SentenceType.LAST, [], None))
+                                    return
+
                                 status = data.get("data", {}).get("status", 1)
                                 audio_hex = data.get("data", {}).get("audio")
 
