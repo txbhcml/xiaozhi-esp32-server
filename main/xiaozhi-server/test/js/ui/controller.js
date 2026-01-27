@@ -453,7 +453,7 @@ class UIController {
 
             if (isConnected) {
                 // Check microphone availability (check again after connection)
-                const { checkMicrophoneAvailability } = await import('../core/audio/recorder.js');
+                const { checkMicrophoneAvailability } = await import('../core/audio/recorder.js?v=0127');
                 const micAvailable = await checkMicrophoneAvailability();
 
                 if (!micAvailable) {

@@ -204,7 +204,7 @@ export class AudioRecorder {
         if (this.isRecording) return false;
         try {
             // Check if WebSocketHandler instance exists
-            const { getWebSocketHandler } = await import('../network/websocket.js');
+            const { getWebSocketHandler } = await import('../network/websocket.js?v=0127');
             const wsHandler = getWebSocketHandler();
             // If machine is speaking, send abort message
             if (wsHandler && wsHandler.isRemoteSpeaking && wsHandler.currentSessionId) {
