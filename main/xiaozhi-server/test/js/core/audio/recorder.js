@@ -174,7 +174,6 @@ export class AudioRecorder {
                     if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
                         try {
                             this.websocket.send(opusData.buffer);
-                            log(`已发送Opus帧，大小: ${opusData.length} 字节`, 'debug');
                         } catch (error) {
                             log(`WebSocket发送错误: ${error.message}`, 'error');
                         }

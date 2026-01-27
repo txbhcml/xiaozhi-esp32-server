@@ -304,7 +304,6 @@ export class WebSocketHandler {
             let arrayBuffer;
             if (data instanceof ArrayBuffer) {
                 arrayBuffer = data;
-                log(`收到ArrayBuffer音频数据，大小: ${data.byteLength}字节`, 'debug');
             } else if (data instanceof Blob) {
                 arrayBuffer = await data.arrayBuffer();
                 log(`收到Blob音频数据，大小: ${arrayBuffer.byteLength}字节`, 'debug');
@@ -392,7 +391,7 @@ export class WebSocketHandler {
 
         this.websocket.onerror = (error) => {
             log(`WebSocket错误: ${error.message || '未知错误'}`, 'error');
-
+            uiController.addChatMessage(`⚠️ WebSocket错误: ${error.message || '未知错误'}`, false);
             if (this.onConnectionStateChange) {
                 this.onConnectionStateChange(false);
             }

@@ -1,8 +1,8 @@
 // UI controller module
 import { loadConfig, saveConfig } from '../config/manager.js';
+import { getAudioPlayer } from '../core/audio/player.js';
 import { getAudioRecorder } from '../core/audio/recorder.js';
 import { getWebSocketHandler } from '../core/network/websocket.js';
-import { getAudioPlayer } from '../core/audio/player.js';
 
 // UI controller class
 class UIController {
@@ -292,12 +292,7 @@ class UIController {
             // Update button text and title
             recordBtn.querySelector('.btn-text').textContent = '录音';
             recordBtn.title = isHttpNonLocalhost ? '当前由于是http访问，无法录音，只能用文字交互' : '麦克风不可用';
-            // Display notification message in chat
-            if (isHttpNonLocalhost) {
-                this.addChatMessage('⚠️ 当前由于是http访问，无法录音，只能用文字交互', false);
-            } else {
-                this.addChatMessage('⚠️ 麦克风不可用，请检查权限设置', false);
-            }
+
         } else {
             // If connected, enable record button
             const wsHandler = getWebSocketHandler();
@@ -369,10 +364,20 @@ class UIController {
     // Start AI chat session after connection
     startAIChatSession() {
         this.addChatMessage('连接成功，开始聊天吧~😊', false);
-        // Start recording
-        const recordBtn = document.getElementById('recordBtn');
-        if (recordBtn) {
-            recordBtn.click();
+        // Check microphone availability and show error messages if needed
+        if (!window.microphoneAvailable) {
+            if (window.isHttpNonLocalhost) {
+                this.addChatMessage('⚠️ 当前由于是http访问，无法录音，只能用文字交互', false);
+            } else {
+                this.addChatMessage('⚠️ 麦克风不可用，请检查权限设置，只能用文字交互', false);
+            }
+        }
+        // Start recording only if microphone is available
+        if (window.microphoneAvailable) {
+            const recordBtn = document.getElementById('recordBtn');
+            if (recordBtn) {
+                recordBtn.click();
+            }
         }
     }
 
@@ -418,13 +423,39 @@ class UIController {
 
             // Get WebSocket handler instance
             const wsHandler = getWebSocketHandler();
+
+            // Register connection state callback BEFORE connecting
+            wsHandler.onConnectionStateChange = (isConnected) => {
+                this.updateConnectionUI(isConnected);
+                this.updateDialButton(isConnected);
+            };
+
+            // Register chat message callback BEFORE connecting
+            wsHandler.onChatMessage = (text, isUser) => {
+                this.addChatMessage(text, isUser);
+            };
+
+            // Register record button state callback BEFORE connecting
+            wsHandler.onRecordButtonStateChange = (isRecording) => {
+                const recordBtn = document.getElementById('recordBtn');
+                if (recordBtn) {
+                    if (isRecording) {
+                        recordBtn.classList.add('recording');
+                        recordBtn.querySelector('.btn-text').textContent = '录音中';
+                    } else {
+                        recordBtn.classList.remove('recording');
+                        recordBtn.querySelector('.btn-text').textContent = '录音';
+                    }
+                }
+            };
+
             const isConnected = await wsHandler.connect();
 
             if (isConnected) {
                 // Check microphone availability (check again after connection)
                 const { checkMicrophoneAvailability } = await import('../core/audio/recorder.js');
                 const micAvailable = await checkMicrophoneAvailability();
-                
+
                 if (!micAvailable) {
                     const isHttp = window.isHttpNonLocalhost;
                     if (isHttp) {
@@ -433,34 +464,6 @@ class UIController {
                     // Update global state
                     window.microphoneAvailable = false;
                 }
-
-                // Register connection state callback
-                wsHandler.onConnectionStateChange = (isConnected) => {
-                    this.updateConnectionUI(isConnected);
-                    this.updateDialButton(isConnected);
-                };
-
-                // Register chat message callback
-                wsHandler.onChatMessage = (text, isUser) => {
-                    this.addChatMessage(text, isUser);
-                };
-
-                // Register record button state callback
-                wsHandler.onRecordButtonStateChange = (isRecording) => {
-                    const recordBtn = document.getElementById('recordBtn');
-                    if (recordBtn) {
-                        if (isRecording) {
-                            recordBtn.classList.add('recording');
-                            recordBtn.querySelector('.btn-text').textContent = '录音中';
-                        } else {
-                            recordBtn.classList.remove('recording');
-                            recordBtn.querySelector('.btn-text').textContent = '录音';
-                        }
-                    }
-                };
-
-                // Connection successful
-                this.addChatMessage('OTA连接成功，正在建立WebSocket连接...', false);
 
                 // Update dial button state
                 const dialBtn = document.getElementById('dialBtn');
