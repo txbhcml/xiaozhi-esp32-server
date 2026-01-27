@@ -1,7 +1,7 @@
 // Audio recording module
-import { log } from '../../utils/logger.js';
-import { initOpusEncoder } from './opus-codec.js';
-import { getAudioPlayer } from './player.js';
+import { log } from '../../utils/logger.js?v=0127';
+import { initOpusEncoder } from './opus-codec.js?v=0127';
+import { getAudioPlayer } from './player.js?v=0127';
 
 // Audio recorder class
 export class AudioRecorder {

@@ -1,11 +1,11 @@
 // WebSocket消息处理模块
-import { getConfig, saveConnectionUrls } from '../../config/manager.js';
-import { uiController } from '../../ui/controller.js';
-import { log } from '../../utils/logger.js';
-import { getAudioPlayer } from '../audio/player.js';
-import { getAudioRecorder } from '../audio/recorder.js';
-import { executeMcpTool, getMcpTools, setWebSocket as setMcpWebSocket } from '../mcp/tools.js';
-import { webSocketConnect } from './ota-connector.js';
+import { getConfig, saveConnectionUrls } from '../../config/manager.js?v=0127';
+import { uiController } from '../../ui/controller.js?v=0127';
+import { log } from '../../utils/logger.js?v=0127';
+import { getAudioPlayer } from '../audio/player.js?v=0127';
+import { getAudioRecorder } from '../audio/recorder.js?v=0127';
+import { executeMcpTool, getMcpTools, setWebSocket as setMcpWebSocket } from '../mcp/tools.js?v=0127';
+import { webSocketConnect } from './ota-connector.js?v=0127';
 
 // WebSocket处理器类
 export class WebSocketHandler {

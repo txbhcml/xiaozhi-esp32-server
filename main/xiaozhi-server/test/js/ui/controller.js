@@ -1,8 +1,8 @@
 // UI controller module
-import { loadConfig, saveConfig } from '../config/manager.js';
-import { getAudioPlayer } from '../core/audio/player.js';
-import { getAudioRecorder } from '../core/audio/recorder.js';
-import { getWebSocketHandler } from '../core/network/websocket.js';
+import { loadConfig, saveConfig } from '../config/manager.js?v=0127';
+import { getAudioPlayer } from '../core/audio/player.js?v=0127';
+import { getAudioRecorder } from '../core/audio/recorder.js?v=0127';
+import { getWebSocketHandler } from '../core/network/websocket.js?v=0127';
 
 // UI controller class
 class UIController {
