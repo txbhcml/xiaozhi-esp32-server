@@ -23,8 +23,7 @@ RUN apk update && \
         bash \
         fontconfig \
         ttf-dejavu \
-        font-noto \
-        font-noto-cjk \
+        font-noto-cjk-full \
     && fc-cache -f -v \
     && rm -rf /var/cache/apk/*
 
