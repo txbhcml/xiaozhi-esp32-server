@@ -23,9 +23,13 @@ RUN apk update && \
         bash \
         fontconfig \
         ttf-dejavu \
-        font-noto-cjk-full \
-    && fc-cache -f -v \
     && rm -rf /var/cache/apk/*
+
+# 复制项目自带的中文字体
+COPY main/manager-web/public/generator/static/fonts/*.ttf /usr/share/fonts/
+
+# 更新字体缓存
+RUN fc-cache -f -v
 
 # 配置Nginx
 COPY docs/docker/nginx.conf /etc/nginx/nginx.conf
