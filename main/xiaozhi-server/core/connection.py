@@ -917,7 +917,7 @@ class ConnectionHandler:
             self.tts.tts_text_queue.put(
                 TTSMessageDTO(
                     sentence_id=self.sentence_id,
-                    sentence_type=SentenceType.LAST,
+                    sentence_type=SentenceType.MIDDLE,
                     content_type=ContentType.TEXT,
                     content_detail=get_system_error_response(self.config),
                 )
