@@ -11,7 +11,7 @@ class UIController {
         this.visualizerCanvas = null;
         this.visualizerContext = null;
         this.audioStatsTimer = null;
-        this.currentBackgroundIndex = 0;
+        this.currentBackgroundIndex = localStorage.getItem('backgroundIndex') ? parseInt(localStorage.getItem('backgroundIndex')) : 0;
         this.backgroundImages = ['1.png', '2.png', '3.png'];
 
         // Bind methods
@@ -20,6 +20,7 @@ class UIController {
         this.updateDialButton = this.updateDialButton.bind(this);
         this.addChatMessage = this.addChatMessage.bind(this);
         this.switchBackground = this.switchBackground.bind(this);
+        this.switchLive2DModel = this.switchLive2DModel.bind(this);
         this.showModal = this.showModal.bind(this);
         this.hideModal = this.hideModal.bind(this);
         this.switchTab = this.switchTab.bind(this);
@@ -51,6 +52,12 @@ class UIController {
 
         // Initialize status display
         this.updateConnectionUI(false);
+        // Apply saved background
+        const backgroundContainer = document.querySelector('.background-container');
+        if (backgroundContainer) {
+            backgroundContainer.style.backgroundImage = `url('./images/${this.backgroundImages[this.currentBackgroundIndex]}')`;
+        }
+
         this.updateDialButton(false);
 
         console.log('UIController init completed');
@@ -80,6 +87,14 @@ class UIController {
         const backgroundBtn = document.getElementById('backgroundBtn');
         if (backgroundBtn) {
             backgroundBtn.addEventListener('click', this.switchBackground);
+        }
+
+        // Model switch button
+        const switchModelBtn = document.getElementById('switchModelBtn');
+        if (switchModelBtn) {
+            switchModelBtn.addEventListener('click', () => {
+                this.switchLive2DModel();
+            });
         }
 
         // Dial button
@@ -323,6 +338,36 @@ class UIController {
         const backgroundContainer = document.querySelector('.background-container');
         if (backgroundContainer) {
             backgroundContainer.style.backgroundImage = `url('./images/${this.backgroundImages[this.currentBackgroundIndex]}')`;
+        }
+        localStorage.setItem('backgroundIndex', this.currentBackgroundIndex);
+    }
+
+    // Switch Live2D model
+    switchLive2DModel() {
+        const modelSelect = document.getElementById('live2dModelSelect');
+        if (!modelSelect) {
+            console.error('模型选择下拉框不存在');
+            return;
+        }
+
+        const selectedModel = modelSelect.value;
+        const app = window.chatApp;
+
+        if (app && app.live2dManager) {
+            app.live2dManager.switchModel(selectedModel)
+                .then(success => {
+                    if (success) {
+                        this.addChatMessage(`已切换到模型: ${selectedModel}`, false);
+                    } else {
+                        this.addChatMessage('模型切换失败', false);
+                    }
+                })
+                .catch(error => {
+                    console.error('模型切换错误:', error);
+                    this.addChatMessage('模型切换出错', false);
+                });
+        } else {
+            this.addChatMessage('Live2D管理器未初始化', false);
         }
     }
 

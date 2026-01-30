@@ -87,14 +87,6 @@
                 <span class="btn-text">设置</span>
             </button>
 
-            <button class="control-btn" id="backgroundBtn" title="切换背景">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15V18M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z" />
-                </svg>
-                <span class="btn-text">背景</span>
-            </button>
-
             <button class="control-btn dial-btn" id="dialBtn" title="拨号">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path
@@ -124,6 +116,7 @@
                 <div class="settings-tabs">
                     <button class="tab-btn active" data-tab="device">设备配置</button>
                     <button class="tab-btn" data-tab="mcp">MCP工具</button>
+                    <button class="tab-btn" data-tab="other">其他</button>
                 </div>
 
                 <div class="tab-content active" id="deviceTab">
@@ -182,6 +175,44 @@
                                 <button class="btn-primary" id="addMcpToolBtn">
                                     ➕ 添加新工具
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="otherTab">
+                    <div class="other-settings-panel">
+                        <div class="control-panel">
+                            <div class="config-row">
+                                <div class="config-item">
+                                    <label>选择模型:</label>
+                                    <select id="live2dModelSelect" class="model-select">
+                                        <option value="hiyori_pro_zh">hiyori (春日)</option>
+                                        <option value="natori_pro_zh">natori (名取)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="config-row">
+                                <div class="config-item">
+                                    <label></label>
+                                    <button class="control-btn" id="switchModelBtn" title="切换模型">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15V18M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z" />
+                                        </svg>
+                                        <span class="btn-text">切换模型</span>
+                                    </button>
+                                </div>
+                                <div class="config-item">
+                                    <label></label>
+                                    <button class="control-btn" id="backgroundBtn" title="切换背景">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15V18M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z" />
+                                        </svg>
+                                        <span class="btn-text">切换背景</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
