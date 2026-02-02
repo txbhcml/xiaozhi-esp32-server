@@ -89,10 +89,10 @@ class UIController {
             backgroundBtn.addEventListener('click', this.switchBackground);
         }
 
-        // Model switch button
-        const switchModelBtn = document.getElementById('switchModelBtn');
-        if (switchModelBtn) {
-            switchModelBtn.addEventListener('click', () => {
+        // Model select change event
+        const modelSelect = document.getElementById('live2dModelSelect');
+        if (modelSelect) {
+            modelSelect.addEventListener('change', () => {
                 this.switchLive2DModel();
             });
         }
