@@ -12,6 +12,7 @@ import opuslib_next
 from abc import ABC, abstractmethod
 from config.logger import setup_logging
 from typing import Optional, Tuple, List
+from core.providers.asr.dto.dto import InterfaceType
 from core.handle.receiveAudioHandle import startToChat
 from core.handle.reportHandle import enqueue_asr_report
 from core.utils.util import remove_punctuation_and_length
@@ -57,18 +58,17 @@ class ASRProviderBase(ABC):
             conn.asr_audio.append(audio)
         else:
             # 自动/实时模式：使用VAD检测
-            have_voice = audio_have_voice
-
             conn.asr_audio.append(audio)
-            if not have_voice and not conn.client_have_voice:
+
+            # 如果没有语音，且之前也没有声音，缓存部分音频
+            if not audio_have_voice and not conn.client_have_voice:
                 conn.asr_audio = conn.asr_audio[-10:]
                 return
 
             # 自动模式下通过VAD检测到语音停止时触发识别
-            if conn.client_voice_stop:
+            if conn.asr.interface_type != InterfaceType.STREAM and conn.client_voice_stop:
                 asr_audio_task = conn.asr_audio.copy()
-                conn.asr_audio.clear()
-                conn.reset_vad_states()
+                conn.reset_audio_states()
 
                 if len(asr_audio_task) > 15:
                     await self.handle_voice_stop(conn, asr_audio_task)
@@ -159,7 +159,8 @@ class ASRProviderBase(ABC):
             if text_len > 0:
                 # 使用自定义模块进行上报
                 await startToChat(conn, enhanced_text)
-                enqueue_asr_report(conn, enhanced_text, asr_audio_task)
+                audio_snapshot = asr_audio_task.copy()
+                enqueue_asr_report(conn, enhanced_text, audio_snapshot)
                 
         except Exception as e:
             logger.bind(tag=TAG).error(f"处理语音停止失败: {e}")
@@ -204,6 +205,9 @@ class ASRProviderBase(ABC):
             return b""
 
     def stop_ws_connection(self):
+        pass
+
+    async def close(self):
         pass
 
     def save_audio_to_file(self, pcm_data: List[bytes], session_id: str) -> str:
