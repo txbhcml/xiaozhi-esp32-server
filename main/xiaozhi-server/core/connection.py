@@ -87,6 +87,7 @@ class ConnectionHandler:
         self.max_output_size = 0
         self.chat_history_conf = 0
         self.audio_format = "opus"
+        self.sample_rate = 24000  # 默认采样率，从客户端 hello 消息中动态更新
 
         # 客户端状态相关
         self.client_abort = False
@@ -207,6 +208,10 @@ class ConnectionHandler:
 
             self.welcome_msg = self.config["xiaozhi"]
             self.welcome_msg["session_id"] = self.session_id
+
+            # 从配置中读取采样率
+            self.sample_rate = self.welcome_msg["audio_params"]["sample_rate"]
+            self.logger.bind(tag=TAG).info(f"配置输出音频采样率为: {self.sample_rate}")
 
             # 在后台初始化配置和组件（完全不阻塞主循环）
             asyncio.create_task(self._background_initialize())
@@ -1184,6 +1189,8 @@ class ConnectionHandler:
 
             if self.tts:
                 await self.tts.close()
+            if self.asr:
+                await self.asr.close()
 
             # 最后关闭线程池（避免阻塞）
             if self.executor:
@@ -1232,11 +1239,21 @@ class ConnectionHandler:
                 f"清理结束: TTS队列大小={self.tts.tts_text_queue.qsize()}, 音频队列大小={self.tts.tts_audio_queue.qsize()}"
             )
 
-    def reset_vad_states(self):
-        self.client_audio_buffer = bytearray()
+    def reset_audio_states(self):
+        """
+        重置所有音频相关状态(VAD + ASR)
+        """
+        # Reset VAD states
+        self.client_audio_buffer.clear()
         self.client_have_voice = False
         self.client_voice_stop = False
-        self.logger.bind(tag=TAG).debug("VAD states reset.")
+        self.client_voice_window.clear()
+        self.last_is_voice = False
+
+        # Clear ASR buffers
+        self.asr_audio.clear()
+
+        self.logger.bind(tag=TAG).debug("All audio states reset.")
 
     def chat_and_close(self, text):
         """Chat with the user and then close the connection"""
