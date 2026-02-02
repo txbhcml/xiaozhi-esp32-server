@@ -76,7 +76,6 @@ class LLMProvider(LLMProviderBase):
             if value is not None:
                 request_params[key] = value
 
-        # raise ValueError("model_name is required")
         responses = self.client.chat.completions.create(**request_params)
 
         is_active = True

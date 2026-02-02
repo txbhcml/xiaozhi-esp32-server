@@ -137,7 +137,6 @@ class ConnectionHandler:
         self.current_language_tag = None  # 存储当前ASR识别的语言标签
 
         # llm相关变量
-        self.llm_finish_task = True
         self.dialogue = Dialogue()
 
         # tts相关变量
@@ -801,7 +800,6 @@ class ConnectionHandler:
 
         # 为最顶层时新建会话ID和发送FIRST请求
         if depth == 0:
-            self.llm_finish_task = False
             self.sentence_id = str(uuid.uuid4().hex)
             self.dialogue.put(Message(role="user", content=query))
             self.tts.tts_text_queue.put(
@@ -935,7 +933,6 @@ class ConnectionHandler:
                         content_type=ContentType.ACTION,
                     )
                 )
-                self.llm_finish_task = True
             return
         # 处理function call
         if tool_call_flag:
@@ -1017,7 +1014,6 @@ class ConnectionHandler:
                     content_type=ContentType.ACTION,
                 )
             )
-            self.llm_finish_task = True
             # 使用lambda延迟计算，只有在DEBUG级别时才执行get_llm_dialogue()
             self.logger.bind(tag=TAG).debug(
                 lambda: json.dumps(
