@@ -27,7 +27,16 @@ export async function initMcpTools() {
     const savedTools = localStorage.getItem('mcpTools');
     if (savedTools) {
         try {
-            mcpTools = JSON.parse(savedTools);
+            const parsedTools = JSON.parse(savedTools);
+            // 合并默认工具和用户保存的工具，保留用户自定义的工具
+            const defaultToolNames = new Set(defaultMcpTools.map(t => t.name));
+            // 添加默认工具中不存在的新工具
+            parsedTools.forEach(tool => {
+                if (!defaultToolNames.has(tool.name)) {
+                    defaultMcpTools.push(tool);
+                }
+            });
+            mcpTools = defaultMcpTools;
         } catch (e) {
             log('加载MCP工具失败，使用默认工具', 'warning');
             mcpTools = [...defaultMcpTools];
@@ -392,12 +401,26 @@ export function getMcpTools() {
 /**
  * 执行工具调用
  */
-export function executeMcpTool(toolName, toolArgs) {
+export async function executeMcpTool(toolName, toolArgs) {
     const tool = mcpTools.find(t => t.name === toolName);
     if (!tool) {
         log(`未找到工具: ${toolName}`, 'error');
         return { success: false, error: `未知工具: ${toolName}` };
     }
+
+    // 处理拍照工具
+    if (toolName === 'self_camera_take_photo') {
+        if (typeof window.takePhoto === 'function') {
+            const question = toolArgs && toolArgs.question ? toolArgs.question : '描述一下看到的物品';
+            log(`正在执行拍照: ${question}`, 'info');
+            const result = await window.takePhoto(question);
+            return result;
+        } else {
+            log('拍照功能不可用', 'warning');
+            return { success: false, error: '摄像头未启动或不支持拍照功能' };
+        }
+    }
+
     // 如果有模拟返回结果，使用它
     if (tool.mockResponse) {
         // 替换模板变量

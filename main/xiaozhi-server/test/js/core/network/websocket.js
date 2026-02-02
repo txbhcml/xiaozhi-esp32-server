@@ -249,28 +249,43 @@ export class WebSocketHandler {
 
             log(`调用工具: ${toolName} 参数: ${JSON.stringify(toolArgs)}`, 'info');
 
-            const result = executeMcpTool(toolName, toolArgs);
-
-            const replyMessage = JSON.stringify({
-                "session_id": message.session_id || "",
-                "type": "mcp",
-                "payload": {
-                    "jsonrpc": "2.0",
-                    "id": payload.id,
-                    "result": {
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": JSON.stringify(result)
-                            }
-                        ],
-                        "isError": false
+            executeMcpTool(toolName, toolArgs).then(result => {
+                const replyMessage = JSON.stringify({
+                    "session_id": message.session_id || "",
+                    "type": "mcp",
+                    "payload": {
+                        "jsonrpc": "2.0",
+                        "id": payload.id,
+                        "result": {
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": JSON.stringify(result)
+                                }
+                            ],
+                            "isError": false
+                        }
                     }
-                }
-            });
+                });
 
-            log(`客户端上报: ${replyMessage}`, 'info');
-            this.websocket.send(replyMessage);
+                log(`客户端上报: ${replyMessage}`, 'info');
+                this.websocket.send(replyMessage);
+            }).catch(error => {
+                log(`工具执行失败: ${error.message}`, 'error');
+                const errorReply = JSON.stringify({
+                    "session_id": message.session_id || "",
+                    "type": "mcp",
+                    "payload": {
+                        "jsonrpc": "2.0",
+                        "id": payload.id,
+                        "error": {
+                            "code": -32603,
+                            "message": error.message
+                        }
+                    }
+                });
+                this.websocket.send(errorReply);
+            });
         } else if (payload.method === 'initialize') {
             log(`收到工具初始化请求: ${JSON.stringify(payload.params)}`, 'info');
             const replyMessage = JSON.stringify({
@@ -387,6 +402,17 @@ export class WebSocketHandler {
 
             const audioRecorder = getAudioRecorder();
             audioRecorder.stop();
+
+            // 关闭摄像头
+            if (typeof window.stopCamera === 'function') {
+                window.stopCamera();
+            }
+
+            // 隐藏摄像头显示区域
+            const cameraContainer = document.getElementById('cameraContainer');
+            if (cameraContainer) {
+                cameraContainer.classList.remove('active');
+            }
         };
 
         this.websocket.onerror = (error) => {
@@ -420,6 +446,17 @@ export class WebSocketHandler {
         this.websocket.close();
         const audioRecorder = getAudioRecorder();
         audioRecorder.stop();
+
+        // 关闭摄像头
+        if (typeof window.stopCamera === 'function') {
+            window.stopCamera();
+        }
+
+        // 隐藏摄像头显示区域
+        const cameraContainer = document.getElementById('cameraContainer');
+        if (cameraContainer) {
+            cameraContainer.classList.remove('active');
+        }
     }
 
     // 发送文本消息
