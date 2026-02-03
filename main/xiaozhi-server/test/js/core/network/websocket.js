@@ -81,6 +81,23 @@ export class WebSocketHandler {
             log(`收到音频控制消息: ${JSON.stringify(message)}`, 'info');
         } else if (message.type === 'stt') {
             log(`识别结果: ${message.text}`, 'info');
+            // 检查是否需要绑定设备
+            if (message.text && (message.text.includes('绑定') || message.text.includes('bind'))) {
+                log('收到设备绑定提示，更新摄像头状态', 'warning');
+                window.cameraAvailable = false;
+                // 关闭摄像头
+                if (typeof window.stopCamera === 'function') {
+                    window.stopCamera();
+                }
+                // 更新摄像头按钮状态
+                const cameraBtn = document.getElementById('cameraBtn');
+                if (cameraBtn) {
+                    cameraBtn.classList.remove('camera-active');
+                    cameraBtn.querySelector('.btn-text').textContent = '摄像头';
+                    cameraBtn.disabled = true;
+                    cameraBtn.title = '请先绑定验证码';
+                }
+            }
             // 使用新的聊天消息回调显示STT消息
             if (this.onChatMessage && message.text) {
                 this.onChatMessage(message.text, true);
@@ -288,6 +305,16 @@ export class WebSocketHandler {
             });
         } else if (payload.method === 'initialize') {
             log(`收到工具初始化请求: ${JSON.stringify(payload.params)}`, 'info');
+            // 保存视觉分析接口地址
+            if (payload.params?.capabilities?.vision?.url) {
+                window.visionApiUrl = payload.params.capabilities.vision.url;
+                log(`视觉分析接口地址: ${window.visionApiUrl}`, 'success');
+                // 更新输入框显示
+                const visionUrlInput = document.getElementById('visionUrl');
+                if (visionUrlInput) {
+                    visionUrlInput.value = window.visionApiUrl;
+                }
+            }
             const replyMessage = JSON.stringify({
                 "session_id": message.session_id || "",
                 "type": "mcp",

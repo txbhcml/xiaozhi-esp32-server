@@ -311,10 +311,15 @@ class UIController {
             }
         }
 
-        // Update camera button state - enable when connected
+        // Update camera button state - enable when connected and camera is available
         if (cameraBtn && isConnected) {
-            cameraBtn.disabled = false;
-            cameraBtn.title = '打开/关闭摄像头';
+            if (window.cameraAvailable) {
+                cameraBtn.disabled = false;
+                cameraBtn.title = '打开/关闭摄像头';
+            } else {
+                cameraBtn.disabled = true;
+                cameraBtn.title = '请先绑定验证码';
+            }
         }
 
         // Update record button state
@@ -487,6 +492,22 @@ class UIController {
                 recordBtn.click();
             }
         }
+        // Start camera only if camera is available (bound with verification code)
+        if (window.cameraAvailable && typeof window.startCamera === 'function') {
+            window.startCamera().then(success => {
+                if (success) {
+                    const cameraBtn = document.getElementById('cameraBtn');
+                    if (cameraBtn) {
+                        cameraBtn.classList.add('camera-active');
+                        cameraBtn.querySelector('.btn-text').textContent = '关闭';
+                    }
+                } else {
+                    this.addChatMessage('⚠️ 摄像头启动失败，可能被浏览器拒绝', false);
+                }
+            }).catch(error => {
+                log(`启动摄像头异常: ${error.message}`, 'error');
+            });
+        }
     }
 
     // Handle connect button click
@@ -582,23 +603,6 @@ class UIController {
                 }
 
                 this.hideModal('settingsModal');
-
-                // 启动摄像头
-                if (typeof window.startCamera === 'function') {
-                    window.startCamera().then(success => {
-                        if (success) {
-                            const cameraBtn = document.getElementById('cameraBtn');
-                            if (cameraBtn) {
-                                cameraBtn.classList.add('camera-active');
-                                cameraBtn.querySelector('.btn-text').textContent = '关闭';
-                            }
-                        } else {
-                            this.addChatMessage('⚠️ 摄像头启动失败，可能被浏览器拒绝', false);
-                        }
-                    }).catch(error => {
-                        log(`启动摄像头异常: ${error.message}`, 'error');
-                    });
-                }
             } else {
                 throw new Error('OTA连接失败');
             }

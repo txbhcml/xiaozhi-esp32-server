@@ -44,6 +44,8 @@ class App {
         initMcpTools();
         // 检查麦克风可用性
         await this.checkMicrophoneAvailability();
+        // 检查摄像头可用性
+        this.checkCameraAvailability();
         // 初始化Live2D
         await this.initLive2D();
         // 初始化摄像头
@@ -113,6 +115,12 @@ class App {
                 this.uiController.updateMicrophoneAvailability(false, window.isHttpNonLocalhost);
             }
         }
+    }
+
+    // 检查摄像头可用性
+    checkCameraAvailability() {
+        window.cameraAvailable = true;
+        log('摄像头可用性检查完成: 默认已绑定验证码', 'success');
     }
 
     // 初始化摄像头
@@ -232,7 +240,7 @@ class App {
                     log(`拍照成功，图像数据长度: ${photoData.length}`, 'success');
 
                     try {
-                        const visionApiUrl = 'http://localhost:8003/mcp/vision/explain';
+                        const visionApiUrl = window.visionApiUrl || 'http://localhost:8003/mcp/vision/explain';
                         log(`正在发送图片到视觉分析接口: ${visionApiUrl}`, 'info');
 
                         const deviceId = document.getElementById('deviceMac')?.value || '';
