@@ -832,12 +832,12 @@ body {
 }
 
 .model-select:hover {
-    background: #4f545c;
+    border-color: #5865f2;
 }
 
 .model-select:focus {
     outline: none;
-    border-color: #40444b;
+    border-color: #5865f2;
 }
 
 .model-select option {

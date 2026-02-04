@@ -306,15 +306,17 @@ export class WebSocketHandler {
         } else if (payload.method === 'initialize') {
             log(`收到工具初始化请求: ${JSON.stringify(payload.params)}`, 'info');
             // 保存视觉分析接口地址
-            if (payload.params?.capabilities?.vision?.url) {
-                window.visionApiUrl = payload.params.capabilities.vision.url;
-                log(`视觉分析接口地址: ${window.visionApiUrl}`, 'success');
-                // 更新输入框显示
-                const visionUrlInput = document.getElementById('visionUrl');
-                if (visionUrlInput) {
-                    visionUrlInput.value = window.visionApiUrl;
-                }
+            const visionUrl = document.getElementById('visionUrl');
+            const visionConfig = payload?.params?.capabilities?.vision;
+            if (visionConfig && typeof visionConfig === 'object' && visionConfig.url && visionConfig.token) {
+                const visionConfigStr = JSON.stringify(visionConfig);
+                localStorage.setItem('xz_tester_vision', visionConfigStr);
+                if (visionUrl) visionUrl.value = visionConfig.url;
+            } else {
+                localStorage.removeItem('xz_tester_vision');
+                if (visionUrl) visionUrl.value = '';
             }
+
             const replyMessage = JSON.stringify({
                 "session_id": message.session_id || "",
                 "type": "mcp",

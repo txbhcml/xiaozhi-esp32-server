@@ -240,40 +240,58 @@ class App {
                     log(`拍照成功，图像数据长度: ${photoData.length}`, 'success');
 
                     try {
-                        const visionApiUrl = window.visionApiUrl || 'http://localhost:8003/mcp/vision/explain';
-                        log(`正在发送图片到视觉分析接口: ${visionApiUrl}`, 'info');
+                        const xz_tester_vision = localStorage.getItem('xz_tester_vision');
+                        if (xz_tester_vision) {
+                            let visionInfo = null;
 
-                        const deviceId = document.getElementById('deviceMac')?.value || '';
-                        const clientId = document.getElementById('clientId')?.value || 'web_test_client';
-
-                        const formData = new FormData();
-                        formData.append('question', question);
-                        formData.append('image', dataURItoBlob(photoData), 'photo.jpg');
-
-                        const response = await fetch(visionApiUrl, {
-                            method: 'POST',
-                            body: formData,
-                            headers: {
-                                'Device-Id': deviceId,
-                                'Client-Id': clientId
+                            try {
+                                visionInfo = JSON.parse(xz_tester_vision);
+                            } catch (err) {
+                                throw new Error(`视觉配置解析失败`);
                             }
-                        });
 
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            const { url, token } = visionInfo || {};
+                            if (!url || !token) {
+                                throw new Error('视觉分析失败：配置缺少接口地址(url)或令牌(token)');
+                            }
+                            
+                            log(`正在发送图片到视觉分析接口: ${url}`, 'info');
+
+                            const deviceId = document.getElementById('deviceMac')?.value || '';
+                            const clientId = document.getElementById('clientId')?.value || 'web_test_client';
+
+                            const formData = new FormData();
+                            formData.append('question', question);
+                            formData.append('image', dataURItoBlob(photoData), 'photo.jpg');
+
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'Device-Id': deviceId,
+                                    'Client-Id': clientId,
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const analysisResult = await response.json();
+                            log(`视觉分析完成: ${JSON.stringify(analysisResult).substring(0, 200)}...`, 'success');
+
+                            resolve({
+                                success: true,
+                                message: question,
+                                photo_data: photoData,
+                                photo_width: canvas.width,
+                                photo_height: canvas.height,
+                                vision_analysis: analysisResult
+                            });
+                        } else {
+                            log('未配置视觉分析服务', 'warning');
                         }
-
-                        const analysisResult = await response.json();
-                        log(`视觉分析完成: ${JSON.stringify(analysisResult).substring(0, 200)}...`, 'success');
-
-                        resolve({
-                            success: true,
-                            message: question,
-                            photo_data: photoData,
-                            photo_width: canvas.width,
-                            photo_height: canvas.height,
-                            vision_analysis: analysisResult
-                        });
                     } catch (error) {
                         log(`视觉分析失败: ${error.message}`, 'error');
                         resolve({
