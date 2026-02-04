@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ import xiaozhi.common.service.impl.BaseServiceImpl;
 import xiaozhi.common.user.UserDetail;
 import xiaozhi.common.utils.ConvertUtils;
 import xiaozhi.common.utils.JsonUtils;
+import xiaozhi.common.utils.ToolUtil;
 import xiaozhi.modules.agent.dao.AgentDao;
 import xiaozhi.modules.agent.dto.AgentCreateDTO;
 import xiaozhi.modules.agent.dto.AgentDTO;
@@ -85,9 +87,9 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
 
         if (agent.getMemModelId() != null && agent.getMemModelId().equals(Constant.MEMORY_NO_MEM)) {
             agent.setChatHistoryConf(Constant.ChatHistoryConfEnum.IGNORE.getCode());
-            if (agent.getChatHistoryConf() == null) {
-                agent.setChatHistoryConf(Constant.ChatHistoryConfEnum.RECORD_TEXT_AUDIO.getCode());
-            }
+        }
+        if (agent.getChatHistoryConf() == null) {
+            agent.setChatHistoryConf(Constant.ChatHistoryConfEnum.RECORD_TEXT_AUDIO.getCode());
         }
 
         // 查询上下文源配置
@@ -130,26 +132,21 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
     @Override
     public List<AgentDTO> getUserAgents(Long userId, String keyword, String searchType) {
         QueryWrapper<AgentEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("user_id", userId).orderByDesc("created_at");
 
         // 如果有搜索关键词，根据搜索类型添加相应的查询条件
         if (StringUtils.isNotBlank(keyword)) {
             if ("mac".equals(searchType)) {
                 // 按MAC地址搜索：先搜索设备，再获取对应的智能体
-                List<DeviceEntity> devices = deviceService.searchDevicesByMacAddress(keyword, userId);
-
-                if (!devices.isEmpty()) {
-                    // 获取设备对应的智能体ID列表
-                    List<String> agentIds = devices.stream()
-                            .map(DeviceEntity::getAgentId)
-                            .distinct()
-                            .collect(Collectors.toList());
-
-                    if (!agentIds.isEmpty()) {
-                        queryWrapper.in("id", agentIds);
-                    } else {
-                        return new ArrayList<>();
-                    }
+                List<DeviceEntity> devices = Optional
+                        .ofNullable(deviceService.searchDevicesByMacAddress(keyword, userId)).orElseGet(ArrayList::new);
+                // 获取设备对应的智能体ID列表
+                List<String> agentIds = devices.stream()
+                        .map(DeviceEntity::getAgentId)
+                        .distinct()
+                        .collect(Collectors.toList());
+                if (ToolUtil.isNotEmpty(agentIds)) {
+                    queryWrapper.in("id", agentIds);
                 } else {
                     return new ArrayList<>();
                 }
