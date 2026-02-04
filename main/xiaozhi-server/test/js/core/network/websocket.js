@@ -74,6 +74,9 @@ export class WebSocketHandler {
     handleTextMessage(message) {
         if (message.type === 'hello') {
             log(`服务器回应：${JSON.stringify(message, null, 2)}`, 'success');
+            window.cameraAvailable = true;
+            log('连接成功，摄像头已可用', 'success');
+            uiController.updateDialButton(true);
             uiController.startAIChatSession();
         } else if (message.type === 'tts') {
             this.handleTTSMessage(message);
