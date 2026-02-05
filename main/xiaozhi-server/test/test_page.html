@@ -244,19 +244,22 @@
                     </div>
                     <div class="input-group">
                         <label for="mcpToolDescription">工具描述 *</label>
-                        <textarea id="mcpToolDescription" placeholder="详细描述工具的功能和使用场景..." required></textarea>
+                        <textarea id="mcpToolDescription" placeholder="详细描述工具的功能和使用场景..." required>
+                        </textarea>
                     </div>
                     <div class="input-group">
-                        <label>输入参数</label>
-                        <div class="properties-container">
-                            <div id="mcpPropertiesContainer">
-                                <div style="text-align: center; padding: 20px; color: #999; font-size: 14px;">
-                                    暂无参数，点击下方按钮添加参数
-                                </div>
-                            </div>
-                            <button type="button" class="btn-secondary" id="addMcpPropertyBtn">
+                        <div class="input-group-header">
+                            <label>输入参数</label>
+                            <button type="button" class="properties-btn-primary" id="addMcpPropertyBtn">
                                 ➕ 添加参数
                             </button>
+                        </div>
+                        <div class="properties-container">
+                            <div class="mcp-empty-state" id="mcpEmptyState">
+                                暂无参数，点击上方按钮添加参数
+                            </div>
+                            <div class="mcp-properties-list" id="mcpPropertiesContainer">
+                            </div>
                         </div>
                     </div>
                     <div class="input-group">
@@ -268,6 +271,62 @@
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn-secondary" id="cancelMcpBtn">取消</button>
+                        <button type="submit" class="btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 参数编辑模态框 -->
+    <div id="mcpPropertyModal" class="modal">
+        <div class="modal-content property-modal">
+            <div class="modal-header">
+                <h2 id="mcpPropertyModalTitle">编辑参数</h2>
+                <button class="close-btn" id="closeMcpPropertyModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="mcpPropertyForm">
+                    <input type="hidden" id="mcpPropertyIndex" value="-1">
+                    <div class="input-group">
+                        <label for="mcpPropertyName">参数名称 *</label>
+                        <input type="text" id="mcpPropertyName" placeholder="例如: param_1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="mcpPropertyType">数据类型 *</label>
+                        <select id="mcpPropertyType" class="model-select" required>
+                            <option value="string">字符串</option>
+                            <option value="integer">整数</option>
+                            <option value="number">数字</option>
+                            <option value="boolean">布尔值</option>
+                            <option value="array">数组</option>
+                            <option value="object">对象</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="mcpPropertyRangeGroup" style="display: none;">
+                        <div class="config-row">
+                            <div class="config-item">
+                                <label for="mcpPropertyMinimum">最小值</label>
+                                <input type="number" id="mcpPropertyMinimum" placeholder="可选">
+                            </div>
+                            <div class="config-item">
+                                <label for="mcpPropertyMaximum">最大值</label>
+                                <input type="number" id="mcpPropertyMaximum" placeholder="可选">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="mcpPropertyDescription">参数描述</label>
+                        <input type="text" id="mcpPropertyDescription" placeholder="可选">
+                    </div>
+                    <div class="input-group">
+                        <label class="mcp-checkbox-label">
+                            <input type="checkbox" id="mcpPropertyRequired">
+                            必填参数
+                        </label>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" id="cancelMcpPropertyBtn">取消</button>
                         <button type="submit" class="btn-primary">保存</button>
                     </div>
                 </form>

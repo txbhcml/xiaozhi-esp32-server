@@ -1028,35 +1028,174 @@ body {
     margin-bottom: 12px;
 }
 
-.property-item {
+.properties-container #addMcpPropertyBtn {
+    display: block;
+    margin: 0 auto;
+}
+
+.properties-container #addMcpPropertyBtn:hover {
+    background: #4752c4;
+}
+
+.mcp-checkbox-label {
     display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
     align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    color: #b9bbbe;
+    font-size: 13px;
+    cursor: pointer;
+    justify-content: flex-start;
 }
 
-.property-item input {
-    flex: 1;
-    padding: 6px 8px;
-    border: 1px solid #40444b;
-    border-radius: 4px;
-    background: #40444b;
+.mcp-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.mcp-property-name {
     color: white;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
 }
 
-.remove-property {
-    background: #ed4245;
+.mcp-property-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mcp-properties-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-height: 60px;
+    padding: 8px;
+}
+
+.input-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.input-group-header label {
+    margin-bottom: 0;
+}
+
+.input-group-header .properties-btn-primary {
+    margin: 0;
+}
+
+.mcp-empty-state {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-size: 14px;
+    width: 100%;
+    display: none;
+}
+
+.properties-btn-primary {
+    background: #2196f3;
     color: white;
     border: none;
-    padding: 4px 8px;
+    padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    display: block;
+    margin: 0 auto;
 }
 
-.remove-property:hover {
-    background: #c03537;
+.properties-btn-primary:hover {
+    background: #2196f3;
+}
+
+.mcp-property-card {
+    background: #36393f;
+    border: 1px solid #40444b;
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mcp-property-card:hover {
+    background: #40444b;
+    border-color: #5865f2;
+}
+
+.mcp-property-card:active {
+    transform: none;
+}
+
+.mcp-property-row-label {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    gap: 8px;
+}
+
+.mcp-property-label {
+    color: #b9bbbe;
+    font-size: 13px;
+    width: 60px;
+    flex-shrink: 0;
+    text-align: left;
+}
+
+.mcp-property-value {
+    color: white;
+    font-size: 13px;
+    flex: 1;
+    word-break: break-all;
+}
+
+.mcp-property-required-badge {
+    color: #f44336;
+    font-size: 12px;
+}
+
+.mcp-property-row-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #40444b;
+}
+
+.mcp-property-delete-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: background-color 0.2s;
+}
+
+.mcp-property-delete-btn:hover {
+    background: #d32f2f;
+}
+
+.mcp-property-card-optional {
+    background: #4f545c;
+    color: #b9bbbe;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.property-modal {
+    max-width: 450px;
 }
 
 /* ==================== 音频可视化器样式 ==================== */
