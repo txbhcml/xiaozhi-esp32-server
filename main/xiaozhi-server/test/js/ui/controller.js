@@ -13,6 +13,7 @@ class UIController {
         this.audioStatsTimer = null;
         this.currentBackgroundIndex = localStorage.getItem('backgroundIndex') ? parseInt(localStorage.getItem('backgroundIndex')) : 0;
         this.backgroundImages = ['1.png', '2.png', '3.png'];
+        this.dialBtnDisabled = false;
 
         // Bind methods
         this.init = this.init.bind(this);
@@ -99,36 +100,36 @@ class UIController {
 
         // Dial button
         const dialBtn = document.getElementById('dialBtn');
-        let dialTimer = null;
         if (dialBtn) {
             dialBtn.addEventListener('click', () => {
-                if (dialTimer) {
-                    clearTimeout(dialTimer);
-                    dialTimer = null;
-                }
-                dialTimer = setTimeout(() => {
-                    const wsHandler = getWebSocketHandler();
-                    const isConnected = wsHandler.isConnected();
+                dialBtn.disabled = true;
+                this.dialBtnDisabled = true;
+                setTimeout(() => {
+                    dialBtn.disabled = false;
+                    this.dialBtnDisabled = false;
+                }, 3000);
 
-                    if (isConnected) {
-                        wsHandler.disconnect();
-                        this.updateDialButton(false);
-                        this.addChatMessage('Disconnected, see you next time~😊', false);
-                    } else {
-                        // Check if OTA URL is filled
-                        const otaUrlInput = document.getElementById('otaUrl');
-                        if (!otaUrlInput || !otaUrlInput.value.trim()) {
-                            // If OTA URL is not filled, show settings modal and switch to device tab
-                            this.showModal('settingsModal');
-                            this.switchTab('device');
-                            this.addChatMessage('Please fill in OTA server URL', false);
-                            return;
-                        }
+                const wsHandler = getWebSocketHandler();
+                const isConnected = wsHandler.isConnected();
 
-                        // Start connection process
-                        this.handleConnect();
+                if (isConnected) {
+                    wsHandler.disconnect();
+                    this.updateDialButton(false);
+                    this.addChatMessage('Disconnected, see you next time~😊', false);
+                } else {
+                    // Check if OTA URL is filled
+                    const otaUrlInput = document.getElementById('otaUrl');
+                    if (!otaUrlInput || !otaUrlInput.value.trim()) {
+                        // If OTA URL is not filled, show settings modal and switch to device tab
+                        this.showModal('settingsModal');
+                        this.switchTab('device');
+                        this.addChatMessage('Please fill in OTA server URL', false);
+                        return;
                     }
-                }, 300);
+
+                    // Start connection process
+                    this.handleConnect();
+                }
             });
         }
 
@@ -618,7 +619,9 @@ class UIController {
                 // Update dial button state
                 const dialBtn = document.getElementById('dialBtn');
                 if (dialBtn) {
-                    dialBtn.disabled = false;
+                    if (!this.dialBtnDisabled) {
+                        dialBtn.disabled = false;
+                    }
                     dialBtn.querySelector('.btn-text').textContent = '挂断';
                     dialBtn.classList.add('dial-active');
                 }
@@ -644,7 +647,9 @@ class UIController {
             // Restore dial button state
             const dialBtn = document.getElementById('dialBtn');
             if (dialBtn) {
-                dialBtn.disabled = false;
+                if (!this.dialBtnDisabled) {
+                    dialBtn.disabled = false;
+                }
                 dialBtn.querySelector('.btn-text').textContent = '拨号';
                 dialBtn.classList.remove('dial-active');
                 console.log('Dial button state restored successfully');
