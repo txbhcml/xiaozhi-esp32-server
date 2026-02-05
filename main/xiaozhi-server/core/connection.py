@@ -841,7 +841,8 @@ class ConnectionHandler:
         try:
             # 使用带记忆的对话
             memory_str = None
-            if self.memory is not None:
+            # 仅当query非空（代表用户询问）时查询记忆
+            if self.memory is not None and query:
                 future = asyncio.run_coroutine_threadsafe(
                     self.memory.query_memory(query), self.loop
                 )
