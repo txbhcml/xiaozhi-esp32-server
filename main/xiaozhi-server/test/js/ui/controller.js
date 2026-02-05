@@ -99,69 +99,83 @@ class UIController {
 
         // Dial button
         const dialBtn = document.getElementById('dialBtn');
+        let dialTimer = null;
         if (dialBtn) {
             dialBtn.addEventListener('click', () => {
-                const wsHandler = getWebSocketHandler();
-                const isConnected = wsHandler.isConnected();
-
-                if (isConnected) {
-                    wsHandler.disconnect();
-                    this.updateDialButton(false);
-                    this.addChatMessage('Disconnected, see you next time~😊', false);
-                } else {
-                    // Check if OTA URL is filled
-                    const otaUrlInput = document.getElementById('otaUrl');
-                    if (!otaUrlInput || !otaUrlInput.value.trim()) {
-                        // If OTA URL is not filled, show settings modal and switch to device tab
-                        this.showModal('settingsModal');
-                        this.switchTab('device');
-                        this.addChatMessage('Please fill in OTA server URL', false);
-                        return;
-                    }
-
-                    // Start connection process
-                    this.handleConnect();
+                if (dialTimer) {
+                    clearTimeout(dialTimer);
+                    dialTimer = null;
                 }
+                dialTimer = setTimeout(() => {
+                    const wsHandler = getWebSocketHandler();
+                    const isConnected = wsHandler.isConnected();
+
+                    if (isConnected) {
+                        wsHandler.disconnect();
+                        this.updateDialButton(false);
+                        this.addChatMessage('Disconnected, see you next time~😊', false);
+                    } else {
+                        // Check if OTA URL is filled
+                        const otaUrlInput = document.getElementById('otaUrl');
+                        if (!otaUrlInput || !otaUrlInput.value.trim()) {
+                            // If OTA URL is not filled, show settings modal and switch to device tab
+                            this.showModal('settingsModal');
+                            this.switchTab('device');
+                            this.addChatMessage('Please fill in OTA server URL', false);
+                            return;
+                        }
+
+                        // Start connection process
+                        this.handleConnect();
+                    }
+                }, 300);
             });
         }
 
         // Camera button
         const cameraBtn = document.getElementById('cameraBtn');
+        let cameraTimer = null;
         if (cameraBtn) {
             cameraBtn.addEventListener('click', () => {
-                const cameraContainer = document.getElementById('cameraContainer');
-                if (!cameraContainer) {
-                    log('摄像头容器不存在', 'warning');
-                    return;
+                if (cameraTimer) {
+                    clearTimeout(cameraTimer);
+                    cameraTimer = null;
                 }
+                cameraTimer = setTimeout(() => {
+                    const cameraContainer = document.getElementById('cameraContainer');
+                    if (!cameraContainer) {
+                        log('摄像头容器不存在', 'warning');
+                        return;
+                    }
 
-                const isActive = cameraContainer.classList.contains('active');
-                if (isActive) {
-                    // 关闭摄像头
-                    if (typeof window.stopCamera === 'function') {
-                        window.stopCamera();
-                    }
-                    cameraContainer.classList.remove('active');
-                    cameraBtn.classList.remove('camera-active');
-                    cameraBtn.querySelector('.btn-text').textContent = '摄像头';
-                    log('摄像头已关闭', 'info');
-                } else {
-                    // 打开摄像头
-                    if (typeof window.startCamera === 'function') {
-                        window.startCamera().then(success => {
-                            if (success) {
-                                cameraBtn.classList.add('camera-active');
-                                cameraBtn.querySelector('.btn-text').textContent = '关闭';
-                            } else {
-                                this.addChatMessage('⚠️ 摄像头启动失败，请检查浏览器权限', false);
-                            }
-                        }).catch(error => {
-                            log(`启动摄像头异常: ${error.message}`, 'error');
-                        });
+                    const isActive = cameraContainer.classList.contains('active');
+                    if (isActive) {
+                        // 关闭摄像头
+                        if (typeof window.stopCamera === 'function') {
+                            window.stopCamera();
+                        }
+                        cameraContainer.classList.remove('active');
+                        cameraBtn.classList.remove('camera-active');
+                        cameraBtn.querySelector('.btn-text').textContent = '摄像头';
+                        log('摄像头已关闭', 'info');
                     } else {
-                        log('startCamera函数未定义', 'warning');
+                        // 打开摄像头
+                        if (typeof window.startCamera === 'function') {
+                            window.startCamera().then(success => {
+                                if (success) {
+                                    cameraBtn.classList.add('camera-active');
+                                    cameraBtn.querySelector('.btn-text').textContent = '关闭';
+                                } else {
+                                    this.addChatMessage('⚠️ 摄像头启动失败，请检查浏览器权限', false);
+                                }
+                            }).catch(error => {
+                                log(`启动摄像头异常: ${error.message}`, 'error');
+                            });
+                        } else {
+                            log('startCamera函数未定义', 'warning');
+                        }
                     }
-                }
+                }, 300);
             });
         }
 
