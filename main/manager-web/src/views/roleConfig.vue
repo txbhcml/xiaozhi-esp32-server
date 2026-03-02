@@ -1701,6 +1701,7 @@ export default {
 .tts-slider ::v-deep .el-input__inner {
   text-align: center;
   padding: 0 8px;
+}
 .input-new-tag {
   width: 90px;
   &::v-deep(.el-input__inner) {
