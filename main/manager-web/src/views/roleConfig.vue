@@ -32,7 +32,7 @@
                   v-model="inputValue"
                   ref="saveTagInput"
                   size="small"
-                  maxLength="100"
+                  maxLength="64"
                   @keyup.enter.native="handleInputConfirm"
                   @blur="handleInputConfirm"
                 >
@@ -63,7 +63,7 @@
                       <el-input
                         v-model="form.agentName"
                         class="form-input"
-                        maxlength="10"
+                        maxlength="64"
                       />
                     </el-form-item>
                     <el-form-item :label="$t('roleConfig.roleTemplate') + '：'">
@@ -387,7 +387,6 @@ export default {
         asr: false, // 语音识别功能状态
       },
       dynamicTags: [],
-      maxVisibleTags: 5,
       inputVisible: false,
       inputValue: ''
     };
@@ -471,6 +470,7 @@ export default {
               intentModelId: "",
             },
           };
+          this.dynamicTags = [];
           this.currentFunctions = [];
           this.$message.success({
             message: i18n.t("roleConfig.resetSuccess"),
@@ -1531,5 +1531,8 @@ export default {
 }
 .input-new-tag {
   width: 90px;
+  &::v-deep(.el-input__inner) {
+    width: 90px !important;
+  }
 }
 </style>

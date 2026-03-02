@@ -1,13 +1,15 @@
 <template>
   <div class="device-item">
     <div style="display: flex;justify-content: space-between;">
-      <div style="font-weight: 700;font-size: 18px;text-align: left;color: #3d4566;">
+    <el-tooltip :content="device.agentName" placement="top" effect="light">
+      <div class="device-item-title">
         {{ device.agentName }}
       </div>
+    </el-tooltip>
       <div>
         <img src="@/assets/home/delete.png" alt="" style="width: 18px;height: 18px;margin-right: 10px;"
           @click.stop="handleDelete" />
-        <el-tooltip class="item" effect="dark" :content="device.systemPrompt" placement="top"
+        <el-tooltip class="item" effect="light" :content="device.systemPrompt" placement="top"
           popper-class="custom-tooltip">
           <img src="@/assets/home/info.png" alt="" style="width: 18px;height: 18px;" />
         </el-tooltip>
@@ -140,6 +142,16 @@ export default {
   background: #fafcfe;
   padding: 22px 22px 14px;
   box-sizing: border-box;
+  &-title {
+    flex: 1;
+    font-weight: bold;
+    font-size: 18px;
+    color: #3d4566;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
 }
 
 .device-name {
