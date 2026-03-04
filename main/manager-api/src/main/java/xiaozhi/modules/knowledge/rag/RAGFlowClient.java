@@ -13,6 +13,21 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+import java.util.Locale;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -45,8 +60,8 @@ public class RAGFlowClient {
         this.objectMapper = new ObjectMapper();
         // [Reinforce] 兼容 RAGFlow 返回的 RFC 1123 日期格式 (如: Tue, 10 Feb 2026 10:27:35 GMT)
         this.objectMapper
-                .setDateFormat(new java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", java.util.Locale.US));
-        this.objectMapper.setTimeZone(java.util.TimeZone.getTimeZone("GMT"));
+                .setDateFormat(new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US));
+        this.objectMapper.setTimeZone(TimeZone.getTimeZone("GMT"));
 
         // 优先从 Spring 上下文中获取池化的 RestTemplate Bean (Issue 3: 连接池化)
         RestTemplate pooledTemplate = null;
@@ -62,7 +77,7 @@ public class RAGFlowClient {
         } else {
             // 兜底方案：配置超时并创建简单 RestTemplate
             log.info("RAGFlowClient 初始化: 使用独立 RestTemplate (Debug Mode)");
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
             factory.setConnectTimeout(timeoutSeconds * 1000);
             factory.setReadTimeout(timeoutSeconds * 1000);
             this.restTemplate = new RestTemplate(factory);
@@ -194,10 +209,10 @@ public class RAGFlowClient {
                 if (v != null) {
                     try {
                         sb.append(k).append("=")
-                                .append(java.net.URLEncoder.encode(v.toString(),
+                                .append(URLEncoder.encode(v.toString(),
                                         StandardCharsets.UTF_8.name()))
                                 .append("&");
-                    } catch (java.io.UnsupportedEncodingException e) {
+                    } catch (UnsupportedEncodingException e) {
                         log.warn("参数编码失败: k={}, v={}", k, v);
                         sb.append(k).append("=").append(v).append("&");
                     }
@@ -217,32 +232,32 @@ public class RAGFlowClient {
      * @param body     请求体
      * @param onData   数据回调（每收到一行数据调用一次）
      */
-    public void postStream(String endpoint, Object body, java.util.function.Consumer<String> onData) {
+    public void postStream(String endpoint, Object body, Consumer<String> onData) {
         try {
             String url = buildUrl(endpoint, null);
             log.debug("POST STREAM {}", url);
 
             String jsonBody = objectMapper.writeValueAsString(body);
 
-            java.net.http.HttpClient httpClient = java.net.http.HttpClient.newBuilder()
+            HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(DEFAULT_TIMEOUT))
                     .build();
 
-            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(url))
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + apiKey)
-                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
                     .build();
 
             // 发送请求并处理流式响应
-            httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream())
+            httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream())
                     .body()
-                    .transferTo(new java.io.OutputStream() {
-                        private final java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+                    .transferTo(new OutputStream() {
+                        private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
                         @Override
-                        public void write(int b) throws java.io.IOException {
+                        public void write(int b) throws IOException {
                             if (b == '\n') {
                                 String line = buffer.toString(StandardCharsets.UTF_8);
                                 if (!line.trim().isEmpty()) {

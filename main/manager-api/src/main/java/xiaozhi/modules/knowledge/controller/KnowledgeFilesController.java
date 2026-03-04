@@ -126,6 +126,20 @@ public class KnowledgeFilesController {
         return new Result<>();
     }
 
+    @DeleteMapping("/documents/{document_id}")
+    @Operation(summary = "删除单个文档")
+    @RequiresPermissions("sys:role:normal")
+    public Result<Void> deleteSingle(@PathVariable("dataset_id") String datasetId,
+            @PathVariable("document_id") String documentId) {
+        // 验证知识库权限
+        validateKnowledgeBasePermission(datasetId);
+
+        DocumentDTO.BatchIdReq req = new DocumentDTO.BatchIdReq();
+        req.setIds(java.util.Collections.singletonList(documentId));
+        knowledgeFilesService.deleteDocuments(datasetId, req);
+        return new Result<>();
+    }
+
     @PostMapping("/chunks")
     @Operation(summary = "解析文档（切块）")
     @RequiresPermissions("sys:role:normal")

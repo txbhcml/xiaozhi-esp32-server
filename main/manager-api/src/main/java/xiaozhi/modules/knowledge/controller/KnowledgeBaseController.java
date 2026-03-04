@@ -26,6 +26,7 @@ import xiaozhi.common.utils.Result;
 import xiaozhi.common.utils.ToolUtil;
 import xiaozhi.modules.knowledge.dto.KnowledgeBaseDTO;
 import xiaozhi.modules.knowledge.service.KnowledgeBaseService;
+import xiaozhi.modules.knowledge.service.KnowledgeManagerService;
 import xiaozhi.modules.model.entity.ModelConfigEntity;
 import xiaozhi.modules.security.user.SecurityUser;
 
@@ -36,7 +37,7 @@ import xiaozhi.modules.security.user.SecurityUser;
 public class KnowledgeBaseController {
 
     private final KnowledgeBaseService knowledgeBaseService;
-    private final xiaozhi.modules.knowledge.service.KnowledgeManagerService knowledgeManagerService;
+    private final KnowledgeManagerService knowledgeManagerService;
 
     @GetMapping
     @Operation(summary = "分页查询知识库列表")

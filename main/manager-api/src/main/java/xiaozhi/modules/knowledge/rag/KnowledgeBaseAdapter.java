@@ -8,6 +8,9 @@ import xiaozhi.modules.knowledge.dto.dataset.DatasetDTO;
 import xiaozhi.common.page.PageData;
 import xiaozhi.modules.knowledge.dto.KnowledgeFilesDTO;
 import xiaozhi.modules.knowledge.dto.document.DocumentDTO;
+import xiaozhi.modules.knowledge.dto.document.ChunkDTO;
+import xiaozhi.modules.knowledge.dto.document.RetrievalDTO;
+import java.util.function.Consumer;
 
 /**
  * 知识库API适配器抽象基类
@@ -105,9 +108,9 @@ public abstract class KnowledgeBaseAdapter {
          * @param req        列表请求参数 (分页、关键词等)
          * @return 切片列表VO
          */
-        public abstract xiaozhi.modules.knowledge.dto.document.ChunkDTO.ListVO listChunks(String datasetId,
+        public abstract ChunkDTO.ListVO listChunks(String datasetId,
                         String documentId,
-                        xiaozhi.modules.knowledge.dto.document.ChunkDTO.ListReq req);
+                        ChunkDTO.ListReq req);
 
         /**
          * 召回测试 - 从知识库中检索相关切片
@@ -115,8 +118,8 @@ public abstract class KnowledgeBaseAdapter {
          * @param req 检索测试请求参数
          * @return 召回测试结果
          */
-        public abstract xiaozhi.modules.knowledge.dto.document.RetrievalDTO.ResultVO retrievalTest(
-                        xiaozhi.modules.knowledge.dto.document.RetrievalDTO.TestReq req);
+        public abstract RetrievalDTO.ResultVO retrievalTest(
+                        RetrievalDTO.TestReq req);
 
         /**
          * 测试连接
@@ -186,7 +189,7 @@ public abstract class KnowledgeBaseAdapter {
          * @param body     请求体
          * @param onData   数据回调
          */
-        public abstract void postStream(String endpoint, Object body, java.util.function.Consumer<String> onData);
+        public abstract void postStream(String endpoint, Object body, Consumer<String> onData);
 
         /**
          * SearchBot 提问
@@ -197,7 +200,7 @@ public abstract class KnowledgeBaseAdapter {
          * @return 响应对象
          */
         public abstract Object postSearchBotAsk(Map<String, Object> config, Object body,
-                        java.util.function.Consumer<String> onData);
+                        Consumer<String> onData);
 
         /**
          * AgentBot 对话
@@ -208,5 +211,5 @@ public abstract class KnowledgeBaseAdapter {
          * @param onData  数据回调
          */
         public abstract void postAgentBotCompletion(Map<String, Object> config, String agentId, Object body,
-                        java.util.function.Consumer<String> onData);
+                        Consumer<String> onData);
 }

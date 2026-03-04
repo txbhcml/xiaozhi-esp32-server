@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.AbstractResource;
@@ -515,7 +516,7 @@ public class RAGFlowAdapter extends KnowledgeBaseAdapter {
     }
 
     @Override
-    public void postStream(String endpoint, Object body, java.util.function.Consumer<String> onData) {
+    public void postStream(String endpoint, Object body, Consumer<String> onData) {
         try {
             getClient().postStream(endpoint, body, onData);
         } catch (Exception e) {
@@ -526,7 +527,7 @@ public class RAGFlowAdapter extends KnowledgeBaseAdapter {
 
     @Override
     public Object postSearchBotAsk(Map<String, Object> config, Object body,
-            java.util.function.Consumer<String> onData) {
+            Consumer<String> onData) {
         // SearchBot 实际上是 Dataset 检索的一种封装，或者是未公开的 API？
         // 假设 RAGFlow 没有显式的 /searchbots 接口供 SDK 调用，而是 Dataset Retrieval 或者 Chat。
         // 但根据 BotDTO，它是 /api/v1/searchbots/ask (假设)
@@ -547,7 +548,7 @@ public class RAGFlowAdapter extends KnowledgeBaseAdapter {
 
     @Override
     public void postAgentBotCompletion(Map<String, Object> config, String agentId, Object body,
-            java.util.function.Consumer<String> onData) {
+            Consumer<String> onData) {
         // AgentBot 对应 /api/v1/agentbots/{id}/completions
         try {
             getClient().postStream("/api/v1/agentbots/" + agentId + "/completions", body, onData);
