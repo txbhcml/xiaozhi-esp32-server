@@ -11,6 +11,7 @@ export interface Agent {
   summaryMemory: string | null
   lastConnectedAt: string | null
   deviceCount: number
+  tags: { id: string, tagName: string }[]
 }
 
 // 智能体创建数据类型

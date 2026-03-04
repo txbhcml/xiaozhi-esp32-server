@@ -73,6 +73,8 @@ export default {
   'home.minutesAgo': 'minutes ago',
   'home.hoursAgo': 'hours ago',
   'home.daysAgo': 'days ago',
+  'home.languageModel': 'LLM',
+  'home.voiceModel': 'TTS',
 
   // Agent page
   'agent.pageTitle': 'Agent',
@@ -92,6 +94,13 @@ export default {
   'agent.agentName': 'Agent Name',
   'agent.inputAgentName': 'Please input agent name',
   'agent.roleMode': 'Role Mode',
+  'agent.agentTag': 'Intelligent agent label',
+  'agent.addAgentTag': 'Add label',
+  'agent.inputAgentTag': 'Please input agent label',
+  'agent.contextProvider': 'Context',
+  'agent.contextProviderSuccess': 'Successfully added {count} sources.',
+  'agent.contextProviderDocLink': 'How to deploy context provider',
+  'agent.editContextProvider': 'Edit Source',
   'agent.roleDescription': 'Role Description',
   'agent.inputRoleDescription': 'Please input role description',
   'agent.modelConfig': 'Model Configuration',
@@ -115,6 +124,20 @@ export default {
   'agent.pleaseInputAgentName': 'Please input agent name',
   'agent.pleaseInputRoleDescription': 'Please input role description',
   'agent.pleaseSelect': 'Please select',
+
+  // Context provider dialog related
+  'contextProviderDialog.title': 'Edit Source',
+  'contextProviderDialog.noContextApi': 'No Context API',
+  'contextProviderDialog.add': 'Add',
+  'contextProviderDialog.apiUrl': 'API URL',
+  'contextProviderDialog.apiUrlPlaceholder': 'http://api.example.com/data',
+  'contextProviderDialog.requestHeaders': 'Request Headers',
+  'contextProviderDialog.headerKeyPlaceholder': 'Key',
+  'contextProviderDialog.headerValuePlaceholder': 'Value',
+  'contextProviderDialog.noHeaders': 'No Headers',
+  'contextProviderDialog.addHeader': 'Add Header',
+  'contextProviderDialog.cancel': 'Cancel',
+  'contextProviderDialog.confirm': 'Confirm',
 
   // Chat History Page
   'chatHistory.getChatSessions': 'Get chat session list',

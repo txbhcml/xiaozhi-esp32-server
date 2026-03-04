@@ -94,6 +94,8 @@ export default {
   'home.minutesAgo': '分鐘前',
   'home.hoursAgo': '小時前',
   'home.daysAgo': '天前',
+  'home.languageModel': '語言模型',
+  'home.voiceModel': '音色模型',
 
   // Agent頁面
   'agent.pageTitle': '智能體',
@@ -113,6 +115,13 @@ export default {
   'agent.agentName': '助手暱稱',
   'agent.inputAgentName': '請輸入助手暱稱',
   'agent.roleMode': '角色模式',
+  'agent.agentTag': '智慧體標籤',
+  'agent.addAgentTag': '添加標籤',
+  'agent.inputAgentTag': '請輸入智慧體標籤',
+  'agent.contextProvider': '上下文源',
+  'agent.contextProviderSuccess': '已成功添加 {count} 個源。',
+  'agent.contextProviderDocLink': '如何部署上下文源',
+  'agent.editContextProvider': '編輯源',
   'agent.roleDescription': '角色介紹',
   'agent.inputRoleDescription': '請輸入角色介紹',
   'agent.modelConfig': '模型配置',
@@ -136,6 +145,20 @@ export default {
   'agent.pleaseInputAgentName': '請輸入助手暱稱',
   'agent.pleaseInputRoleDescription': '請輸入角色介紹',
   'agent.pleaseSelect': '請選擇',
+
+  // 上下文源对话框相关
+  'contextProviderDialog.title': '編輯源',
+  'contextProviderDialog.noContextApi': '暫無上下文API',
+  'contextProviderDialog.add': '添加',
+  'contextProviderDialog.apiUrl': '介面地址',
+  'contextProviderDialog.apiUrlPlaceholder': 'http://api.example.com/data',
+  'contextProviderDialog.requestHeaders': '請求頭',
+  'contextProviderDialog.headerKeyPlaceholder': 'Key',
+  'contextProviderDialog.headerValuePlaceholder': 'Value',
+  'contextProviderDialog.noHeaders': '暫無 Headers',
+  'contextProviderDialog.addHeader': '添加 Header',
+  'contextProviderDialog.cancel': '取消',
+  'contextProviderDialog.confirm': '確定',
 
   // 聊天歷史頁面
   'chatHistory.getChatSessions': '獲取聊天會話列表',

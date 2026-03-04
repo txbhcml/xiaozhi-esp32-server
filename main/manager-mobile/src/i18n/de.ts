@@ -73,6 +73,8 @@ export default {
     'home.minutesAgo': 'Minuten her',
     'home.hoursAgo': 'Stunden her',
     'home.daysAgo': 'Tage her',
+    'home.languageModel': 'LLM',
+    'home.voiceModel': 'TTS',
 
     // Agentenseite
     'agent.pageTitle': 'Agent',
@@ -92,6 +94,13 @@ export default {
     'agent.agentName': 'Agentenname',
     'agent.inputAgentName': 'Bitte Agenten-Namen eingeben',
     'agent.roleMode': 'Rollenmodus',
+    'agent.agentTag': 'Smart Body-Etiketten',
+    'agent.addAgentTag': 'Tags hinzufügen',
+    'agent.inputAgentTag': 'Bitte Smart Body-Etiketten eingeben',
+    'agent.contextProvider': 'Kontext',
+    'agent.contextProviderSuccess': '{count} Quellen erfolgreich hinzugefügt.',
+    'agent.contextProviderDocLink': 'Wie man Kontextquellen bereitstellt',
+    'agent.editContextProvider': 'Quelle bearbeiten',
     'agent.roleDescription': 'Rollenbeschreibung',
     'agent.inputRoleDescription': 'Bitte Rollenbeschreibung eingeben',
     'agent.modelConfig': 'Modellkonfiguration',
@@ -115,6 +124,20 @@ export default {
     'agent.pleaseInputAgentName': 'Bitte Agenten-Namen eingeben',
     'agent.pleaseInputRoleDescription': 'Bitte Rollenbeschreibung eingeben',
     'agent.pleaseSelect': 'Bitte auswählen',
+
+    // Context provider dialog related
+    'contextProviderDialog.title': 'Quelle bearbeiten',
+    'contextProviderDialog.noContextApi': 'Keine Kontext-API',
+    'contextProviderDialog.add': 'Hinzufügen',
+    'contextProviderDialog.apiUrl': 'API-URL',
+    'contextProviderDialog.apiUrlPlaceholder': 'http://api.example.com/data',
+    'contextProviderDialog.requestHeaders': 'Anfrage-Header',
+    'contextProviderDialog.headerKeyPlaceholder': 'Schlüssel',
+    'contextProviderDialog.headerValuePlaceholder': 'Wert',
+    'contextProviderDialog.noHeaders': 'Keine Headers',
+    'contextProviderDialog.addHeader': 'Header hinzufügen',
+    'contextProviderDialog.cancel': 'Abbrechen',
+    'contextProviderDialog.confirm': 'Bestätigen',
 
     // Chat-Verlauf Seite
     'chatHistory.getChatSessions': 'Chat-Sitzungsliste abrufen',

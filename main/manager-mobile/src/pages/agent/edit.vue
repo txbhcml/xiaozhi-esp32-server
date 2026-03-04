@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import type { AgentDetail, ModelOption, PluginDefinition, RoleTemplate } from '@/api/agent/types'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { getAgentDetail, getModelOptions, getPluginFunctions, getRoleTemplates, getTTSVoices, updateAgent } from '@/api/agent/agent'
+import { getAgentDetail, getAgentTags, getModelOptions, getPluginFunctions, getRoleTemplates, getTTSVoices, updateAgent, updateAgentTags } from '@/api/agent/agent'
+import ContextProviderDialog from '@/components/ContextProviderDialog.vue'
+import { t } from '@/i18n'
 import { usePluginStore } from '@/store'
 import { toast } from '@/utils/toast'
-import { t } from '@/i18n'
 
 defineOptions({
   name: 'AgentEdit',
@@ -88,6 +89,11 @@ const pickerShow = ref<{
 })
 
 const allFunctions = ref<PluginDefinition[]>([])
+const dynamicTags = ref([])
+const inputValue = ref('')
+const inputVisible = ref(false)
+const showContextProviderDialog = ref(false)
+const currentContextProviders = ref([])
 
 // 使用插件store
 const pluginStore = usePluginStore()
@@ -119,6 +125,31 @@ const tabList = [
     activeIcon: '/static/tabbar/voiceprint_activate.png',
   },
 ]
+function handleCloseTag(id: string) {
+  dynamicTags.value = dynamicTags.value.filter(tag => tag.id !== id)
+}
+
+function showInput() {
+  inputVisible.value = true
+}
+
+function handleInputConfirm() {
+  if (inputValue.value) {
+    dynamicTags.value.push({ id: new Date().getTime(), tagName: inputValue.value.trim() })
+    inputValue.value = ''
+  }
+  inputVisible.value = false
+}
+
+// 打开上下文源编辑弹窗
+function openContextProviderDialog() {
+  showContextProviderDialog.value = true
+}
+
+// 处理上下文源更新
+function handleUpdateContext(providers: any[]) {
+  currentContextProviders.value = providers
+}
 
 // 加载智能体详情
 async function loadAgentDetail() {
@@ -133,6 +164,9 @@ async function loadAgentDetail() {
     // 更新插件store
     pluginStore.setCurrentAgentId(agentId.value)
     pluginStore.setCurrentFunctions(detail.functions || [])
+
+    // 加载上下文配置
+    currentContextProviders.value = (detail as any).contextProviders || []
 
     // 如果有TTS模型，加载对应的音色选项
     if (detail.ttsModelId) {
@@ -370,8 +404,21 @@ async function saveAgent() {
   }
 
   try {
+    await handleUpdateAgentTags()
+  }
+  catch (err) {
+    toast.error(err)
+    return
+  }
+
+  try {
     saving.value = true
-    await updateAgent(agentId.value, formData.value)
+    // 构建保存数据，包含上下文配置
+    const saveData = {
+      ...formData.value,
+      contextProviders: currentContextProviders.value,
+    }
+    await updateAgent(agentId.value, saveData)
 
     toast.success(t('agent.saveSuccess'))
   }
@@ -423,9 +470,25 @@ function watchPluginUpdates() {
   }, { deep: true })
 }
 
+// 获取智能体标签
+async function loadAgentTags() {
+  try {
+    const res = await getAgentTags(agentId.value)
+    dynamicTags.value = res || []
+  }
+  catch (error) {}
+}
+
+// 更新智能体标签
+async function handleUpdateAgentTags() {
+  const tagNames = dynamicTags.value.map(tag => tag.tagName)
+  await updateAgentTags(agentId.value, { tagNames })
+}
+
 onMounted(async () => {
   // 初始化插件配置监听
   watchPluginUpdates()
+  loadAgentTags()
 
   // 先加载模型选项和角色模板
   await Promise.all([
@@ -443,19 +506,19 @@ onMounted(async () => {
 
 <template>
   <view class="bg-[#f5f7fb] px-[20rpx]">
-    <!--// 基础信息标题
+    <!-- 基础信息标题
     <view class="pb-[20rpx] first:pt-[20rpx]">
       <text class="text-[32rpx] text-[#232338] font-bold">
         {{ t('agent.basicInfo') }}
       </text>
-    </view>
+    </view -->
 
     <!-- 基础信息卡片 -->
     <view class="mb-[24rpx] border border-[#eeeeee] rounded-[20rpx] bg-[#fbfbfb] p-[24rpx]" style="box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);">
       <view class="mb-[24rpx] last:mb-0">
         <text class="mb-[12rpx] block text-[28rpx] text-[#232338] font-medium">
-            {{ t('agent.agentName') }}
-          </text>
+          {{ t('agent.agentName') }}
+        </text>
         <input
           v-model="formData.agentName"
           class="box-border h-[80rpx] w-full border border-[#eeeeee] rounded-[12rpx] bg-[#f5f7fb] p-[16rpx_20rpx] text-[28rpx] text-[#232338] leading-[1.4] outline-none focus:border-[#336cff] focus:bg-white placeholder:text-[#9d9ea3]"
@@ -466,8 +529,32 @@ onMounted(async () => {
 
       <view class="mb-[24rpx] last:mb-0">
         <text class="mb-[12rpx] block text-[28rpx] text-[#232338] font-medium">
-            {{ t('agent.roleMode') }}
-          </text>
+          {{ t('agent.agentTag') }}
+        </text>
+        <input
+          v-if="inputVisible"
+          v-model="inputValue"
+          class="mb-[10rpx] box-border h-[80rpx] w-full border border-[#eeeeee] rounded-[12rpx] bg-[#f5f7fb] p-[16rpx_20rpx] text-[28rpx] text-[#232338] leading-[1.4] outline-none focus:border-[#336cff] focus:bg-white placeholder:text-[#9d9ea3]"
+          type="text"
+          :maxlength="20"
+          :placeholder="t('agent.inputAgentTag')"
+          @keyup.enter="handleInputConfirm"
+          @blur="handleInputConfirm"
+        >
+        <view class="flex flex-wrap gap-[10rpx_10rpx]">
+          <wd-tag v-for="tag in dynamicTags" :key="tag.id" class="items-center border !flex !border-[rgba(51,108,255,0.2)] !bg-[rgba(51,108,255,0.1)] !text-[#336cff]" round closable @close="handleCloseTag(tag.id)">
+            {{ tag.tagName }}
+          </wd-tag>
+          <wd-button class="!bg-[rgba(51,108,255,0.1)] !text-[#336cff]" v-if="!inputVisible" size="small" icon="add" @click="showInput">
+            {{ t('agent.addAgentTag') }}
+          </wd-button>
+        </view>
+      </view>
+
+      <view class="mb-[24rpx] last:mb-0">
+        <text class="mb-[12rpx] block text-[28rpx] text-[#232338] font-medium">
+          {{ t('agent.roleMode') }}
+        </text>
         <view class="mt-0 flex flex-wrap gap-[12rpx]">
           <view
             v-for="template in roleTemplates"
@@ -485,8 +572,25 @@ onMounted(async () => {
 
       <view class="mb-[24rpx] last:mb-0">
         <text class="mb-[12rpx] block text-[28rpx] text-[#232338] font-medium">
-            {{ t('agent.roleDescription') }}
+          {{ t('agent.contextProvider') }}
+        </text>
+        <view class="mt-0 flex flex-wrap items-center gap-[12rpx]">
+          <text class="text-[26rpx] text-[#65686f]">
+            {{ t('agent.contextProviderSuccess', { count: currentContextProviders.length }) }}
           </text>
+          <a class="text-[26rpx] text-[#5778ff] no-underline" href="https://github.com/xinnan-tech/xiaozhi-esp32-server/blob/main/docs/context-provider-integration.md" target="_blank">
+            {{ t('agent.contextProviderDocLink') }}
+          </a>
+          <wd-button class="!bg-[rgba(51,108,255,0.1)] !text-[#336cff]" size="small" @click="openContextProviderDialog">
+            {{ t('agent.editContextProvider') }}
+          </wd-button>
+        </view>
+      </view>
+
+      <view class="mb-[24rpx] last:mb-0">
+        <text class="mb-[12rpx] block text-[28rpx] text-[#232338] font-medium">
+          {{ t('agent.roleDescription') }}
+        </text>
         <textarea
           v-model="formData.systemPrompt"
           :maxlength="2000"
@@ -699,5 +803,16 @@ onMounted(async () => {
       @close="onPickerCancel('voiceprint')"
       @select="({ item }) => onPickerConfirm('voiceprint', item.value, item.name)"
     />
+    <ContextProviderDialog
+      v-model:visible="showContextProviderDialog"
+      :providers="currentContextProviders"
+      @confirm="handleUpdateContext"
+    />
   </view>
 </template>
+
+<style lang="scss" scoped>
+::v-deep .wd-tag__close {
+  color: #336cff !important;
+}
+</style>
