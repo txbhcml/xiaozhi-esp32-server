@@ -145,6 +145,17 @@ export default {
   'agent.pleaseInputAgentName': '請輸入助手暱稱',
   'agent.pleaseInputRoleDescription': '請輸入角色介紹',
   'agent.pleaseSelect': '請選擇',
+  'agent.reportText': '上报文字',
+  'agent.reportTextVoice': '上报文字+语音',
+  'agent.reportMode': '上報模式',
+  'agent.language': '對話語言',
+  'agent.languageConfig': '語速音調',
+  'agent.ttsVolume': '音量',
+  'agent.ttsRate': '語速',
+  'agent.ttsPitch': '音調',
+  'agent.volumeHint': '-100=最小, 0=標準, 100=最大',
+  'agent.speedHint': '-100=最慢, 0=標準, 100=最快',
+  'agent.pitchHint': '-100=最低, 0=標準, 100=最高',
 
   // 上下文源对话框相关
   'contextProviderDialog.title': '編輯源',

@@ -124,6 +124,17 @@ export default {
   'agent.pleaseInputAgentName': 'Por favor, insira o nome do agente',
   'agent.pleaseInputRoleDescription': 'Por favor, insira a descrição do papel',
   'agent.pleaseSelect': 'Por favor, selecione',
+  'agent.reportText': 'Enviar Texto',
+  'agent.reportTextVoice': 'Enviar Texto+Voz',
+  'agent.reportMode': 'Modo de Envio',
+  'agent.language': 'Idioma de Conversa',
+  'agent.languageConfig': 'Configuração de Voz',
+  'agent.ttsVolume': 'Volume',
+  'agent.ttsRate': 'Taxa de Fala',
+  'agent.ttsPitch': 'Tonalidade',
+  'agent.volumeHint': '-100=Mínimo, 0=Padrão, 100=Máximo',
+  'agent.speedHint': '-100=Slower, 0=Standard, 100=Faster',
+  'agent.pitchHint': '-100=Lowest, 0=Standard, 100=Highest',
 
   // Diálogo de provedor de contexto
   'contextProviderDialog.title': 'Editar Fonte',

@@ -124,6 +124,17 @@ export default {
     'agent.pleaseInputAgentName': 'Vui lòng nhập tên đại lý',
     'agent.pleaseInputRoleDescription': 'Vui lòng nhập mô tả vai trò',
     'agent.pleaseSelect': 'Vui lòng chọn',
+    'agent.reportText': 'Gửi văn bản',
+    'agent.reportTextVoice': 'Gửi văn bản+giọng nói',
+    'agent.reportMode': 'Chế độ gửi',
+    'agent.language': 'Ngôn ngữ',
+    'agent.languageConfig': 'Giọng nói',
+    'agent.ttsVolume': 'Âm lượng',
+    'agent.ttsRate': 'Tốc độ',
+    'agent.ttsPitch': 'Tone',
+    'agent.volumeHint': '-100=Minimum, 0=Standard, 100=Maximum',
+    'agent.speedHint': '-100=Slowest, 0=Standard, 100=Fastest',
+    'agent.pitchHint': '-100=Lowest, 0=Standard, 100=Highest',
 
     // Context provider dialog related
     'contextProviderDialog.title': 'Chỉnh sửa nguồn',

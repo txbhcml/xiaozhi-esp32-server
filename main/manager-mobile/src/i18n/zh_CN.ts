@@ -124,6 +124,17 @@ export default {
   'agent.pleaseInputAgentName': '请输入智能体名称',
   'agent.pleaseInputRoleDescription': '请输入角色介绍',
   'agent.pleaseSelect': '请选择',
+  'agent.reportText': '上报文字',
+  'agent.reportTextVoice': '上报文字+语音',
+  'agent.reportMode': '上报模式',
+  'agent.language': '对话语言',
+  'agent.languageConfig': '语速音调',
+  'agent.ttsVolume': '音量',
+  'agent.ttsRate': '语速',
+  'agent.ttsPitch': '音调',
+  'agent.volumeHint': '-100=最小, 0=标准, 100=最大',
+  'agent.speedHint': '-100=最慢, 0=标准, 100=最快',
+  'agent.pitchHint': '-100=最低, 0=标准, 100=最高',
 
   // 上下文源对话框相关
   'contextProviderDialog.title': '编辑源',

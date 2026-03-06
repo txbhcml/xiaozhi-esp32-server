@@ -242,7 +242,7 @@ onMounted(() => {
                       {{ t('home.lastConversation') }}{{ formatTime(agent.lastConnectedAt) }}
                     </text>
                   </view>
-                  <text v-if="agent.tags" class="flex-1 truncate text-[22rpx] text-[#666]">
+                  <text v-if="agent.tags" class="flex-1 truncate text-right text-[22rpx] text-[#666]">
                     {{ agent.tags.map(tag => tag.tagName).join(',') }}
                   </text>
                 </view>

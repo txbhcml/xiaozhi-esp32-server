@@ -124,6 +124,17 @@ export default {
     'agent.pleaseInputAgentName': 'Bitte Agenten-Namen eingeben',
     'agent.pleaseInputRoleDescription': 'Bitte Rollenbeschreibung eingeben',
     'agent.pleaseSelect': 'Bitte auswählen',
+    'agent.reportText': 'Text melden',
+    'agent.reportTextVoice': 'Text + Sprache melden',
+    'agent.reportMode': 'Meldemodus',
+    'agent.language': 'Unterhaltungssprache',
+    'agent.languageConfig': 'Sprachgeschwindigkeit & Tonhöhe',
+    'agent.ttsVolume': 'Lautstärke',
+    'agent.ttsRate': 'Sprechtempo',
+    'agent.ttsPitch': 'Tonhöhe',
+    'agent.volumeHint': '-100=min, 0=Standard, 100=max',
+    'agent.speedHint': '-100=langsamst, 0=Standard, 100=schnellst',
+    'agent.pitchHint': '-100=tiefst, 0=Standard, 100=höchst',
 
     // Context provider dialog related
     'contextProviderDialog.title': 'Quelle bearbeiten',

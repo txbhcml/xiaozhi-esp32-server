@@ -124,6 +124,17 @@ export default {
   'agent.pleaseInputAgentName': 'Please input agent name',
   'agent.pleaseInputRoleDescription': 'Please input role description',
   'agent.pleaseSelect': 'Please select',
+  'agent.reportText': 'Report Text',
+  'agent.reportTextVoice': 'Report Text+Voice',
+  'agent.reportMode': 'Report Mode',
+  'agent.language': 'Conversation Language',
+  'agent.languageConfig': 'Speech Rate&Tone',
+  'agent.ttsVolume': 'Volume',
+  'agent.ttsRate': 'Speech Rate',
+  'agent.ttsPitch': 'Tone',
+  'agent.volumeHint': '-100=Minimum, 0=Standard, 100=Maximum',
+  'agent.speedHint': '-100=Slower, 0=Standard, 100=Faster',
+  'agent.pitchHint': '-100=Lowest, 0=Standard, 100=Highest',
 
   // Context provider dialog related
   'contextProviderDialog.title': 'Edit Source',

@@ -192,7 +192,7 @@ watch(() => props.visible, (val) => {
                       {{ t('contextProviderDialog.noHeaders') }}
                     </text>
                     <wd-button type="text" size="small" @click="addHeader(pIndex, 0)">
-                      {{ t('contextProviderDialog.addHeaders') }}
+                      {{ t('contextProviderDialog.addHeader') }}
                     </wd-button>
                   </view>
                 </view>
