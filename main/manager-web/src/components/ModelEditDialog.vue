@@ -26,7 +26,7 @@
 
     <div class="section-divider"></div>
 
-    <el-form :model="form" ref="form" label-width="auto" label-position="left">
+    <el-form :model="form" ref="form" label-width="100px" label-position="left">
       <div class="form-row">
         <el-form-item :label="$t('modelConfigDialog.modelName')" prop="name" style="flex: 1">
           <el-input v-model="form.modelName" :placeholder="$t('modelConfigDialog.enterModelName')"></el-input>
@@ -62,7 +62,7 @@
       <div class="section-divider"></div>
     </div>
 
-    <el-form :model="form.configJson" ref="callInfoForm" label-width="auto" label-position="left">
+    <el-form :model="form.configJson" ref="callInfoForm" label-width="120px" label-position="left">
       <template>
         <div v-for="(row, rowIndex) in chunkedCallInfoFields" :key="rowIndex" class="form-row">
           <el-form-item v-for="field in row" :key="field.prop" :label="field.label" :prop="field.prop"
