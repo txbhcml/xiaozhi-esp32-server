@@ -68,10 +68,10 @@
         </el-form-item>
       </el-form>
 
-      <teleport v-if="chunkedCallInfoFields.length">
+      <div v-if="chunkedCallInfoFields.length" class="call-info-section">
         <div class="section-title">{{ $t('modelConfigDialog.callInfo') }}</div>
         <div class="divider"></div>
-      </teleport>
+      </div>
 
       <el-form :model="formData.configJson" label-width="auto" label-position="left" class="custom-form">
         <div v-for="(row, rowIndex) in chunkedCallInfoFields" :key="rowIndex" class="form-row">

@@ -57,10 +57,10 @@
       </el-form-item>
     </el-form>
 
-    <teleport v-if="chunkedCallInfoFields.length">
+    <div v-if="chunkedCallInfoFields.length" class="call-info-section">
       <div class="section-title">{{ $t("modelConfigDialog.callInfo") }}</div>
       <div class="section-divider"></div>
-    </teleport>
+    </div>
 
     <el-form :model="form.configJson" ref="callInfoForm" label-width="auto" label-position="left">
       <template>
