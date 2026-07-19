@@ -9,7 +9,7 @@
                             <h2 class="page-title">{{ $t('voiceResource.title') }}</h2>
                             <div class="right-operations">
                                 <el-input :placeholder="$t('voiceClone.searchPlaceholder')" v-model="searchName"
-                                    class="search-input" @keyup.enter.native="handleSearch" clearable />
+                                    class="search-input" @keyup.enter="handleSearch" clearable />
                                 <CustomButton icon="el-icon-search" type="confirm"
                                     @click="handleSearch">{{ $t('voiceClone.search') }}</CustomButton>
                             </div>
@@ -19,17 +19,17 @@
                             :total="total" :current-page="currentPage" :page-size="pageSize"
                             :page-size-options="pageSizeOptions" @size-change="handlePageSizeChange"
                             @page-change="goToPage">
-                            <template slot="trainStatus" slot-scope="scope">
+                            <template #trainStatus="scope">
                                 {{ getTrainStatusText(scope.row) }}
                             </template>
-                            <template slot="createdAt" slot-scope="scope">
+                            <template #createdAt="scope">
                                 {{ formatDate(scope.row.createDate) }}
                             </template>
-                            <template slot="operations" slot-scope="scope">
-                                <el-button size="mini" type="text"
+                            <template #operations="scope">
+                                <el-button size="small" link
                                     @click="deleteVoiceClone(scope.row)">{{ $t('voiceClone.delete') }}</el-button>
                             </template>
-                            <template slot="footer-btns">
+                            <template #footer-btns>
                                 <div class="ctrl_btn">
                                     <CustomButton
                                         :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'"
@@ -49,7 +49,7 @@
         </div>
 
         <!-- 新增音色资源对话框 -->
-        <voice-clone-dialog :title="$t('voiceClone.addVoiceClone')" :visible.sync="dialogVisible" :form="voiceCloneForm"
+        <voice-clone-dialog :title="$t('voiceClone.addVoiceClone')" v-model:visible="dialogVisible" :form="voiceCloneForm"
             @submit="handleSubmit" @cancel="dialogVisible = false" />
 
         <el-footer>
@@ -353,7 +353,7 @@ export default {
     box-shadow: none;
     overflow: hidden;
 
-    ::v-deep .el-card__body {
+    :deep(.el-card__body) {
         padding: 14px 20px;
         display: flex;
         flex-direction: column;

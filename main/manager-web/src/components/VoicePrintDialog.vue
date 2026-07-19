@@ -1,7 +1,7 @@
 <template>
   <CustomDialog
     :title="title"
-    :visible.sync="innerVisible"
+    v-model:visible="innerVisible"
     :confirm-loading="saving"
     width="600px"
     @confirm="submit"

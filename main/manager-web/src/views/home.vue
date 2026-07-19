@@ -23,20 +23,20 @@
                     v-model="search"
                     :placeholder="$t('header.searchPlaceholder')"
                     class="custom-search-input"
-                    @keyup.enter.native="handleSearch"
+                    @keyup.enter="handleSearch"
                     @clear="handleSearchReset"
                     clearable
                     ref="searchInput"
                     @focus="showSearchHistory"
                     @blur="hideSearchHistory"
                   >
-                    <i slot="suffix" class="el-icon-search search-icon" @click="handleSearch"></i>
+                    <template #suffix><i class="el-icon-search search-icon" @click="handleSearch"></i></template>
                   </el-input>
                   <!-- 搜索历史下拉框 -->
                   <div v-if="showHistory && searchHistory.length > 0" class="search-history-dropdown">
                     <div class="search-history-header">
                       <span>{{ $t("header.searchHistory") }}</span>
-                      <el-button type="text" size="small" class="clear-history-btn" @click="clearSearchHistory">
+                      <el-button link size="small" class="clear-history-btn" @click="clearSearchHistory">
                         {{ $t("header.clearHistory") }}
                       </el-button>
                     </div>
@@ -72,9 +72,8 @@
           </template>
         </div>
       </div>
-      <AddWisdomBodyDialog :visible.sync="addDeviceDialogVisible" @confirm="handleWisdomBodyAdded" />
-      <el-dialog
-        :visible.sync="deleteAgentDialogVisible"
+      <AddWisdomBodyDialog v-model:visible="addDeviceDialogVisible" @confirm="handleWisdomBodyAdded" />
+      <el-dialog v-model="deleteAgentDialogVisible"
         :close-on-click-modal="!isDeletingAgent"
         :close-on-press-escape="!isDeletingAgent"
         :show-close="!isDeletingAgent"
@@ -83,7 +82,7 @@
         class="delete-agent-dialog"
         @closed="resetDeleteAgentDialog"
       >
-        <template slot="title">
+        <template #header>
           <div class="delete-agent-title">
             <img src="@/assets/knowledge-base/level.png" class="delete-agent-title-icon" />
             <span>{{ $t('home.deleteConfirmTitle') }}</span>
@@ -104,17 +103,17 @@
               class="delete-agent-input"
               :placeholder="$t('home.deleteAgentNamePlaceholder')"
               clearable
-              @paste.native.prevent="handleDeleteAgentPaste"
-              @drop.native.prevent="handleDeleteAgentPaste"
-              @contextmenu.native.prevent
-              @keyup.enter.native="confirmDeleteAgent"
+              @paste.prevent="handleDeleteAgentPaste"
+              @drop.prevent="handleDeleteAgentPaste"
+              @contextmenu.prevent
+              @keyup.enter="confirmDeleteAgent"
             />
             <div v-if="deleteAgentConfirmText && !isDeleteAgentNameMatched" class="delete-agent-helper">
               {{ $t('home.deleteAgentNameMismatch') }}
             </div>
           </div>
         </div>
-        <span slot="footer" class="delete-agent-footer">
+        <template #footer><span class="delete-agent-footer">
           <el-button class="delete-agent-cancel" :disabled="isDeletingAgent" @click="closeDeleteAgentDialog">{{ $t('button.cancel') }}</el-button>
           <el-button
             class="delete-agent-confirm"
@@ -125,13 +124,13 @@
           >
             {{ $t('button.ok') }}
           </el-button>
-        </span>
+        </span></template>
       </el-dialog>
     </el-main>
     <el-footer>
       <version-footer />
     </el-footer>
-    <chat-history-dialog :visible.sync="showChatHistory" :agent-id="currentAgentId" :agent-name="currentAgentName" />
+    <chat-history-dialog v-model:visible="showChatHistory" :agent-id="currentAgentId" :agent-name="currentAgentName" />
   </div>
 
 </template>
@@ -515,15 +514,15 @@ export default {
 }
 
 .custom-search-input {
-  &::v-deep .el-input__inner {
+  &:deep(.el-input__inner) {
     border-radius: 20px;
     border: 1px solid transparent;
     box-shadow: 0 2px 2px 0 #cfe1fb;
   }
-  &::v-deep .el-input__suffix {
+  &:deep(.el-input__suffix) {
     right: 10px;
   }
-  &::v-deep .el-input__suffix-inner {
+  &:deep(.el-input__suffix-inner) {
     display: flex;
     align-items: center;
     height: 100%;
@@ -791,7 +790,7 @@ export default {
   margin-top: 16px;
 }
 
-.delete-agent-input::v-deep .el-input__inner {
+.delete-agent-input:deep(.el-input__inner) {
   height: 42px;
   border-color: #d8dce8;
   border-radius: 4px;
@@ -812,19 +811,19 @@ export default {
   gap: 10px;
 }
 
-.delete-agent-dialog::v-deep .el-dialog {
+.delete-agent-dialog:deep(.el-dialog) {
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.delete-agent-dialog::v-deep .el-dialog__header {
+.delete-agent-dialog:deep(.el-dialog__header) {
   padding: 16px 20px 12px;
   background: linear-gradient(135deg, #e2eeff, #edeafe);
   text-align: left;
 }
 
-.delete-agent-dialog::v-deep .el-dialog__headerbtn {
+.delete-agent-dialog:deep(.el-dialog__headerbtn) {
   top: 12px;
   right: 16px;
   width: 32px;
@@ -838,27 +837,27 @@ export default {
   justify-content: center;
 }
 
-.delete-agent-dialog::v-deep .el-dialog__headerbtn .el-dialog__close {
+.delete-agent-dialog:deep(.el-dialog__headerbtn) .el-dialog__close {
   font-size: 18px;
   color: #666;
   position: static;
   transform: none;
 }
 
-.delete-agent-dialog::v-deep .el-dialog__headerbtn:hover {
+.delete-agent-dialog:deep(.el-dialog__headerbtn:hover) {
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
-.delete-agent-dialog::v-deep .el-dialog__headerbtn:hover .el-dialog__close {
+.delete-agent-dialog:deep(.el-dialog__headerbtn:hover) .el-dialog__close {
   color: #333;
 }
 
-.delete-agent-dialog::v-deep .el-dialog__body {
+.delete-agent-dialog:deep(.el-dialog__body) {
   padding: 28px 32px 20px;
 }
 
-.delete-agent-dialog::v-deep .el-dialog__footer {
+.delete-agent-dialog:deep(.el-dialog__footer) {
   padding: 12px 32px 24px;
 }
 

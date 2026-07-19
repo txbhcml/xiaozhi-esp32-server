@@ -1042,6 +1042,7 @@ export default {
   'modelConfig.tts': 'Văn bản thành giọng nói',
   'modelConfig.memory': 'Bộ nhớ',
   'modelConfig.rag': 'RAG',
+  'modelConfig.voiceprint': 'Dấu vân giọng',
   'modelConfig.modelId': 'ID mô hình',
   'modelConfig.modelName': 'Tên mô hình',
   'modelConfig.provider': 'Loại giao diện',

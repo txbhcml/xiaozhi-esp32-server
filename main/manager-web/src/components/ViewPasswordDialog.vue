@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="visible" width="400px" center>
+  <el-dialog :model-value="visible" @update:model-value="val => $emit('update:visible', val)" width="400px" center>
     <div
       style="margin: 0 10px 10px;display: flex;align-items: center;gap: 10px;font-weight: 700;font-size: 20px;text-align: left;color: #3d4566;">
       <div
@@ -16,7 +16,7 @@
         用户新密码：
       </div>
       <div class="input-46" style="margin-top: 12px;">
-        <el-input v-model="password" type="text" :readonly="true" style="font-weight: bold; color: #333;" />
+        <el-input :model-value="password" @update:model-value="val => $emit('update:password', val)" type="text" :readonly="true" style="font-weight: bold; color: #333;" />
       </div>
     </div>
     <div style="display: flex;margin: 15px 15px;gap: 7px;">
@@ -71,20 +71,20 @@ export default {
   text-align: center;
 }
 
-::v-deep .el-dialog {
+:deep(.el-dialog) {
   border-radius: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-::v-deep .el-dialog__headerbtn {
+:deep(.el-dialog__headerbtn) {
   display: none;
 }
 
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   padding: 4px 6px;
 }
 
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
   background-color: #f6f8fb !important;
   cursor: default !important;
 }

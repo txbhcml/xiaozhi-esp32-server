@@ -12,7 +12,7 @@
                   :placeholder="$t('replacementWordManagement.searchPlaceholder')"
                   v-model="searchKeyword"
                   class="search-input"
-                  @keyup.enter.native="handleSearch"
+                  @keyup.enter="handleSearch"
                   clearable
                 />
                 <CustomButton icon="el-icon-search" type="confirm" size="small" @click="handleSearch">
@@ -35,33 +35,33 @@
               @size-change="handlePageSizeChange"
               @page-change="goToPage"
             >
-              <template slot="content" slot-scope="scope">
+              <template #content="scope">
                 <el-tooltip placement="right" effect="light" popper-class="replace-word-tooltip">
-                  <div slot="content" class="replace-word-content">
+                  <template #content><div class="replace-word-content">
                     <el-tag
                       v-for="(item, index) in scope.row.content"
                       :key="index"
-                      size="mini"
+                      size="small"
                       class="custom-tag"
                     >
                       {{ item }}
                     </el-tag>
-                  </div>
+                  </div></template>
                   <span class="content-text">{{ formatContent(scope.row.content) }}</span>
                 </el-tooltip>
               </template>
-              <template slot="operations" slot-scope="scope">
-                <el-button size="mini" type="text" @click="handleEdit(scope.row)">
+              <template #operations="scope">
+                <el-button size="small" link @click="handleEdit(scope.row)">
                   {{ $t('replacementWordManagement.edit') }}
                 </el-button>
-                <el-button size="mini" type="text" @click="handleDownload(scope.row)">
+                <el-button size="small" link @click="handleDownload(scope.row)">
                   {{ $t('replacementWordManagement.download') }}
                 </el-button>
-                <el-button size="mini" type="text" @click="handleDelete(scope.row)">
+                <el-button size="small" link @click="handleDelete(scope.row)">
                   {{ $t('replacementWordManagement.delete') }}
                 </el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton
                     :icon="allSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'"
@@ -87,7 +87,7 @@
     <ReplacementWordDialog
       ref="paramDialog"
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model:visible="dialogVisible"
       :form="dialogForm"
       @submit="handleSubmit"
       @cancel="dialogVisible = false"
@@ -221,12 +221,12 @@ export default {
     handleSelectAll() {
       if (this.allSelected) {
         this.filteredParamsList.forEach(row => {
-          this.$set(row, 'selected', false);
+          row.selected = false;
         });
         this.selectedRows = new Set();
       } else {
         this.filteredParamsList.forEach(row => {
-          this.$set(row, 'selected', true);
+          row.selected = true;
         });
         this.selectedRows = new Set(this.filteredParamsList.map(row => row.id));
       }
@@ -452,7 +452,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;

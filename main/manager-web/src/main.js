@@ -1,31 +1,49 @@
-import 'element-ui/lib/theme-chalk/index.css';
-import 'normalize.css/normalize.css'; // A modern alternative to CSS resets
-import Vue from 'vue';
-import ElementUI from 'element-ui';
+import 'element-plus/dist/index.css';
+import 'normalize.css/normalize.css';
+import { createApp } from 'vue';
+import ElementPlus from 'element-plus';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox, ElNotification, ElLoading } from 'element-plus';
 import App from './App.vue';
 import router from './router';
 import store from './store';
 import i18n from './i18n';
-import locale from 'element-ui/lib/locale'
+import { getElLocale } from './i18n';
+import eventBus from './utils/eventBus';
 import './styles/global.scss';
 import { register as registerServiceWorker } from './registerServiceWorker';
-import featureManager from './utils/featureManager';
 
-// 创建事件总线，用于组件间通信
-Vue.prototype.$eventBus = new Vue();
+// 创建 Vue 3 应用实例
+const app = createApp(App)
 
-Vue.use(ElementUI);
-locale.i18n((key, value) => i18n.t(key, value))
+// 注册 Element Plus，传入当前语言的 locale
+app.use(ElementPlus, { locale: getElLocale() })
 
-Vue.config.productionTip = false
+// 全局注册 Element Plus 图标
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
 
-// 注册Service Worker
+// 使用路由、状态管理、国际化
+app.use(router)
+app.use(store)
+app.use(i18n)
+
+// 挂载事件总线到全局属性（替代 Vue 2 的 Vue.prototype.$eventBus）
+app.config.globalProperties.$eventBus = eventBus
+
+// === 兼容层：将 Element Plus 的实例方法挂载到全局属性 ===
+// 这样原有代码中的 this.$message()、this.$confirm() 等调用无需修改
+app.config.globalProperties.$message = ElMessage
+app.config.globalProperties.$msgbox = ElMessageBox
+app.config.globalProperties.$alert = ElMessageBox.alert
+app.config.globalProperties.$confirm = ElMessageBox.confirm
+app.config.globalProperties.$prompt = ElMessageBox.prompt
+app.config.globalProperties.$notify = ElNotification
+app.config.globalProperties.$loading = ElLoading.service
+
+// 注册 Service Worker
 registerServiceWorker();
 
-// 创建Vue实例
-new Vue({
-  router,
-  store,
-  i18n,
-  render: function (h) { return h(App) }
-}).$mount('#app')
+// 挂载应用
+app.mount('#app')

@@ -2,7 +2,7 @@
   <form>
     <CustomDialog
       :title="$t('changePassword.title')"
-      :visible.sync="dialogVisible"
+      :visible="modelValue" @update:visible="val => $emit('update:modelValue', val)"
       width="600px"
       @cancel="cancel"
       @confirm="confirm">
@@ -41,14 +41,14 @@ import CustomDialog from '@/components/CustomDialog.vue';
 export default {
   name: 'ChangePasswordDialog',
   props: {
-    value: {
+    modelValue: {
       type: Boolean,
       required: true
     }
   },
+  emits: ['update:modelValue'],
   data() {
     return {
-      dialogVisible: this.value,
       oldPassword: "",
       newPassword: "",
       confirmNewPassword: ""
@@ -57,16 +57,8 @@ export default {
   components: {
     CustomDialog
   },
-  watch: {
-    value(val) {
-      this.dialogVisible = val;
-    },
-    dialogVisible(val) {
-      this.$emit('input', val);
-    }
-  },
   methods: {
-    ...mapActions(['logout']), // 引入Vuex的logout action
+    ...mapActions(['logout']),
     confirm() {
       if (!this.oldPassword.trim() || !this.newPassword.trim() || !this.confirmNewPassword.trim()) {
         this.$message.error(this.$t('changePassword.allFieldsRequired'));
@@ -81,7 +73,6 @@ export default {
         return;
       }
 
-      // 修改后的接口调用
       userApi.changePassword(this.oldPassword, this.newPassword, (res) => {
         if (res.data.code === 0) {
           this.$message.success({
@@ -97,7 +88,7 @@ export default {
       }, (err) => {
         this.$message.error(err.msg || this.$t('changePassword.changeFailed'));
       });
-      this.dialogVisible = false;
+      this.$emit('update:modelValue', false);
     },
     cancel() {
       this.resetForm();

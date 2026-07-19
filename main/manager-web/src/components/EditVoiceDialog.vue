@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" width="900px" @close="handleClose" class="compact-dialog" :append-to-body="true">
+  <el-dialog v-model="dialogVisible" width="900px" @close="handleClose" class="compact-dialog" :append-to-body="true">
     <el-form :model="voiceForm" :rules="rules" ref="voiceForm" label-width="auto">
       <el-row :gutter="20">
         <el-col :span="12">
@@ -38,15 +38,15 @@
         class="custom-audio"
       ></audio>
     </div>
-          <el-button type="primary" size="mini" class="preview-btn">{{ $t('editVoiceDialog.generatePreview') }}</el-button>
+          <el-button type="primary" size="small" class="preview-btn">{{ $t('editVoiceDialog.generatePreview') }}</el-button>
         </div>
       </el-form-item>
     </el-form>
 
-    <div slot="footer" class="dialog-footer">
+    <template #footer><div class="dialog-footer">
       <el-button type="primary" @click="handleSave">{{ $t('button.save') }}</el-button>
       <el-button @click="handleClose">{{ $t('button.close') }}</el-button>
-    </div>
+    </div></template>
   </el-dialog>
 </template>
 
@@ -99,7 +99,7 @@ export default {
 
 <style scoped>
 .compact-dialog {
-  /deep/ .el-dialog__body {
+  :deep(.el-dialog__body) {
     padding: 20px;
   }
 
@@ -113,7 +113,7 @@ export default {
 
   .compact-number {
     width: 100%;
-    /deep/ .el-input__inner {
+    :deep(.el-input__inner) {
       padding-right: 10px;
     }
   }

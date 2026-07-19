@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.session.StoppedSessionException;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +73,18 @@ public class Oauth2Filter extends AuthenticatingFilter {
             return false;
         }
 
-        return executeLogin(request, response);
+        try {
+            return executeLogin(request, response);
+        } catch (StoppedSessionException e) {
+            // Shiro 3.x: session 已停止（如登出后），返回401而非抛异常
+            logger.debug("Session stopped, returning 401");
+            HttpServletResponse httpResponse = (HttpServletResponse) response;
+            httpResponse.setContentType("application/json;charset=utf-8");
+            httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
+            httpResponse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin());
+            httpResponse.getWriter().print(JsonUtils.toJsonString(new Result<Void>().error(ErrorCode.UNAUTHORIZED)));
+            return false;
+        }
     }
 
     @Override

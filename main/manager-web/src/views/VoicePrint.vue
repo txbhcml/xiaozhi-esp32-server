@@ -24,11 +24,11 @@
                             @size-change="handlePageSizeChange"
                             @page-change="goToPage"
                         >
-                            <template slot="operations" slot-scope="scope">
-                                <el-button size="mini" type="text" @click="editVoicePrint(scope.row)">{{ $t('voicePrint.edit') }}</el-button>
-                                <el-button size="mini" type="text" @click="deleteVoicePrint(scope.row.id)">{{ $t('voicePrint.delete') }}</el-button>
+                            <template #operations="scope">
+                                <el-button size="small" link @click="editVoicePrint(scope.row)">{{ $t('voicePrint.edit') }}</el-button>
+                                <el-button size="small" link @click="deleteVoicePrint(scope.row.id)">{{ $t('voicePrint.delete') }}</el-button>
                             </template>
-                            <template slot="footer-btns">
+                            <template #footer-btns>
                                 <div class="ctrl_btn">
                                     <CustomButton icon="el-icon-plus" type="add" size="small" @click="showAddDialog">{{ $t('voicePrint.add') }}</CustomButton>
                                 </div>
@@ -40,7 +40,7 @@
         </div>
 
         <!-- 新增/编辑参数对话框 -->
-        <voice-print-dialog :title="dialogTitle" :visible.sync="dialogVisible" :agentId="agentId" :form="paramForm"
+        <voice-print-dialog :title="dialogTitle" v-model:visible="dialogVisible" :agentId="agentId" :form="paramForm"
             @submit="handleSubmit" @cancel="dialogVisible = false" />
         <el-footer>
             <version-footer />
@@ -286,7 +286,7 @@ export default {
     box-shadow: none;
     overflow: hidden;
 
-    ::v-deep .el-card__body {
+    :deep(.el-card__body) {
         padding: 14px 20px;
         display: flex;
         flex-direction: column;

@@ -1,7 +1,4 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-
-Vue.use(VueRouter)
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
@@ -209,24 +206,12 @@ const routes = [
     }
   },
 ]
-const router = new VueRouter({
-  base: process.env.VUE_APP_PUBLIC_PATH || '/',
+
+// Vue Router 4: 使用 createRouter 创建路由实例
+const router = createRouter({
+  history: createWebHashHistory(process.env.VUE_APP_PUBLIC_PATH || '/'),
   routes
 })
-
-// 全局处理重复导航，改为刷新页面
-const originalPush = VueRouter.prototype.push
-VueRouter.prototype.push = function push(location) {
-  return originalPush.call(this, location).catch(err => {
-    if (err.name === 'NavigationDuplicated') {
-      // 如果是重复导航，刷新页面
-      window.location.reload()
-    } else {
-      // 其他错误正常抛出
-      throw err
-    }
-  })
-}
 
 // 需要登录才能访问的路由
 const protectedRoutes = ['home', 'RoleConfig', 'DeviceManagement', 'UserManagement', 'ModelConfig', 'KnowledgeBaseManagement', 'KnowledgeFileUpload', 'AddressBookManagement']

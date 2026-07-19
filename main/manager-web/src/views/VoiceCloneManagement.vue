@@ -9,7 +9,7 @@
               <h2 class="page-title">{{ $t('voiceClone.title') }}</h2>
               <div class="right-operations">
                 <el-input :placeholder="$t('voiceClone.searchPlaceholder')" v-model="searchName" class="search-input"
-                  @keyup.enter.native="handleSearch" clearable />
+                  @keyup.enter="handleSearch" clearable />
                 <CustomButton type="confirm" icon="el-icon-search" @click="handleSearch">{{ $t('voiceClone.search') }}</CustomButton>
               </div>
             </div>
@@ -20,8 +20,8 @@
                   <div class="card-info">
                     <div class="info-left">
                       <div class="info-title">
-                        <el-input v-show="item.isEdit" v-model="item.name" size="mini" maxlength="64"
-                          show-word-limit @keyup.enter.native="onNameEnter(item)"
+                        <el-input v-show="item.isEdit" v-model="item.name" size="small" maxlength="64"
+                          show-word-limit @keyup.enter="onNameEnter(item)"
                           ref="nameInput" />
                         <span v-show="!item.isEdit" class="name-text" :title="item.name">{{ item.name || '-' }}</span>
                       </div>
@@ -60,18 +60,18 @@
                 </div>
 
                 <div class="card-actions">
-                  <el-button v-if="item.hasVoice" size="mini" type="text" icon="el-icon-video-play"
+                  <el-button v-if="item.hasVoice" size="small" link icon="el-icon-video-play"
                     @click="handlePlay(item)">
                     {{ playingRowId === item.id ? $t('voiceClone.stop') : $t('voiceClone.play') }}
                   </el-button>
-                  <el-button size="mini" type="text" icon="el-icon-upload2" @click="handleUpload(item)">
+                  <el-button size="small" link icon="el-icon-upload2" @click="handleUpload(item)">
                     {{ $t('voiceClone.upload') }}
                   </el-button>
-                  <el-button v-if="item.hasVoice" size="mini" type="text" icon="el-icon-copy-document"
+                  <el-button v-if="item.hasVoice" size="small" link icon="el-icon-copy-document"
                     @click="handleClone(item)" :loading="item._cloning">
                     {{ $t('voiceClone.clone') }}
                   </el-button>
-                  <el-button size="mini" type="text"
+                  <el-button size="small" link
                     :icon="item.isEdit ? 'el-icon-check' : 'el-icon-edit'"
                     @click="handleEditButtonClick(item)">
                     {{ item.isEdit ? $t('button.save') : $t('common.edit') }}
@@ -101,7 +101,7 @@
       <version-footer />
     </el-footer>
 
-    <VoiceCloneDialog :visible.sync="cloneDialogVisible" :voiceCloneData="currentVoiceClone"
+    <VoiceCloneDialog v-model:visible="cloneDialogVisible" :voiceCloneData="currentVoiceClone"
       @success="handleCloneSuccess" />
   </div>
 </template>
@@ -232,7 +232,7 @@ export default {
       if (row._cloning) {
         return;
       }
-      this.$set(row, '_cloning', true);
+      row._cloning = true;
       const params = { cloneId: row.id };
       try {
         Api.voiceClone.cloneAudio(params, (res) => {
@@ -250,26 +250,26 @@ export default {
             this.$message.error('处理响应时出错');
             this.fetchVoiceCloneList();
           } finally {
-            this.$set(row, '_cloning', false);
+            row._cloning = false;
           }
         }, (error) => {
           console.error('API调用失败:', error);
           this.$message.error(this.$t('voiceClone.cloneErrorTip'));
           this.fetchVoiceCloneList();
-          this.$set(row, '_cloning', false);
+          row._cloning = false;
         });
       } catch (error) {
         console.error('调用API时出错:', error);
         this.$message.error(this.$t('voiceClone.apiError'));
         this.fetchVoiceCloneList();
-        this.$set(row, '_cloning', false);
+        row._cloning = false;
       }
     },
     handleCloneSuccess() {
       this.fetchVoiceCloneList();
     },
     handleEditName(row) {
-      this.$set(row, 'isEdit', true);
+      row.isEdit = true;
       this.$nextTick(() => {
         const input = this.$refs.nameInput;
         if (input) {
@@ -439,7 +439,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;
@@ -626,16 +626,16 @@ export default {
   padding-top: 10px;
   border-top: 1px solid #f0f2f5;
 
-  ::v-deep .el-button {
+  :deep(.el-button) {
     display: flex;
     align-items: center;
   }
 
-  ::v-deep .el-button--text {
+  :deep(.el-button--text) {
     color: #7079aa;
   }
 
-  ::v-deep .el-button--text:hover {
+  :deep(.el-button--text:hover) {
     color: #5a64b5;
   }
 }

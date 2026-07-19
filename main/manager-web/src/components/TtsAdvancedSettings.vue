@@ -1,17 +1,15 @@
 <template>
-  <el-drawer
-    :visible.sync="drawerVisible"
+  <el-drawer v-model="drawerVisible"
     :before-close="handleClose"
     direction="rtl"
     size="400px"
     :modal="true"
-    :show-close="false"
-    custom-class="tts-advanced-drawer"
+    :show-close="false" class="tts-advanced-drawer"
   >
-    <div class="drawer-header" slot="title">
+    <template #header><div class="drawer-header">
       <span class="drawer-title">{{ $t('roleConfig.advancedSettings') }}</span>
       <button class="drawer-close-btn" @click="handleClose">×</button>
-    </div>
+    </div></template>
 
     <div class="drawer-content">
       <el-form label-position="top">
@@ -237,11 +235,11 @@ export default {
   width: 100%;
 }
 
-.tts-slider ::v-deep .el-slider__input {
+.tts-slider :deep(.el-slider__input) {
   width: 80px;
 }
 
-.tts-slider ::v-deep .el-input__inner {
+.tts-slider :deep(.el-input__inner) {
   text-align: center;
   padding: 0 8px;
 }
@@ -258,14 +256,14 @@ export default {
   min-width: 80px;
 }
 
-::v-deep .el-form-item__label {
+:deep(.el-form-item__label) {
   font-size: 14px !important;
   color: #3d4566 !important;
   font-weight: 500;
   padding-bottom: 8px;
 }
 
-::v-deep .el-form-item {
+:deep(.el-form-item) {
   margin-bottom: 24px;
 }
 .replacement-label i {
@@ -277,7 +275,7 @@ export default {
 .replacement-label i:hover {
   color: #409eff;
 }
-.replacement-word-select ::v-deep .el-tag {
+.replacement-word-select :deep(.el-tag) {
   background: #e6ebff;
   color: #5778ff;
   border-radius: 8px;
@@ -286,10 +284,10 @@ export default {
   border: none;
 }
 
-.replacement-word-select ::v-deep .el-tag__close {
+.replacement-word-select :deep(.el-tag__close) {
   color: #5778ff;
 }
-.replacement-word-select ::v-deep .el-icon-close {
+.replacement-word-select :deep(.el-icon-close) {
   background: #fff;
 }
 </style>

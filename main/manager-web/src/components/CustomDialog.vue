@@ -1,18 +1,16 @@
 <template>
   <el-dialog
-    :title="title"
-    :visible.sync="dialogVisible"
+    :title="title" v-model="dialogVisible"
     :width="width"
     :close-on-click-modal="closeOnClickModal"
     :close-on-press-escape="closeOnPressEscape"
     :show-close="showClose"
-    :destroy-on-close="destroyOnClose"
-    :custom-class="customClass"
+    :destroy-on-close="destroyOnClose" :class="customClass"
     class="custom-dialog"
     @close="handleClose"
     @open="handleOpen"
   >
-    <template slot="title">
+    <template #header>
       <slot name="title">
         <div class="dialog-title">
           <img src="@/assets/knowledge-base/level.png" class="title-icon" />
@@ -21,7 +19,7 @@
       </slot>
     </template>
     <slot></slot>
-    <template slot="footer">
+    <template #footer>
       <div v-if="footer" class="dialog-footer">
         <CustomButton @click="handleCancel">{{ cancelText }}</CustomButton>
         <CustomButton :loading="confirmLoading" type="confirm" @click="handleConfirm">
@@ -125,19 +123,19 @@ export default {
 
 <style lang="scss" scoped>
 .custom-dialog {
-  ::v-deep .el-dialog {
+  :deep(.el-dialog) {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  ::v-deep .el-dialog__header {
+  :deep(.el-dialog__header) {
     padding: 16px 20px 12px;
     background: linear-gradient(135deg, #e2eeff, #edeafe);
     text-align: left;
   }
 
-  ::v-deep .el-dialog__title {
+  :deep(.el-dialog__title) {
     font-size: 16px;
     font-weight: 500;
     color: #1a1a1a;
@@ -159,7 +157,7 @@ export default {
     margin-right: 8px;
   }
 
-  ::v-deep .el-dialog__headerbtn {
+  :deep(.el-dialog__headerbtn) {
     top: 12px;
     right: 16px;
     width: 32px;
@@ -189,11 +187,11 @@ export default {
     }
   }
 
-  ::v-deep .el-dialog__body {
+  :deep(.el-dialog__body) {
     padding: 20px;
   }
 
-  ::v-deep .el-dialog__footer {
+  :deep(.el-dialog__footer) {
     padding: 12px 20px 16px;
   }
 

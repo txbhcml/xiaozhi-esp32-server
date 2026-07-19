@@ -22,7 +22,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import xiaozhi.common.service.impl.BaseRepositoryImpl;
 
 import lombok.extern.slf4j.Slf4j;
 import xiaozhi.common.constant.Constant;
@@ -39,6 +39,8 @@ import xiaozhi.modules.agent.service.AgentChatAudioService;
 import xiaozhi.modules.agent.service.AgentChatHistoryService;
 import xiaozhi.modules.agent.service.AgentVoicePrintService;
 import xiaozhi.modules.agent.vo.AgentVoicePrintVO;
+import xiaozhi.modules.model.entity.ModelConfigEntity;
+import xiaozhi.modules.model.service.ModelConfigService;
 import xiaozhi.modules.sys.service.SysParamsService;
 
 /**
@@ -46,7 +48,7 @@ import xiaozhi.modules.sys.service.SysParamsService;
  */
 @Service
 @Slf4j
-public class AgentVoicePrintServiceImpl extends ServiceImpl<AgentVoicePrintDao, AgentVoicePrintEntity>
+public class AgentVoicePrintServiceImpl extends BaseRepositoryImpl<AgentVoicePrintDao, AgentVoicePrintEntity>
         implements AgentVoicePrintService {
     private final AgentChatAudioService agentChatAudioService;
     private final RestTemplate restTemplate;
@@ -57,16 +59,19 @@ public class AgentVoicePrintServiceImpl extends ServiceImpl<AgentVoicePrintDao, 
     // 识别度
     private final Double RECOGNITION = 0.5;
     private final Executor taskExecutor;
+    private final ModelConfigService modelConfigService;
 
     public AgentVoicePrintServiceImpl(AgentChatAudioService agentChatAudioService, RestTemplate restTemplate,
                                       SysParamsService sysParamsService, AgentChatHistoryService agentChatHistoryService,
-                                      TransactionTemplate transactionTemplate, @Qualifier("taskExecutor") Executor taskExecutor) {
+                                      TransactionTemplate transactionTemplate, @Qualifier("taskExecutor") Executor taskExecutor,
+                                      ModelConfigService modelConfigService) {
         this.agentChatAudioService = agentChatAudioService;
         this.restTemplate = restTemplate;
         this.sysParamsService = sysParamsService;
         this.agentChatHistoryService = agentChatHistoryService;
         this.transactionTemplate = transactionTemplate;
         this.taskExecutor = taskExecutor;
+        this.modelConfigService = modelConfigService;
     }
 
     @Override
@@ -220,13 +225,68 @@ public class AgentVoicePrintServiceImpl extends ServiceImpl<AgentVoicePrintDao, 
      * @return URI对象
      */
     private URI getVoicePrintURI() {
-        // 获取声纹接口地址
-        String voicePrint = sysParamsService.getValue(Constant.SERVER_VOICE_PRINT, true);
+        // 优先从 ai_model_config 读取声纹服务配置
+        String voicePrint = null;
+        List<ModelConfigEntity> voiceprintConfigs = modelConfigService.getEnabledModelsByType("Voiceprint");
+        if (voiceprintConfigs != null && !voiceprintConfigs.isEmpty()) {
+            cn.hutool.json.JSONObject configJson = voiceprintConfigs.get(0).getConfigJson();
+            if (configJson != null) {
+                String url = configJson.getStr("url");
+                String key = configJson.getStr("key");
+                if (StringUtils.isNotBlank(url) && StringUtils.isNotBlank(key)) {
+                    voicePrint = url + "?key=" + key;
+                }
+            }
+        }
+        // 向后兼容：回退到 sys_params
+        if (StringUtils.isBlank(voicePrint)) {
+            voicePrint = sysParamsService.getValue(Constant.SERVER_VOICE_PRINT, true);
+        }
         try {
             return new URI(voicePrint);
         } catch (URISyntaxException e) {
             log.error("路径格式不正确路径：{}，\n错误信息:{}", voicePrint, e.getMessage());
                 throw new RenException(ErrorCode.VOICEPRINT_API_URI_ERROR);
+        }
+    }
+
+    /**
+     * 获取声纹 provider 凭据 JSON（从 ai_model_config 读取）
+     * <p>
+     * 通过 X-Voiceprint-Config 请求头传递给 xiaozhi-server，使其能创建 provider 实例
+     * 直接调用声纹 API（注册/删除/识别）。
+     *
+     * @return 凭据 JSON 字符串；若未配置新格式（无 type）则返回 null
+     */
+    private String getVoiceprintCredentialsJson() {
+        List<ModelConfigEntity> configs = modelConfigService.getEnabledModelsByType("Voiceprint");
+        if (configs != null && !configs.isEmpty()) {
+            cn.hutool.json.JSONObject configJson = configs.get(0).getConfigJson();
+            if (configJson != null) {
+                String type = configJson.getStr("type");
+                if (StringUtils.isNotBlank(type)) {
+                    cn.hutool.json.JSONObject creds = new cn.hutool.json.JSONObject();
+                    creds.set("type", type);
+                    creds.set("app_id", configJson.getStr("app_id"));
+                    creds.set("api_key", configJson.getStr("api_key"));
+                    creds.set("api_secret", configJson.getStr("api_secret"));
+                    creds.set("group_id", configJson.getStr("group_id"));
+                    return creds.toString();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 为请求头添加声纹 provider 凭据
+     *
+     * @param headers 请求头
+     */
+    private void addVoiceprintCredentials(HttpHeaders headers) {
+        String credsJson = getVoiceprintCredentialsJson();
+        if (credsJson != null) {
+            headers.set("X-Voiceprint-Config", credsJson);
         }
     }
 
@@ -308,6 +368,8 @@ public class AgentVoicePrintServiceImpl extends ServiceImpl<AgentVoicePrintDao, 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", getAuthorization(uri));
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        // 传递声纹 provider 凭据，供 xiaozhi-server 创建 provider 实例
+        addVoiceprintCredentials(headers);
         // 创建请求体
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
         // 发送 POST 请求
@@ -337,6 +399,8 @@ public class AgentVoicePrintServiceImpl extends ServiceImpl<AgentVoicePrintDao, 
         // 创建请求头
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", getAuthorization(uri));
+        // 传递声纹 provider 凭据，供 xiaozhi-server 创建 provider 实例
+        addVoiceprintCredentials(headers);
         // 创建请求体
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(headers);
 
@@ -392,6 +456,8 @@ public class AgentVoicePrintServiceImpl extends ServiceImpl<AgentVoicePrintDao, 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", getAuthorization(uri));
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        // 传递声纹 provider 凭据，供 xiaozhi-server 创建 provider 实例
+        addVoiceprintCredentials(headers);
         // 创建请求体
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
         // 发送 POST 请求

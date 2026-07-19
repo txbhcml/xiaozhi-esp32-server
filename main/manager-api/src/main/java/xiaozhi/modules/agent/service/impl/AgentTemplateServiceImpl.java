@@ -4,8 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-
+import xiaozhi.common.service.impl.BaseRepositoryImpl;
 import xiaozhi.modules.agent.dao.AgentTemplateDao;
 import xiaozhi.modules.agent.entity.AgentTemplateEntity;
 import xiaozhi.modules.agent.service.AgentTemplateService;
@@ -21,7 +20,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
  * @createDate 2025-03-22 11:48:18
  */
 @Service
-public class AgentTemplateServiceImpl extends ServiceImpl<AgentTemplateDao, AgentTemplateEntity>
+public class AgentTemplateServiceImpl extends BaseRepositoryImpl<AgentTemplateDao, AgentTemplateEntity>
         implements AgentTemplateService {
 
     /**
@@ -47,6 +46,10 @@ public class AgentTemplateServiceImpl extends ServiceImpl<AgentTemplateDao, Agen
         modelType = modelType.toUpperCase();
         // 如果是rag模型，不需要更新
         if (modelType.equals("RAG")) {
+            return;
+        }
+        // 声纹服务是全局配置，不绑定到智能体模板
+        if (modelType.equals("VOICEPRINT")) {
             return;
         }
 

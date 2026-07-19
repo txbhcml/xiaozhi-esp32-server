@@ -1,5 +1,4 @@
-import Vue from 'vue';
-import VueI18n from 'vue-i18n';
+import { createI18n } from 'vue-i18n';
 import zhCN from './zh_CN';
 import zhTW from './zh_TW';
 import en from './en';
@@ -7,15 +6,25 @@ import de from './de';
 import vi from './vi';
 import ptBR from './pt_BR';
 
-import enLocale from 'element-ui/lib/locale/lang/en'
-import zhLocale from 'element-ui/lib/locale/lang/zh-CN'
-import twLocale from 'element-ui/lib/locale/lang/zh-TW'
-import deLocale from 'element-ui/lib/locale/lang/de'
-import viLocale from 'element-ui/lib/locale/lang/vi'
-import ptBRLocale from 'element-ui/lib/locale/lang/pt-br'
+// Element Plus 语言包
+import elZhCn from 'element-plus/es/locale/lang/zh-cn'
+import elZhTw from 'element-plus/es/locale/lang/zh-tw'
+import elEn from 'element-plus/es/locale/lang/en'
+import elDe from 'element-plus/es/locale/lang/de'
+import elVi from 'element-plus/es/locale/lang/vi'
+import elPtBr from 'element-plus/es/locale/lang/pt-br'
 
+import eventBus from '@/utils/eventBus';
 
-Vue.use(VueI18n);
+// 应用语言代码 → Element Plus locale 映射
+const elLocaleMap = {
+  'zh_CN': elZhCn,
+  'zh_TW': elZhTw,
+  'en': elEn,
+  'de': elDe,
+  'vi': elVi,
+  'pt_BR': elPtBr
+}
 
 // 从本地存储获取语言设置，如果没有则使用浏览器语言或默认语言
 const getDefaultLanguage = () => {
@@ -42,25 +51,33 @@ const getDefaultLanguage = () => {
   return 'en';
 };
 
-const i18n = new VueI18n({
+// vue-i18n 9: 使用 createI18n 创建实例，legacy 模式保持 this.$t() 兼容
+const i18n = createI18n({
+  legacy: true,
   locale: getDefaultLanguage(),
   fallbackLocale: 'zh_CN',
   messages: {
-    'zh_CN': { ...zhLocale, ...zhCN },
-    'zh_TW': { ...twLocale, ...zhTW },
-    'en': { ...en, ...enLocale },
-    'de': { ...de, ...deLocale },
-    'vi': { ...vi, ...viLocale },
-    'pt_BR': { ...ptBR, ...ptBRLocale }
+    'zh_CN': zhCN,
+    'zh_TW': zhTW,
+    'en': en,
+    'de': de,
+    'vi': vi,
+    'pt_BR': ptBR
   }
 });
+
+// 获取当前语言对应的 Element Plus locale（供 main.js 使用）
+export const getElLocale = () => {
+  const lang = getDefaultLanguage()
+  return elLocaleMap[lang] || elEn
+}
 
 export default i18n;
 
 // 提供一个方法来切换语言
 export const changeLanguage = (lang) => {
-  i18n.locale = lang;
+  i18n.global.locale = lang;
   localStorage.setItem('userLanguage', lang);
-  // 通知组件语言已更改
-  Vue.prototype.$eventBus.$emit('languageChanged', lang);
+  // 通知组件语言已更改（使用 mitt 事件总线）
+  eventBus.emit('languageChanged', lang);
 };

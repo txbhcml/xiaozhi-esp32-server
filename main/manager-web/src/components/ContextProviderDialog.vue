@@ -1,10 +1,8 @@
 <template>
-  <el-dialog
-    :visible.sync="dialogVisible"
+  <el-dialog v-model="dialogVisible"
     width="900px"
     :title="$t('contextProviderDialog.title')"
-    :close-on-click-modal="false"
-    custom-class="context-provider-dialog"
+    :close-on-click-modal="false" class="context-provider-dialog"
     append-to-body
   >
     <div class="dialog-content">
@@ -56,16 +54,14 @@
                   <el-button
                     type="primary"
                     icon="el-icon-plus"
-                    circle
-                    size="mini"
+                    circle size="small"
                     plain
                     @click="addHeader(pIndex, hIndex + 1)"
                   ></el-button>
                   <el-button
                     type="danger"
                     icon="el-icon-minus"
-                    circle
-                    size="mini"
+                    circle size="small"
                     plain
                     @click="removeHeader(pIndex, hIndex)"
                   ></el-button>
@@ -74,10 +70,8 @@
               <!-- Empty Headers State -->
               <div v-if="provider.headers.length === 0" class="header-row empty-header">
                  <span class="no-header-text">{{ $t('contextProviderDialog.noHeaders') }}</span>
-                 <el-button
-                    type="text"
-                    icon="el-icon-plus"
-                    size="mini"
+                 <el-button link
+                    icon="el-icon-plus" size="small"
                     @click="addHeader(pIndex, 0)"
                   >{{ $t('contextProviderDialog.addHeader') }}</el-button>
               </div>
@@ -91,24 +85,24 @@
             type="primary"
             icon="el-icon-plus"
             circle
-            size="medium"
+            
             @click="addProvider(pIndex + 1)"
           ></el-button>
           <el-button
             type="danger"
             icon="el-icon-minus"
             circle
-            size="medium"
+            
             @click="removeProvider(pIndex)"
           ></el-button>
         </div>
       </div>
     </div>
 
-    <span slot="footer" class="dialog-footer">
+    <template #footer><span class="dialog-footer">
       <el-button @click="dialogVisible = false">{{ $t('contextProviderDialog.cancel') }}</el-button>
       <el-button type="primary" @click="handleConfirm">{{ $t('contextProviderDialog.confirm') }}</el-button>
-    </span>
+    </span></template>
   </el-dialog>
 </template>
 

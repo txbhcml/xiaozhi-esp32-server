@@ -22,15 +22,15 @@ dotenv.config();
 // 定义CDN资源列表，确保Service Worker也能访问
 const cdnResources = {
   css: [
-    'https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css',
+    'https://unpkg.com/element-plus@2.7.0/dist/index.css',
     'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css'
   ],
   js: [
-    'https://unpkg.com/vue@2.6.14/dist/vue.min.js',
-    'https://unpkg.com/vue-router@3.6.5/dist/vue-router.min.js',
-    'https://unpkg.com/vuex@3.6.2/dist/vuex.min.js',
-    'https://unpkg.com/element-ui@2.15.14/lib/index.js',
-    'https://unpkg.com/axios@0.27.2/dist/axios.min.js',
+    'https://unpkg.com/vue@3.4.0/dist/vue.global.prod.js',
+    'https://unpkg.com/vue-router@4.3.0/dist/vue-router.global.prod.js',
+    'https://unpkg.com/vuex@4.1.0/dist/vuex.global.prod.js',
+    'https://unpkg.com/element-plus@2.7.0/dist/index.full.min.js',
+    'https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js',
     'https://unpkg.com/opus-decoder@0.7.7/dist/opus-decoder.min.js'
   ]
 };
@@ -141,8 +141,8 @@ module.exports = defineConfig({
           'vue': 'Vue',
           'vue-router': 'VueRouter',
           'vuex': 'Vuex',
-          'element-ui': 'ELEMENT',
-          'axios': 'axios',
+          'element-plus': 'ElementPlus',
+          '@element-plus/icons-vue': 'ElementPlusIconsVue',
           'opus-decoder': 'OpusDecoder'
         };
       } else {

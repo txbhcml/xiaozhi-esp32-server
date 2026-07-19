@@ -46,22 +46,20 @@
           </div>
           <div class="doc-card-actions">
             <el-button
-              v-if="doc.parseStatusCode === 3"
-              type="text"
+              v-if="doc.parseStatusCode === 3" link
               @click.stop="$emit('view-slices', doc)"
             >
               {{ $t('knowledgeFileUpload.viewSlices') }}
             </el-button>
             <el-button
-              v-else
-              type="text"
+              v-else link
               :disabled="doc.parseStatusCode === 1"
               :loading="doc.parsing"
               @click.stop="handleParse(doc)"
             >
               {{ $t('knowledgeFileUpload.parse') }}
             </el-button>
-            <el-button type="text" class="delete-btn" :loading="deleteLoadingMap[doc.id]" @click.stop="handleDelete(doc)">
+            <el-button link class="delete-btn" :loading="deleteLoadingMap[doc.id]" @click.stop="handleDelete(doc)">
               {{ $t('knowledgeBaseManagement.delete') }}
             </el-button>
           </div>
@@ -207,9 +205,9 @@ export default {
           type: 'warning'
         }
       ).then(() => {
-        this.$set(this.deleteLoadingMap, doc.id, true);
+        this.deleteLoadingMap[doc.id] = true;
         Api.knowledgeBase.deleteDocument(this.kb.datasetId, doc.id, (res) => {
-          this.$set(this.deleteLoadingMap, doc.id, false);
+          this.deleteLoadingMap[doc.id] = false;
           if (res.data && res.data.code === 0) {
             if (this.documents.length === 1 && this.currentPage > 1) {
               this.currentPage--;
@@ -220,7 +218,7 @@ export default {
             this.$message.error(res.data?.msg || this.$t('knowledgeFileUpload.deleteFailed'));
           }
         }, (err) => {
-          this.$set(this.deleteLoadingMap, doc.id, false);
+          this.deleteLoadingMap[doc.id] = false;
           this.$message.error(err?.data?.msg ||this.$t('knowledgeFileUpload.deleteFailed'));
         });
       }).catch(() => {});
@@ -232,7 +230,7 @@ export default {
         cancelButtonText: this.$t('knowledgeFileUpload.cancel'),
         type: 'info'
       }).then(() => {
-        this.$set(doc, 'parsing', true);
+        doc.parsing = true;
         doc.parseStatusCode = 1;
         Api.knowledgeBase.parseDocument(
           this.kb.datasetId,
@@ -240,16 +238,16 @@ export default {
           ({ data }) => {
             if (data && data.code === 0) {
               this.$message.success(this.$t('knowledgeFileUpload.parsing'));
-              this.$set(doc, 'parsing', false);
+              doc.parsing = false;
               this.startParsePolling(doc);
             } else {
-              this.$set(doc, 'parsing', false);
+              doc.parsing = false;
               doc.parseStatusCode = 0;
               this.$message.error(data?.msg || this.$t('knowledgeFileUpload.parseFailed'));
             }
           },
           (err) => {
-            this.$set(doc, 'parsing', false);
+            doc.parsing = false;
             doc.parseStatusCode = 0;
             this.$message.error(err?.data?.msg || this.$t('knowledgeFileUpload.parseFailed'));
           }
@@ -268,9 +266,9 @@ export default {
               const list = data.data.list || [];
               const updated = list.find(d => d.id === doc.id);
               if (updated) {
-                this.$set(doc, 'parseStatusCode', updated.parseStatusCode);
+                doc.parseStatusCode = updated.parseStatusCode;
                 if (updated.parseStatusCode !== 1) {
-                  this.$set(doc, 'parsing', false);
+                  doc.parsing = false;
                   if (updated.parseStatusCode === 3) {
                     this.$message.success(`「${doc.name}」${this.$t('knowledgeFileUpload.parseSuccess')}`);
                     this.fetchSliceCountForSingleDocument(doc);
@@ -306,7 +304,7 @@ export default {
         params,
         ({ data }) => {
           if (data && data.code === 0) {
-            this.$set(doc, 'sliceCount', data.data.total || 0);
+            doc.sliceCount = data.data.total || 0;
           }
         },
         () => {}

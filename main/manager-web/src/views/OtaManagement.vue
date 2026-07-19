@@ -9,7 +9,7 @@
                             <h2 class="page-title">{{ $t('otaManagement.firmwareManagement') }}</h2>
                             <div class="right-operations">
                                 <el-input :placeholder="$t('otaManagement.searchPlaceholder')" v-model="searchName"
-                                    class="search-input" @keyup.enter.native="handleSearch" clearable />
+                                    class="search-input" @keyup.enter="handleSearch" clearable />
                                 <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">
                                     {{ $t('otaManagement.search') }}
                                 </CustomButton>
@@ -20,32 +20,32 @@
                             :total="total" :current-page="currentPage" :page-size="pageSize"
                             :page-size-options="pageSizeOptions" @size-change="handlePageSizeChange"
                             @page-change="goToPage">
-                            <template slot="selection" slot-scope="scope">
+                            <template #selection="scope">
                                 <el-checkbox v-model="scope.row.selected"></el-checkbox>
                             </template>
-                            <template slot="type" slot-scope="scope">
+                            <template #type="scope">
                                 {{ getFirmwareTypeName(scope.row.type) }}
                             </template>
-                            <template slot="size" slot-scope="scope">
+                            <template #size="scope">
                                 {{ formatFileSize(scope.row.size) }}
                             </template>
-                            <template slot="createDate" slot-scope="scope">
+                            <template #createDate="scope">
                                 {{ formatDate(scope.row.createDate) }}
                             </template>
-                            <template slot="updateDate" slot-scope="scope">
+                            <template #updateDate="scope">
                                 {{ formatDate(scope.row.updateDate) }}
                             </template>
-                            <template slot="operations" slot-scope="scope">
-                                <el-button size="mini" type="text"
+                            <template #operations="scope">
+                                <el-button size="small" link
                                     @click="downloadFirmware(scope.row)">{{ $t('otaManagement.download') }}</el-button>
-                                <el-button size="mini" type="text" @click="editParam(scope.row)">
+                                <el-button size="small" link @click="editParam(scope.row)">
                                     {{ $t('otaManagement.edit') }}
                                 </el-button>
-                                <el-button size="mini" type="text" @click="deleteParam(scope.row)">
+                                <el-button size="small" link @click="deleteParam(scope.row)">
                                     {{ $t('otaManagement.delete') }}
                                 </el-button>
                             </template>
-                            <template slot="footer-btns">
+                            <template #footer-btns>
                                 <div class="ctrl_btn">
                                     <CustomButton
                                         :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'"
@@ -68,7 +68,7 @@
         </div>
 
         <!-- 新增/编辑固件对话框 -->
-        <firmware-dialog :title="dialogTitle" :visible.sync="dialogVisible" :form="firmwareForm"
+        <firmware-dialog :title="dialogTitle" v-model:visible="dialogVisible" :form="firmwareForm"
             :firmware-types="firmwareTypes" @submit="handleSubmit" @cancel="dialogVisible = false" />
         <el-footer>
             <version-footer />
@@ -414,7 +414,7 @@ export default {
     box-shadow: none;
     overflow: hidden;
 
-    ::v-deep .el-card__body {
+    :deep(.el-card__body) {
         padding: 14px 20px;
         display: flex;
         flex-direction: column;

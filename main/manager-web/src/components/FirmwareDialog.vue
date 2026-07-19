@@ -1,7 +1,7 @@
 <template>
   <CustomDialog
     :title="title"
-    :visible.sync="visible"
+    :visible="visible" @update:visible="val => $emit('update:visible', val)"
     width="800px"
     @confirm="submit"
     @close="cancel"
@@ -26,7 +26,7 @@
           :before-upload="beforeUpload" :accept="'.bin,.apk,.wav'" :limit="1" :multiple="false" :auto-upload="true"
           :on-remove="handleRemove">
           <el-button size="small" type="primary">{{ $t('firmwareDialog.clickUpload') }}</el-button>
-          <div slot="tip" class="el-upload__tip">{{ $t('firmwareDialog.uploadTip') }}</div>
+          <template #tip><div class="el-upload__tip">{{ $t('firmwareDialog.uploadTip') }}</div></template>
         </el-upload>
         <el-progress v-if="isUploading || uploadStatus === 'success'" :percentage="uploadProgress"
           :status="uploadStatus"></el-progress>

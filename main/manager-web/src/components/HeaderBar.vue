@@ -56,14 +56,14 @@
             <span class="nav-text">{{ $t("header.voiceCloneManagement") }}</span>
             <i class="el-icon-arrow-down" :class="{ 'rotate-down': voiceCloneDropdownVisible }"></i>
           </span>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item @click.native="handleRouter('voiceCloneManagement')">
+          <template #dropdown><el-dropdown-menu>
+            <el-dropdown-item @click="handleRouter('voiceCloneManagement')">
               {{ $t("header.voiceCloneManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('voiceResourceManagement')">
+            <el-dropdown-item @click="handleRouter('voiceResourceManagement')">
               {{ $t("header.voiceResourceManagement") }}
             </el-dropdown-item>
-          </el-dropdown-menu>
+          </el-dropdown-menu></template>
         </el-dropdown>
 
         <div v-if="userInfo.superAdmin" class="equipment-management"
@@ -122,35 +122,35 @@
             <span class="nav-text">{{ $t("header.paramDictionary") }}</span>
             <i class="el-icon-arrow-down" :class="{ 'rotate-down': paramDropdownVisible }"></i>
           </span>
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item @click.native="handleRouter('paramManagement')">
+          <template #dropdown><el-dropdown-menu>
+            <el-dropdown-item @click="handleRouter('paramManagement')">
               {{ $t("header.paramManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('userManagement')">
+            <el-dropdown-item @click="handleRouter('userManagement')">
               {{ $t("header.userManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('otaManagement')">
+            <el-dropdown-item @click="handleRouter('otaManagement')">
               {{ $t("header.otaManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('dictManagement')">
+            <el-dropdown-item @click="handleRouter('dictManagement')">
               {{ $t("header.dictManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('providerManagement')">
+            <el-dropdown-item @click="handleRouter('providerManagement')">
               {{ $t("header.providerManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('agentTemplate')">
+            <el-dropdown-item @click="handleRouter('agentTemplate')">
               {{ $t("header.agentTemplate") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('replacementWordManagement')">
+            <el-dropdown-item @click="handleRouter('replacementWordManagement')">
               {{ $t("header.replacementWordManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('serverSideManagement')">
+            <el-dropdown-item @click="handleRouter('serverSideManagement')">
               {{ $t("header.serverSideManagement") }}
             </el-dropdown-item>
-            <el-dropdown-item @click.native="handleRouter('featureManagement')">
+            <el-dropdown-item @click="handleRouter('featureManagement')">
               {{ $t("header.featureManagement") }}
             </el-dropdown-item>
-          </el-dropdown-menu>
+          </el-dropdown-menu></template>
         </el-dropdown>
       </div>
 
@@ -164,7 +164,7 @@
         <el-cascader :options="userMenuOptions" trigger="click" :props="cascaderProps"
           style="width: 0px; overflow: hidden" :show-all-levels="false" @change="handleCascaderChange"
           @visible-change="handleUserMenuVisibleChange" ref="userCascader">
-          <template slot-scope="{ data }">
+          <template #default="{ data }">
             <span>{{ data.label }}</span>
           </template>
         </el-cascader>
@@ -410,38 +410,17 @@ export default {
     completeResetCascader() {
       if (this.$refs.userCascader) {
         try {
-          // 尝试所有可能的方法来清空选择
-          // 1. 尝试使用组件提供的clearValue方法
-          if (this.$refs.userCascader.clearValue) {
-            this.$refs.userCascader.clearValue();
+          // Element Plus: 使用暴露的 API 清空
+          const cascader = this.$refs.userCascader;
+          if (cascader.clearValue) {
+            cascader.clearValue();
+          } else if (cascader.$el) {
+            // fallback: 点击清除按钮
+            const clearBtn = cascader.$el.querySelector('.el-cascader__clear-icon, .el-input__clear');
+            if (clearBtn) clearBtn.click();
           }
-
-          // 2. 直接清空内部属性
-          if (this.$refs.userCascader.$data) {
-            this.$refs.userCascader.$data.selectedPaths = [];
-            this.$refs.userCascader.$data.displayLabels = [];
-            this.$refs.userCascader.$data.inputValue = "";
-            this.$refs.userCascader.$data.checkedValue = [];
-            this.$refs.userCascader.$data.showAllLevels = false;
-          }
-
-          // 3. 操作DOM清除选中状态
-          const menuElement = this.$refs.userCascader.$refs.menu;
-          if (menuElement && menuElement.$el) {
-            const activeItems = menuElement.$el.querySelectorAll(
-              ".el-cascader-node.is-active"
-            );
-            activeItems.forEach((item) => item.classList.remove("is-active"));
-
-            const checkedItems = menuElement.$el.querySelectorAll(
-              ".el-cascader-node.is-checked"
-            );
-            checkedItems.forEach((item) => item.classList.remove("is-checked"));
-          }
-
-          console.log("Cascader values cleared");
         } catch (error) {
-          console.error("清空选择值失败:", error);
+          // 静默处理
         }
       }
     },
@@ -457,16 +436,15 @@ export default {
           this.completeResetCascader();
         }
 
-        // 直接设置菜单的显隐状态
+        // 使用 el-cascader 暴露的 togglePopperVisible 方法（Element Plus）
         try {
-          // 尝试使用toggleDropDownVisible方法
-          this.$refs.userCascader.toggleDropDownVisible(this.userMenuVisible);
+          this.$refs.userCascader.togglePopperVisible(this.userMenuVisible);
         } catch (error) {
-          // 如果toggle方法失败，尝试直接设置属性
-          if (this.$refs.userCascader.$refs.menu) {
-            this.$refs.userCascader.$refs.menu.showMenu(this.userMenuVisible);
-          } else {
-            console.error("Cannot access menu component");
+          // fallback: 模拟点击
+          const cascaderEl = this.$refs.userCascader.$el;
+          const input = cascaderEl?.querySelector('input');
+          if (input) {
+            input.click();
           }
         }
       }

@@ -485,7 +485,7 @@ public class AgentSnapshotServiceImpl extends BaseServiceImpl<AgentSnapshotDao, 
             mapping.setParamInfo(JsonUtils.toJsonString(info.getParamInfo()));
             return mapping;
         }).toList();
-        agentPluginMappingService.saveBatch(mappings);
+        agentPluginMappingService.saveBatch(mappings, 1000);
     }
 
     private void restoreContextProviders(String agentId,

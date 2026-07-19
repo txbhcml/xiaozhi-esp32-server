@@ -1,7 +1,7 @@
 <template>
   <CustomDialog
     :title="title"
-    :visible.sync="visible"
+    :visible="visible" @update:visible="val => $emit('update:visible', val)"
     width="600px"
     class="param-dialog-wrapper"
     @confirm="submit"

@@ -1,5 +1,5 @@
 <template>
-  <el-drawer :visible.sync="dialogVisible" direction="rtl" size="80%" :wrapperClosable="false" :withHeader="false">
+  <el-drawer v-model="dialogVisible" direction="rtl" size="80%" :wrapperClosable="false" :withHeader="false">
     <!-- 自定义标题区域 -->
     <div class="custom-header">
       <div class="header-left">
@@ -13,7 +13,7 @@
       <div class="function-column">
         <div class="column-header">
           <h4 class="column-title">{{ $t('functionDialog.unselectedFunctions') }}</h4>
-          <el-button type="text" @click="selectAll" class="select-all-btn">
+          <el-button link @click="selectAll" class="select-all-btn">
             {{ $t('functionDialog.selectAll') }}
           </el-button>
         </div>
@@ -21,7 +21,7 @@
           <div v-if="unselected.length">
             <div v-for="func in unselected" :key="func.name" class="function-item">
               <el-checkbox :label="func.name" v-model="selectedNames" @change="(val) => handleCheckboxChange(func, val)"
-                @click.native.stop></el-checkbox>
+                @click.stop></el-checkbox>
               <div class="func-tag" @click="handleFunctionClick(func)">
                 <div class="color-dot"></div>
                 <span>{{ func.name }}</span>
@@ -38,7 +38,7 @@
       <div class="function-column">
         <div class="column-header">
           <h4 class="column-title">{{ $t('functionDialog.selectedFunctions') }}</h4>
-          <el-button type="text" @click="deselectAll" class="select-all-btn">
+          <el-button link @click="deselectAll" class="select-all-btn">
             {{ $t('functionDialog.selectAll') }}
           </el-button>
         </div>
@@ -46,7 +46,7 @@
           <div v-if="selectedList.length > 0">
             <div v-for="func in selectedList" :key="func.name" class="function-item">
               <el-checkbox :label="func.name" v-model="selectedNames" @change="(val) => handleCheckboxChange(func, val)"
-                @click.native.stop></el-checkbox>
+                @click.stop></el-checkbox>
               <div class="func-tag" @click="handleFunctionClick(func)">
                 <div class="color-dot"></div>
                 <span>{{ func.name }}</span>
@@ -239,13 +239,13 @@ export default {
       newFn.fieldsMeta.forEach(f => {
         const v = newFn.params[f.key];
         if (f.type === 'array') {
-          this.$set(this.textCache, f.key, Array.isArray(v) ? v.join('\n') : '');
+          this.textCache[f.key] = Array.isArray(v ? v.join('\n') : '');
         }
         else if (f.type === 'json') {
           try {
-            this.$set(this.textCache, f.key, JSON.stringify(v ?? {}, null, 2));
+            this.textCache[f.key] = JSON.stringify(v ?? {}, null, 2);
           } catch {
-            this.$set(this.textCache, f.key, '');
+            this.textCache[f.key] = '';
           }
         }
       });
@@ -595,13 +595,13 @@ export default {
     font-size: 16px;
 
     &.textarea-field {
-      ::v-deep .el-form-item__content {
+      :deep(.el-form-item__content) {
         margin-left: 0 !important;
         display: block;
         width: 100%;
       }
 
-      ::v-deep .el-form-item__label {
+      :deep(.el-form-item__label) {
         display: block;
         width: 100% !important;
         margin-bottom: 8px;
@@ -613,7 +613,7 @@ export default {
     width: 100%;
   }
 
-  ::v-deep .el-form-item {
+  :deep(.el-form-item) {
     display: flex;
     flex-direction: column;
     margin-bottom: 12px;
@@ -697,7 +697,7 @@ export default {
   border-color: #409EFF;
 }
 
-::v-deep .el-checkbox__label {
+:deep(.el-checkbox__label) {
   display: none;
 }
 
@@ -761,11 +761,11 @@ export default {
   height: 36px;
   box-sizing: border-box;
 
-  ::v-deep .el-input__inner {
+  :deep(.el-input__inner) {
     background-color: #f5f5f5 !important;
   }
 
-  ::v-deep .el-input__suffix {
+  :deep(.el-input__suffix) {
     right: 0;
     display: flex;
     align-items: center;

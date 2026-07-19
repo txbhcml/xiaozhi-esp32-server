@@ -13,7 +13,7 @@
                   v-model="search"
                   class="search-input"
                   clearable
-                  @keyup.enter.native="handleSearch"
+                  @keyup.enter="handleSearch"
                 />
                 <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">
                   {{ $t("agentTemplateManagement.search") }}
@@ -35,21 +35,21 @@
               @size-change="handlePageSizeChange"
               @page-change="handlePageChange"
             >
-              <template slot="selection" slot-scope="scope">
+              <template #selection="scope">
                 <el-checkbox v-model="scope.row.selected" @change="handleRowSelectionChange(scope.row)"></el-checkbox>
               </template>
-              <template slot="serialNumber" slot-scope="scope">
+              <template #serialNumber="scope">
                 <span>{{ (currentPage - 1) * pageSize + scope.$index + 1 }}</span>
               </template>
-              <template slot="operations" slot-scope="scope">
-                <el-button size="mini" type="text" @click="editTemplate(scope.row)">
+              <template #operations="scope">
+                <el-button size="small" link @click="editTemplate(scope.row)">
                   {{ $t("agentTemplateManagement.editTemplate") }}
                 </el-button>
-                <el-button size="mini" type="text" @click="deleteTemplate(scope.row)">
+                <el-button size="small" link @click="deleteTemplate(scope.row)">
                   {{ $t("agentTemplateManagement.deleteTemplate") }}
                 </el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'" size="small" @click="handleSelectAll">
                     {{ isAllSelected ? $t("agentTemplateManagement.deselectAll") : $t("agentTemplateManagement.selectAll") }}
@@ -71,7 +71,7 @@
     <!-- 新增/编辑模板弹窗 -->
     <CustomDialog
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model:visible="dialogVisible"
       :confirm-loading="confirmLoading"
       :footer="true"
       :width="'1200px'"
@@ -466,7 +466,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;

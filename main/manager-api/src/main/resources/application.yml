@@ -19,6 +19,10 @@ spring:
   messages:
     encoding: UTF-8
     basename: i18n/messages
+  # Spring Boot 4 默认 Jackson 3，项目使用 Jackson 2
+  http:
+    converters:
+      preferred-json-mapper: jackson2
   servlet:
     multipart:
       max-file-size: 100MB
@@ -37,8 +41,6 @@ knife4j:
     enableFooter: false
 
 renren:
-  redis:
-    open: true
   xss:
     enabled: true
     exclude-urls:

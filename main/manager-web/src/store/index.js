@@ -1,12 +1,10 @@
 import { goToPage } from "@/utils";
-import Vue from 'vue';
-import Vuex from 'vuex';
+import { createStore } from 'vuex';
 import Api from '../apis/api';
 import Constant from '../utils/constant';
 
-Vue.use(Vuex)
-
-export default new Vuex.Store({
+// Vuex 4: 使用 createStore 创建 store
+const store = createStore({
   state: {
     token: '',
     userInfo: {}, // 添加用户信息存储
@@ -75,3 +73,5 @@ export default new Vuex.Store({
   modules: {
   }
 })
+
+export default store

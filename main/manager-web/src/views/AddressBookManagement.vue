@@ -23,7 +23,7 @@
         <!-- 智能体列表 -->
         <el-collapse accordion class="agent-collapse" v-model="expandedAgentId">
           <el-collapse-item v-for="agent in filteredAgents" :key="agent.id" :name="agent.id">
-            <template slot="title">
+            <template #title>
               <svg class="agent-triangle" width="8" height="12" viewBox="0 0 10 14" fill="#c8cafb">
                 <path d="M2 2L8 7L2 12L2 2Z" stroke="#c8cafb" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
               </svg>
@@ -310,7 +310,9 @@ export default {
         Api.device.getDeviceStatus(agent.id, (statusRes) => {
           if (statusRes.data?.code === 0) {
             try {
-              const statusData = JSON.parse(statusRes.data.data);
+              const rawData = statusRes.data.data;
+              if (!rawData) return;
+              const statusData = JSON.parse(rawData);
               if (statusData && typeof statusData === 'object') {
                 this.mqttServiceAvailable = true;
                 this.updateDeviceStatusFromResponse(agent, statusData);
@@ -985,7 +987,7 @@ export default {
     top: 8px;
     right: 8px;
 
-    ::v-deep(.el-checkbox__inner) {
+    :deep(.el-checkbox__inner) {
       width: 16px;
       height: 16px;
       border-radius: 4px;
@@ -1000,12 +1002,12 @@ export default {
       }
     }
 
-    ::v-deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+    :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
       background-color: #3765f8;
       border-color: #3765f8;
     }
 
-    ::v-deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
+    :deep(.el-checkbox__input.is-checked + .el-checkbox__label) {
       color: #3765f8;
     }
   }
@@ -1230,27 +1232,27 @@ export default {
   }
 }
 
-::v-deep(.el-input__inner) {
+:deep(.el-input__inner) {
   height: 36px;
   border-radius: 6px;
 }
 
-::v-deep(.el-textarea__inner) {
+:deep(.el-textarea__inner) {
   border-radius: 4px;
 }
-::v-deep(.el-collapse) {
+:deep(.el-collapse) {
   border: none !important;
 }
-::v-deep(.el-collapse-item__header) {
+:deep(.el-collapse-item__header) {
   border: none !important;
 }
-::v-deep(.el-collapse-item__wrap) {
+:deep(.el-collapse-item__wrap) {
   border: none !important;
 }
-::v-deep(.el-collapse-item__content) {
+:deep(.el-collapse-item__content) {
   padding-bottom: 0 !important;
 }
-::v-deep(.el-empty) {
+:deep(.el-empty) {
   height: 100%;
 }
 </style>

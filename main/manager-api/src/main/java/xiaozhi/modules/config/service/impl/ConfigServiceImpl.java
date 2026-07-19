@@ -261,7 +261,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     /**
      * 构建配置信息
-     * 
+     *
      * @param config 系统参数列表
      * @return 配置信息
      */
@@ -332,16 +332,78 @@ public class ConfigServiceImpl implements ConfigService {
 
     /**
      * 构建声纹配置信息
-     * 
+     *
      * @param agentId 智能体ID
      * @param result  结果Map
      */
     private void buildVoiceprintConfig(String agentId, Map<String, Object> result) {
         try {
-            // 获取声纹接口地址
-            String voiceprintUrl = sysParamsService.getValue(Constant.SERVER_VOICE_PRINT, true);
-            if (StringUtils.isBlank(voiceprintUrl) || "null".equals(voiceprintUrl)) {
-                return;
+            Map<String, Object> voiceprintConfig = null;
+
+            // 优先从 ai_model_config 读取声纹服务配置
+            List<ModelConfigEntity> voiceprintConfigs = modelConfigService.getEnabledModelsByType("Voiceprint");
+            if (voiceprintConfigs != null && !voiceprintConfigs.isEmpty()) {
+                ModelConfigEntity config = voiceprintConfigs.get(0);
+                cn.hutool.json.JSONObject configJson = config.getConfigJson();
+                if (configJson != null) {
+                    voiceprintConfig = new HashMap<>();
+                    // 传递声纹 provider 类型和凭据（供 xiaozhi-server 直接调用 API）
+                    String type = configJson.getStr("type");
+                    if (StringUtils.isNotBlank(type)) {
+                        voiceprintConfig.put("type", type);
+                    }
+                    String appId = configJson.getStr("app_id");
+                    if (StringUtils.isNotBlank(appId)) {
+                        voiceprintConfig.put("app_id", appId);
+                    }
+                    String apiKey = configJson.getStr("api_key");
+                    if (StringUtils.isNotBlank(apiKey)) {
+                        voiceprintConfig.put("api_key", apiKey);
+                    }
+                    String apiSecret = configJson.getStr("api_secret");
+                    if (StringUtils.isNotBlank(apiSecret)) {
+                        voiceprintConfig.put("api_secret", apiSecret);
+                    }
+                    String groupId = configJson.getStr("group_id");
+                    if (StringUtils.isNotBlank(groupId)) {
+                        voiceprintConfig.put("group_id", groupId);
+                    }
+                    // 相似度阈值
+                    Number threshold = configJson.getDouble("similarity_threshold");
+                    if (threshold != null) {
+                        voiceprintConfig.put("similarity_threshold", threshold.doubleValue());
+                    } else {
+                        voiceprintConfig.put("similarity_threshold", 0.4);
+                    }
+                    // 保留 url（向后兼容，供旧格式 HTTP 调用和 manager-api 声纹注册/删除）
+                    String url = configJson.getStr("url");
+                    if (StringUtils.isNotBlank(url)) {
+                        String key = configJson.getStr("key");
+                        if (StringUtils.isNotBlank(key)) {
+                            voiceprintConfig.put("url", url + "?key=" + key);
+                        }
+                    }
+                }
+            }
+
+            // 向后兼容：ai_model_config 无记录时回退到 sys_params
+            if (voiceprintConfig == null) {
+                String voiceprintUrl = sysParamsService.getValue(Constant.SERVER_VOICE_PRINT, true);
+                if (StringUtils.isBlank(voiceprintUrl) || "null".equals(voiceprintUrl)) {
+                    return;
+                }
+                voiceprintConfig = new HashMap<>();
+                voiceprintConfig.put("url", voiceprintUrl);
+                String thresholdStr = sysParamsService.getValue("server.voiceprint_similarity_threshold", true);
+                if (StringUtils.isNotBlank(thresholdStr) && !"null".equals(thresholdStr)) {
+                    try {
+                        voiceprintConfig.put("similarity_threshold", Double.parseDouble(thresholdStr));
+                    } catch (NumberFormatException e) {
+                        voiceprintConfig.put("similarity_threshold", 0.4);
+                    }
+                } else {
+                    voiceprintConfig.put("similarity_threshold", 0.4);
+                }
             }
 
             // 获取智能体关联的声纹信息（不需要用户权限验证）
@@ -350,7 +412,7 @@ public class ConfigServiceImpl implements ConfigService {
                 return;
             }
 
-            // 构建speakers列表
+            // 构建 speakers 列表
             List<String> speakers = new ArrayList<>();
             for (AgentVoicePrintVO voiceprint : voiceprints) {
                 String speakerStr = String.format("%s,%s,%s",
@@ -359,25 +421,7 @@ public class ConfigServiceImpl implements ConfigService {
                         voiceprint.getIntroduce() != null ? voiceprint.getIntroduce() : "");
                 speakers.add(speakerStr);
             }
-
-            // 构建声纹配置
-            Map<String, Object> voiceprintConfig = new HashMap<>();
-            voiceprintConfig.put("url", voiceprintUrl);
             voiceprintConfig.put("speakers", speakers);
-
-            // 获取声纹识别相似度阈值，默认0.4
-            String thresholdStr = sysParamsService.getValue("server.voiceprint_similarity_threshold", true);
-            if (StringUtils.isNotBlank(thresholdStr) && !"null".equals(thresholdStr)) {
-                try {
-                    double threshold = Double.parseDouble(thresholdStr);
-                    voiceprintConfig.put("similarity_threshold", threshold);
-                } catch (NumberFormatException e) {
-                    // 如果解析失败，使用默认值0.4
-                    voiceprintConfig.put("similarity_threshold", 0.4);
-                }
-            } else {
-                voiceprintConfig.put("similarity_threshold", 0.4);
-            }
 
             result.put("voiceprint", voiceprintConfig);
         } catch (Exception e) {
@@ -388,7 +432,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     /**
      * 获取智能体关联的声纹信息
-     * 
+     *
      * @param agentId 智能体ID
      * @return 声纹信息列表
      */
@@ -402,7 +446,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     /**
      * 构建模块配置
-     * 
+     *
      * @param prompt         提示词
      * @param voice          音色
      * @param referenceAudio 参考音频路径

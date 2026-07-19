@@ -206,13 +206,13 @@ class AgentSnapshotServiceImplTest {
         when(snapshotService.getCurrentVersionNo(agentId)).thenReturn(0);
         when(contextProviderService.getByAgentId(agentId)).thenReturn(null);
         when(correctWordFileService.getAgentCorrectWordFileIds(agentId)).thenReturn(List.of());
-        when(agentDao.updateById(any())).thenReturn(1);
+        when(agentDao.updateById(any(AgentEntity.class))).thenReturn(1);
 
         service.updateAgentById(agentId, update);
 
         InOrder inOrder = inOrder(agentDao, snapshotService);
         inOrder.verify(snapshotService).createSnapshot(agentId, "initial");
-        inOrder.verify(agentDao).updateById(argThat(agent -> "new-name".equals(agent.getAgentName())));
+        inOrder.verify(agentDao).updateById(argThat((AgentEntity agent) -> "new-name".equals(agent.getAgentName())));
         inOrder.verify(snapshotService).createSnapshot(agentId, "config");
     }
 
@@ -407,7 +407,7 @@ class AgentSnapshotServiceImplTest {
         when(tagDao.selectById("deleted-tag-id")).thenReturn(deletedTag);
         when(tagDao.selectOne(any())).thenReturn(null);
         AtomicReference<AgentTagEntity> insertedTag = new AtomicReference<>();
-        when(tagDao.insert(any())).thenAnswer(invocation -> {
+        when(tagDao.insert(any(AgentTagEntity.class))).thenAnswer(invocation -> {
             insertedTag.set(invocation.getArgument(0));
             return 1;
         });
@@ -418,7 +418,7 @@ class AgentSnapshotServiceImplTest {
 
         String restoredTagId = (String) method.invoke(service, snapshotTag, new Date());
 
-        verify(tagDao, never()).updateById(any());
+        verify(tagDao, never()).updateById(any(AgentTagEntity.class));
         assertNotEquals("deleted-tag-id", restoredTagId);
         assertNotNull(insertedTag.get());
         assertEquals(restoredTagId, insertedTag.get().getId());

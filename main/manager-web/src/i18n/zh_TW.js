@@ -1042,6 +1042,7 @@ export default {
   'modelConfig.tts': '語音合成',
   'modelConfig.memory': '記憶',
   'modelConfig.rag': '知識庫',
+  'modelConfig.voiceprint': '聲紋服務',
   'modelConfig.modelId': '模型ID',
   'modelConfig.modelName': '模型名稱',
   'modelConfig.provider': '接口類型',

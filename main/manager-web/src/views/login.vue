@@ -39,26 +39,26 @@
                 <span class="current-language-text">{{ currentLanguageText }}</span>
                 <i class="el-icon-arrow-down el-icon--right" :class="{ 'rotate-down': languageDropdownVisible }"></i>
               </span>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item @click.native="changeLanguage('zh_CN')">
+              <template #dropdown><el-dropdown-menu>
+                <el-dropdown-item @click="changeLanguage('zh_CN')">
                   {{ $t("language.zhCN") }}
                 </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('zh_TW')">
+                <el-dropdown-item @click="changeLanguage('zh_TW')">
                   {{ $t("language.zhTW") }}
                 </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('en')">
+                <el-dropdown-item @click="changeLanguage('en')">
                   {{ $t("language.en") }}
                 </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('de')">
+                <el-dropdown-item @click="changeLanguage('de')">
                   {{ $t("language.de") }}
                 </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('vi')">
+                <el-dropdown-item @click="changeLanguage('vi')">
                   {{ $t("language.vi") }}
                 </el-dropdown-item>
-                <el-dropdown-item @click.native="changeLanguage('pt_BR')">
+                <el-dropdown-item @click="changeLanguage('pt_BR')">
                   {{ $t("language.ptBR") }}
                 </el-dropdown-item>
-              </el-dropdown-menu>
+              </el-dropdown-menu></template>
             </el-dropdown>
           </div>
           <div style="padding: 0 30px">

@@ -1,7 +1,7 @@
 <template>
   <CustomDialog
     :title="title"
-    :visible.sync="visible"
+    :visible="visible" @update:visible="val => $emit('update:visible', val)"
     width="57%"
     class="provider-dialog-wrapper"
     @confirm="submit"
@@ -51,14 +51,14 @@
         <div class="divider"></div>
 
         <div class="fields-container">
-          <el-table :data="form.fields" style="width: 100%;" border size="medium" :key="tableKey">
+          <el-table :data="form.fields" style="width: 100%;" border  :key="tableKey">
             <el-table-column :label="$t('modelConfig.select')" align="center" width="50">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-checkbox v-model="scope.row.selected" @change="handleFieldSelectChange"></el-checkbox>
               </template>
             </el-table-column>
             <el-table-column :label="$t('providerDialog.fieldKey')">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <template v-if="scope.row.editing">
                   <el-input v-model="scope.row.key" :placeholder="$t('providerDialog.fieldKey')"></el-input>
                 </template>
@@ -68,7 +68,7 @@
               </template>
             </el-table-column>
             <el-table-column :label="$t('providerDialog.fieldLabel')">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <template v-if="scope.row.editing">
                   <el-input v-model="scope.row.label" :placeholder="$t('providerDialog.fieldLabel')"></el-input>
                 </template>
@@ -78,7 +78,7 @@
               </template>
             </el-table-column>
             <el-table-column :label="$t('providerDialog.fieldType')">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <template v-if="scope.row.editing">
                   <el-select v-model="scope.row.type" :placeholder="$t('providerDialog.type')">
                     <el-option :label="$t('providerDialog.stringType')" value="string"></el-option>
@@ -94,7 +94,7 @@
               </template>
             </el-table-column>
             <el-table-column :label="$t('providerDialog.defaultValue')">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <template v-if="scope.row.editing">
                   <el-input v-model="scope.row.default" :placeholder="$t('providerDialog.inputDefaultValue')"></el-input>
                 </template>
@@ -104,14 +104,14 @@
               </template>
             </el-table-column>
             <el-table-column :label="$t('providerDialog.operation')" width="150" align="center">
-              <template slot-scope="scope">
-                <el-button v-if="!scope.row.editing" type="primary" size="mini" @click="startEditing(scope.row)">
+              <template #default="scope">
+                <el-button v-if="!scope.row.editing" type="primary" size="small" @click="startEditing(scope.row)">
                   {{ $t('providerDialog.edit') }}
                 </el-button>
-                <el-button v-else type="success" size="mini" @click="stopEditing(scope.row)">
+                <el-button v-else type="success" size="small" @click="stopEditing(scope.row)">
                   {{ $t('providerDialog.complete') }}
                 </el-button>
-                <el-button type="danger" size="mini" @click="removeField(scope.$index)">
+                <el-button type="danger" size="small" @click="removeField(scope.$index)">
                   {{ $t('providerDialog.delete') }}
                 </el-button>
               </template>
@@ -171,11 +171,11 @@ export default {
     },
 
     startEditing(row) {
-      this.$set(row, 'editing', true);
+      row.editing = true;
     },
 
     stopEditing(row) {
-      this.$set(row, 'editing', false);
+      row.editing = false;
 
       const index = this.form.fields.indexOf(row);
       if (index > -1) {

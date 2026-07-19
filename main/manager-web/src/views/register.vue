@@ -346,7 +346,7 @@ export default {
       goToPage('/login')
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.timer) {
       clearInterval(this.timer);
     }

@@ -7,7 +7,7 @@
           <h2 class="page-title">{{ $t('dictManagement.pageTitle') }}</h2>
           <div class="right-operations">
             <el-input :placeholder="$t('dictManagement.searchPlaceholder')" v-model="search" class="search-input"
-              @keyup.enter.native="handleSearch" clearable />
+              @keyup.enter="handleSearch" clearable />
             <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">
               {{ $t('dictManagement.search') }}
             </CustomButton>
@@ -19,8 +19,8 @@
             <div class="dict-type-header">
               <h4 class="dict-type-title">{{ $t('dictManagement.dictTypeCategory') }}</h4>
               <div>
-                <el-button icon="el-icon-plus" size="mini" @click="showAddDictTypeDialog" />
-                <el-button icon="el-icon-delete" size="mini" @click="batchDeleteDictType" />
+                <el-button icon="el-icon-plus" size="small" @click="showAddDictTypeDialog" />
+                <el-button icon="el-icon-delete" size="small" @click="batchDeleteDictType" />
               </div>
             </div>
             <div class="dict-type-checkbox" v-loading="dictTypeLoading">
@@ -36,7 +36,7 @@
                   </el-checkbox>
                   <div class="dict-type-item-content" @click="handleDictTypeRowClick(item)">
                     <span class="dict-type-name">{{item.dictName}}</span>
-                    <el-button class="dict-type-edit-btn" type="text" icon="el-icon-edit" size="mini" @click.stop="editDictType(item)"/>
+                    <el-button class="dict-type-edit-btn" link icon="el-icon-edit" size="small" @click.stop="editDictType(item)"/>
                   </div>
                 </div>
               </el-checkbox-group>
@@ -48,18 +48,18 @@
               :show-operations="true" :operations-label="$t('dictManagement.operation')" :total="total"
               :current-page="currentPage" :page-size="pageSize" :page-size-options="pageSizeOptions"
               @size-change="handlePageSizeChange" @page-change="goToPage">
-              <template slot="selection" slot-scope="scope">
+              <template #selection="scope">
                 <el-checkbox v-model="scope.row.selected"></el-checkbox>
               </template>
-              <template slot="operations" slot-scope="scope">
-                <el-button type="text" size="mini" @click="editDictData(scope.row)">
+              <template #operations="scope">
+                <el-button link size="small" @click="editDictData(scope.row)">
                   {{ $t('dictManagement.edit') }}
                 </el-button>
-                <el-button type="text" size="mini" @click="deleteDictData(scope.row)">
+                <el-button link size="small" @click="deleteDictData(scope.row)">
                   {{ $t('dictManagement.delete') }}
                 </el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton :icon="isAllDictDataSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'"
                     size="small" @click="selectAllDictData">
@@ -80,11 +80,11 @@
     </div>
 
     <!-- 使用字典类型编辑弹框组件 -->
-    <DictTypeDialog :visible.sync="dictTypeDialogVisible" :title="dictTypeDialogTitle" :dictTypeData="dictTypeForm"
+    <DictTypeDialog v-model:visible="dictTypeDialogVisible" :title="dictTypeDialogTitle" :dictTypeData="dictTypeForm"
       @save="saveDictType" />
 
     <!-- 使用字典数据编辑弹框组件 -->
-    <DictDataDialog :visible.sync="dictDataDialogVisible" :title="dictDataDialogTitle" :dictData="dictDataForm"
+    <DictDataDialog v-model:visible="dictDataDialogVisible" :title="dictDataDialogTitle" :dictData="dictDataForm"
       :dictTypeId="selectedDictType?.id" @save="saveDictData" />
     <el-footer style="flex-shrink:unset;">
       <version-footer />
@@ -430,7 +430,7 @@ export default {
     .dict-type-all {
       margin-left: 10px;
     }
-    ::v-deep .el-checkbox-group {
+    :deep(.el-checkbox-group) {
       width: 100%;
       gap: 10px;
       display: flex;
@@ -519,7 +519,7 @@ export default {
   border-radius: 15px;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 0;
     display: flex;
     flex-direction: column;

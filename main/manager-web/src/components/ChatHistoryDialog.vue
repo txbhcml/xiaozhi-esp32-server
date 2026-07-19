@@ -1,7 +1,7 @@
 <template>
     <CustomDialog
         :title="$t('chatHistory.with') + agentName + $t('chatHistory.dialogTitle')"
-        :visible.sync="dialogVisible"
+        v-model:visible="dialogVisible"
         width="80%"
         :footer="false"
         :close-on-click-modal="false"
@@ -222,7 +222,7 @@ export default {
         // 切换工具结果的展开/折叠状态
         toggleToolResult(messageIndex, itemIndex) {
             const key = `${messageIndex}-${itemIndex}`;
-            this.$set(this.expandedToolResults, key, !this.expandedToolResults[key]);
+            this.expandedToolResults[key] = !this.expandedToolResults[key];
         },
         // 判断工具结果是否处于折叠状态
         isToolResultCollapsed(messageIndex, itemIndex) {

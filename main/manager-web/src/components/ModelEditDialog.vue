@@ -1,7 +1,7 @@
 <template>
   <CustomDialog
     :title="$t('modelConfigDialog.editModel')"
-    :visible.sync="dialogVisible"
+    v-model:visible="dialogVisible"
     width="57%"
     class="model-edit-dialog"
     :confirmLoading="saving"
@@ -331,10 +331,7 @@ export default {
         if (!configJson.hasOwnProperty(field.prop)) {
           configJson[field.prop] = "";
         } else if (field.type === "json-textarea") {
-          this.$set(
-            this.fieldJsonMap,
-            field.prop,
-            this.formatJson(configJson[field.prop])
+          this.fieldJsonMap[field.prop] = this.formatJson(configJson[field.prop]
           );
           configJson[field.prop] = this.ensureObject(configJson[field.prop]);
         } else if (typeof configJson[field.prop] !== "string") {
@@ -424,8 +421,8 @@ export default {
       // 如果值包含星号，清空显示
       if (value && value.includes("*")) {
         // 存储原始值，用于失焦时恢复
-        this.$set(this.originalValues, field, this.form.configJson[field]);
-        this.$set(this.form.configJson, field, "");
+        this.originalValues[field] = this.form.configJson[field];
+        this.form.configJson[field] = "";
       }
     },
 
@@ -437,13 +434,13 @@ export default {
         if (!this.form.configJson[field] || this.form.configJson[field].trim() === "") {
           // 如果有原始值，则恢复原始值；否则设置为掩码提示
           if (this.originalValues[field]) {
-            this.$set(this.form.configJson, field, this.originalValues[field]);
+            this.form.configJson[field] = this.originalValues[field];
           } else {
             const sensitiveName = this.getSensitiveFieldName(field);
-            this.$set(this.form.configJson, field, `你的${sensitiveName}`);
+            this.form.configJson[field] = `你的${sensitiveName}`;
           }
           // 清除临时存储的原始值
-          this.$delete(this.originalValues, field);
+          delete this.originalValues[field];
         }
       }
     },
@@ -451,7 +448,7 @@ export default {
     // 处理JSON字段的聚焦事件
     handleJsonInputFocus(field, value) {
       if (value && value.includes("*")) {
-        this.$set(this.fieldJsonMap, field, "");
+        this.fieldJsonMap[field] = "";
       }
     },
 
@@ -466,10 +463,10 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/global.scss';
 
-::v-deep .el-dialog {
+:deep(.el-dialog) {
   margin-top: 6vh !important;
 }
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   max-height: 60vh;
   overflow-y: auto;
   @include scrollbar-style;
@@ -520,10 +517,10 @@ export default {
     margin-bottom: 0;
   }
 
-  ::v-deep .el-input__inner {
+  :deep(.el-input__inner) {
     height: 32px;
   }
-  ::v-deep .el-form-item {
+  :deep(.el-form-item) {
     margin-bottom: 10px;
   }
 }

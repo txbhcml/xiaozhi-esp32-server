@@ -1,4 +1,4 @@
-import { Message } from 'element-ui'
+import { ElMessage as Message } from 'element-plus'
 import router from '../router'
 import Constant from '../utils/constant'
 

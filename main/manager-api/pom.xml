@@ -11,25 +11,23 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.3</version>
+        <version>4.0.7</version>
 	</parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
-        <junit.version>5.10.1</junit.version>
-        <druid.version>1.2.20</druid.version>
-        <mybatisplus.version>3.5.5</mybatisplus.version>
+        <junit.version>5.12.0</junit.version>
+        <druid.version>1.2.28</druid.version>
+        <mybatisplus.version>3.5.17</mybatisplus.version>
         <hutool.version>5.8.24</hutool.version>
         <jsoup.version>1.19.1</jsoup.version>
-        <knife4j.version>4.6.0</knife4j.version>
-        <springdoc.version>2.8.8</springdoc.version>
+        <knife4j.version>5.0.6</knife4j.version>
         <commons-lang3.version>3.18.0</commons-lang3.version>
-        <shiro.version>2.0.2</shiro.version>
+        <shiro.version>3.0.0</shiro.version>
         <captcha.version>1.6.2</captcha.version>
         <guava.version>33.0.0-jre</guava.version>
-        <liquibase-core.version>4.20.0</liquibase-core.version>
         <aliyun-sms-version>4.1.0</aliyun-sms-version>
         <okio-version>3.4.0</okio-version>
         <skipTests>true</skipTests>
@@ -39,14 +37,12 @@
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-core</artifactId>
-            <classifier>jakarta</classifier>
             <version>${shiro.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-spring</artifactId>
-            <classifier>jakarta</classifier>
             <version>${shiro.version}</version>
             <exclusions>
                 <exclusion>
@@ -62,7 +58,6 @@
         <dependency>
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-web</artifactId>
-            <classifier>jakarta</classifier>
             <version>${shiro.version}</version>
             <exclusions>
                 <exclusion>
@@ -87,6 +82,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+        <!-- 本地缓存（替代 Redis，单实例部署） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -137,18 +137,25 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-json</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- Spring Boot 4 默认使用 Jackson 3，项目使用 Jackson 2 需引入此模块 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context-support</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -166,23 +173,34 @@
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-3-starter</artifactId>
+            <artifactId>druid-spring-boot-4-starter</artifactId>
             <version>${druid.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-            <version>${liquibase-core.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>${mybatisplus.version}</version>
         </dependency>
+        <!-- MyBatis Plus 3.5.9+ 将 jsqlparser 拆分为独立模块，需显式引入 -->
         <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis-spring</artifactId>
-            <version>3.0.3</version>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser-4.9</artifactId>
+            <version>${mybatisplus.version}</version>
+        </dependency>
+        <!-- MyBatis Plus 3.5.9+ extension 需显式引入（IService/ServiceImpl 已迁移到 repository 包） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+            <version>${mybatisplus.version}</version>
+        </dependency>
+        <!-- Spring Boot 4 RestTemplateBuilder 支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -194,10 +212,10 @@
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
         </dependency>
-        <!--knife4j -->
+        <!--knife4j (Spring Boot 4 支持版本) -->
         <dependency>
-            <groupId>com.github.xingfudeshi</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <groupId>com.baizhukui</groupId>
+            <artifactId>knife4j-openapi3-boot4-spring-boot-starter</artifactId>
             <version>${knife4j.version}</version>
         </dependency>
         <!-- BouncyCastle SM2加密 -->
@@ -205,12 +223,6 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
             <version>1.78</version>
-        </dependency>
-        <!-- springdoc -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>${springdoc.version}</version>
         </dependency>
         <!-- 日常工具包 -->
         <dependency>

@@ -15,7 +15,7 @@
         <span style="font-size: 11px"> {{ $t('device.verificationCode') }}</span>
       </div>
       <div class="input-46" style="margin-top: 12px;">
-        <el-input :placeholder="$t('device.verificationCodePlaceholder')" v-model="deviceCode" @keyup.enter.native="confirm" />
+        <el-input :placeholder="$t('device.verificationCodePlaceholder')" v-model="deviceCode" @keyup.enter="confirm" />
       </div>
     </div>
     <div style="display: flex;margin: 15px 15px;gap: 7px;">
@@ -107,20 +107,20 @@ export default {
   text-align: center;
 }
 
-::v-deep .el-dialog {
+:deep(.el-dialog) {
   border-radius: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-::v-deep .el-dialog__headerbtn {
+:deep(.el-dialog__headerbtn) {
   display: none;
 }
 
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   padding: 4px 6px;
 }
 
-::v-deep .el-dialog__header {
+:deep(.el-dialog__header) {
   padding: 10px;
 }
 </style>

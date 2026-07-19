@@ -9,7 +9,7 @@
               <h2 class="page-title">{{ $t('paramManagement.pageTitle') }}</h2>
               <div class="right-operations">
                 <el-input :placeholder="$t('paramManagement.searchPlaceholder')" v-model="searchCode" class="search-input"
-                  @keyup.enter.native="handleSearch" clearable />
+                  @keyup.enter="handleSearch" clearable />
                 <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">{{ $t('paramManagement.search') }}</CustomButton>
               </div>
             </div>
@@ -31,31 +31,31 @@
               @page-change="goToPage"
             >
               <!-- 选择列自定义插槽 -->
-              <template slot="selection" slot-scope="scope">
+              <template #selection="scope">
                 <el-checkbox v-model="scope.row.selected"></el-checkbox>
               </template>
-              <template slot="paramValue" slot-scope="scope">
+              <template #paramValue="scope">
                 <div v-if="isSensitiveParam(scope.row.paramCode)">
                   <span v-if="!scope.row.showValue">
                     {{ maskSensitiveValue(scope.row.paramValue) }}
                   </span>
                   <span v-else>{{ scope.row.paramValue }}</span>
-                  <el-button size="mini" type="text" @click="toggleSensitiveValue(scope.row)">
+                  <el-button size="small" link @click="toggleSensitiveValue(scope.row)">
                     {{ scope.row.showValue ? $t('paramManagement.hide') : $t('paramManagement.view') }}
                   </el-button>
                 </div>
                 <span v-else>{{ scope.row.paramValue }}</span>
               </template>
               <!-- 操作列插槽 -->
-              <template slot="operations" slot-scope="scope">
-                <el-button size="mini" type="text" @click="editParam(scope.row)">
+              <template #operations="scope">
+                <el-button size="small" link @click="editParam(scope.row)">
                   {{ $t('paramManagement.edit') }}
                 </el-button>
-                <el-button size="mini" type="text" @click="deleteParam(scope.row)">
+                <el-button size="small" link @click="deleteParam(scope.row)">
                   {{ $t('paramManagement.delete') }}
                 </el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'" size="small" @click="handleSelectAll">
                     {{ isAllSelected ? $t('paramManagement.deselectAll') : $t('paramManagement.selectAll') }}
@@ -78,7 +78,7 @@
     <param-dialog
       ref="paramDialog"
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model:visible="dialogVisible"
       :form="paramForm"
       @submit="handleSubmit"
       @cancel="dialogVisible = false"
@@ -434,7 +434,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;

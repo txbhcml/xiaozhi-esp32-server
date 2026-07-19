@@ -15,8 +15,12 @@ public class ContextProviderListTypeHandler extends AbstractJsonTypeHandler<List
     private static final TypeReference<List<ContextProviderDTO>> CONTEXT_PROVIDER_LIST_TYPE = new TypeReference<>() {
     };
 
+    public ContextProviderListTypeHandler(Class<?> type) {
+        super(type);
+    }
+
     @Override
-    protected List<ContextProviderDTO> parse(String json) {
+    public List<ContextProviderDTO> parse(String json) {
         if (StringUtils.isBlank(json)) {
             return Collections.emptyList();
         }
@@ -25,7 +29,7 @@ public class ContextProviderListTypeHandler extends AbstractJsonTypeHandler<List
     }
 
     @Override
-    protected String toJson(List<ContextProviderDTO> obj) {
+    public String toJson(List<ContextProviderDTO> obj) {
         return JsonUtils.toJsonString(obj == null ? Collections.emptyList() : obj);
     }
 }

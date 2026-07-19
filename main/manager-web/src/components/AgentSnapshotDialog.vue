@@ -22,7 +22,7 @@
           :label="$t('agentSnapshot.version')"
           width="90"
         >
-          <template slot-scope="scope">
+          <template #default="scope">
             <div class="version-cell">
               <span>#{{ scope.row.versionNo }}</span>
               <span
@@ -38,7 +38,7 @@
           :label="$t('agentSnapshot.createdAt')"
           width="170"
         >
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ formatTime(scope.row.createdAt) || "—" }}
           </template>
         </el-table-column>
@@ -47,17 +47,17 @@
           :label="$t('agentSnapshot.source')"
           width="110"
         >
-          <template slot-scope="scope">
+          <template #default="scope">
             {{ sourceLabel(scope.row.source) }}
           </template>
         </el-table-column>
         <el-table-column :label="$t('agentSnapshot.changedFields')" min-width="220">
-          <template slot-scope="scope">
+          <template #default="scope">
             <div v-if="(scope.row.changedFields || []).length" class="field-tags">
               <el-tag
                 v-for="field in scope.row.changedFields"
                 :key="field"
-                size="mini"
+                size="small"
                 effect="plain"
               >
                 {{ fieldLabel(field) }}
@@ -67,26 +67,23 @@
           </template>
         </el-table-column>
         <el-table-column :label="$t('agentSnapshot.actions')" width="190" fixed="right">
-          <template slot-scope="scope">
+          <template #default="scope">
             <el-button
-              v-if="canViewSnapshot(scope.row)"
-              type="text"
+              v-if="canViewSnapshot(scope.row)" link
               size="small"
               @click="viewSnapshot(scope.row)"
             >
               {{ $t('agentSnapshot.view') }}
             </el-button>
             <el-button
-              v-if="canRestoreSnapshot(scope.row)"
-              type="text"
+              v-if="canRestoreSnapshot(scope.row)" link
               size="small"
               @click="restoreSnapshot(scope.row)"
             >
               {{ $t('agentSnapshot.restore') }}
             </el-button>
             <el-button
-              v-if="canDeleteSnapshot(scope.row)"
-              type="text"
+              v-if="canDeleteSnapshot(scope.row)" link
               size="small"
               class="snapshot-delete-button"
               :loading="deletingSnapshotId === scope.row.id"
@@ -111,8 +108,7 @@
     </el-dialog>
 
     <el-dialog
-      :title="detailDialogTitle"
-      :visible.sync="detailVisible"
+      :title="detailDialogTitle" v-model="detailVisible"
       width="860px"
       class="snapshot-detail-dialog"
     >
@@ -284,8 +280,7 @@
     </el-dialog>
 
     <el-dialog
-      :title="restorePreviewTitle"
-      :visible.sync="restorePreviewVisible"
+      :title="restorePreviewTitle" v-model="restorePreviewVisible"
       width="860px"
       class="snapshot-detail-dialog"
     >
@@ -418,7 +413,7 @@
           :title="$t('agentSnapshot.restoreMemoryWarning')"
         />
       </div>
-      <span slot="footer" class="dialog-footer">
+      <template #footer><span class="dialog-footer">
         <el-button @click="restorePreviewVisible = false">
           {{ $t('button.cancel') }}
         </el-button>
@@ -430,7 +425,7 @@
         >
           {{ $t('agentSnapshot.confirmRestore') }}
         </el-button>
-      </span>
+      </span></template>
     </el-dialog>
   </div>
 </template>
@@ -641,7 +636,7 @@ export default {
       }
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.cancelPendingSnapshotRequests();
   },
   methods: {
@@ -1827,30 +1822,30 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/global.scss';
 
-::v-deep .el-dialog {
+:deep(.el-dialog) {
   margin-top: 6vh !important;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-::v-deep .el-dialog__header {
+:deep(.el-dialog__header) {
   padding: 16px 20px 12px;
   background: linear-gradient(135deg, #e2eeff, #edeafe);
   text-align: left;
 }
 
-::v-deep .el-dialog__title {
+:deep(.el-dialog__title) {
   color: #1a1a1a;
   font-size: 16px;
   font-weight: 500;
 }
 
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   padding: 20px;
 }
 
-::v-deep .el-dialog__footer {
+:deep(.el-dialog__footer) {
   padding: 12px 20px 16px;
 }
 
@@ -1874,7 +1869,7 @@ export default {
   box-shadow: 0 0 0 3px rgba(103, 194, 58, 0.12);
 }
 
-::v-deep .current-version-row {
+:deep(.current-version-row) {
   background: #fbfffa;
 }
 
@@ -2237,50 +2232,50 @@ export default {
   white-space: normal;
 }
 
-.markdown-body ::v-deep h1,
-.markdown-body ::v-deep h2,
-.markdown-body ::v-deep h3,
-.markdown-body ::v-deep h4 {
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4) {
   margin: 0 0 8px;
   color: #3d4566;
   font-weight: 700;
   line-height: 1.4;
 }
 
-.markdown-body ::v-deep h1 {
+.markdown-body :deep(h1) {
   font-size: 18px;
 }
 
-.markdown-body ::v-deep h2 {
+.markdown-body :deep(h2) {
   font-size: 16px;
 }
 
-.markdown-body ::v-deep h3,
-.markdown-body ::v-deep h4 {
+.markdown-body :deep(h3),
+.markdown-body :deep(h4) {
   font-size: 14px;
 }
 
-.markdown-body ::v-deep p {
+.markdown-body :deep(p) {
   margin: 0 0 8px;
 }
 
-.markdown-body ::v-deep p:last-child,
-.markdown-body ::v-deep ul:last-child,
-.markdown-body ::v-deep ol:last-child {
+.markdown-body :deep(p:last-child),
+.markdown-body :deep(ul:last-child),
+.markdown-body :deep(ol:last-child) {
   margin-bottom: 0;
 }
 
-.markdown-body ::v-deep ul,
-.markdown-body ::v-deep ol {
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
   margin: 0 0 8px;
   padding-left: 20px;
 }
 
-.markdown-body ::v-deep li {
+.markdown-body :deep(li) {
   margin-bottom: 4px;
 }
 
-.markdown-body ::v-deep code {
+.markdown-body :deep(code) {
   padding: 1px 4px;
   border-radius: 4px;
   background: rgba(87, 120, 255, 0.12);
@@ -2289,12 +2284,12 @@ export default {
   font-size: 12px;
 }
 
-.markdown-body ::v-deep strong {
+.markdown-body :deep(strong) {
   color: #303133;
   font-weight: 700;
 }
 
-.markdown-body ::v-deep .markdown-empty {
+.markdown-body :deep(.markdown-empty) {
   color: #a3a8b8;
 }
 

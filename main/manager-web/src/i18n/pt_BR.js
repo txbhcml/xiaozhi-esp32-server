@@ -1042,6 +1042,7 @@ export default {
   'modelConfig.tts': 'Texto para Fala',
   'modelConfig.memory': 'Memória',
   'modelConfig.rag': 'RAG',
+  'modelConfig.voiceprint': 'Impressão Vocal',
   'modelConfig.modelId': 'ID do Modelo',
   'modelConfig.modelName': 'Nome do Modelo',
   'modelConfig.provider': 'Tipo de Interface',

@@ -1,7 +1,7 @@
 <template>
     <CustomDialog
         :title="$t('voiceClone.dialogTitle')"
-        :visible.sync="innerVisible"
+        v-model:visible="innerVisible"
         width="900px"
         :footer="false"
         @close="handleDialogClose"
@@ -521,7 +521,7 @@ export default {
             }
         });
     },
-    beforeDestroy() {
+    beforeUnmount() {
         if (this.audioContext) {
             this.audioContext.close();
         }
@@ -601,11 +601,11 @@ export default {
 }
 
 .audio-uploader {
-    ::v-deep .el-upload {
+    :deep(.el-upload) {
         width: 100%;
     }
 
-    ::v-deep .el-upload-dragger {
+    :deep(.el-upload-dragger) {
         width: 100%;
         height: 280px;
         display: flex;

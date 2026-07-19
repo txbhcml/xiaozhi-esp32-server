@@ -1,7 +1,6 @@
 <template>
   <el-dialog
-    :title="$t('cache.dialogTitle')"
-    :visible.sync="visible"
+    :title="$t('cache.dialogTitle')" :model-value="visible" @update:model-value="val => $emit('update:visible', val)"
     width="70%"
     :before-close="handleClose"
   >
@@ -41,7 +40,7 @@
           <el-table :data="cacheData.js" stripe style="width: 100%">
             <el-table-column prop="url" label="URL" width="auto" show-overflow-tooltip />
             <el-table-column prop="cached" :label="$t('cache.status')" width="100">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-tag type="success" v-if="scope.row.cached">{{ $t('cache.cached') }}</el-tag>
                 <el-tag type="danger" v-else>{{ $t('cache.notCached') }}</el-tag>
               </template>
@@ -52,7 +51,7 @@
           <el-table :data="cacheData.css" stripe style="width: 100%">
             <el-table-column prop="url" label="URL" width="auto" show-overflow-tooltip />
             <el-table-column prop="cached" label="状态" width="100">
-              <template slot-scope="scope">
+              <template #default="scope">
                 <el-tag type="success" v-if="scope.row.cached">已缓存</el-tag>
                 <el-tag type="danger" v-else>未缓存</el-tag>
               </template>
@@ -62,11 +61,11 @@
       </div>
     </div>
     
-    <span slot="footer" class="dialog-footer">
+    <template #footer><span class="dialog-footer">
       <el-button @click="handleClose">{{ $t('button.close') }}</el-button>
       <el-button type="primary" @click="refreshCache">{{ $t('cache.refreshStatus') }}</el-button>
       <el-button type="danger" @click="clearCache">{{ $t('cache.clearCache') }}</el-button>
-    </span>
+    </span></template>
   </el-dialog>
 </template>
 

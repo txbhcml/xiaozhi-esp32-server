@@ -14,7 +14,7 @@ import xiaozhi.modules.agent.dto.ContextProviderDTO;
 
 class ContextProviderListTypeHandlerTest {
 
-    private final ContextProviderListTypeHandler handler = new ContextProviderListTypeHandler();
+    private final ContextProviderListTypeHandler handler = new ContextProviderListTypeHandler(List.class);
 
     @Test
     void parseKeepsContextProviderDtoElementType() {

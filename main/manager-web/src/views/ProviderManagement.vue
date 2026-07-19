@@ -9,18 +9,18 @@
               <h2 class="page-title">{{ $t('header.providerManagement') }}</h2>
               <div class="right-operations">
                 <el-input :placeholder="$t('providerManagement.searchPlaceholder')" v-model="searchName" class="search-input"
-                  @keyup.enter.native="handleSearch" clearable />
+                  @keyup.enter="handleSearch" clearable />
                   <el-dropdown trigger="click" @command="handleSelectModelType" @visible-change="handleDropdownVisibleChange">
                     <CustomButton>
                       {{ $t('providerManagement.categoryFilter') }}{{ selectedModelTypeLabel }}<i class="el-icon-arrow-down el-icon--right"
                         :class="{ 'rotate-down': DropdownVisible }"></i>
                     </CustomButton>
-                    <el-dropdown-menu slot="dropdown">
+                    <template #dropdown><el-dropdown-menu>
                       <el-dropdown-item command="">{{ $t('common.all') }}</el-dropdown-item>
                       <el-dropdown-item v-for="item in translatedModelTypes" :key="item.value" :command="item.value">
                         {{ item.label }}
                       </el-dropdown-item>
-                    </el-dropdown-menu>
+                    </el-dropdown-menu></template>
                   </el-dropdown>
                 <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">{{ $t('common.search') }}</CustomButton>
               </div>
@@ -40,29 +40,29 @@
               @size-change="handlePageSizeChange"
               @page-change="goToPage"
             >
-              <template slot="selection" slot-scope="scope">
+              <template #selection="scope">
                 <el-checkbox v-model="scope.row.selected"></el-checkbox>
               </template>
-              <template slot="modelType" slot-scope="scope">
+              <template #modelType="scope">
                 <el-tag :type="getModelTypeTag(scope.row.modelType)">
                   {{ getModelTypeLabel(scope.row.modelType) }}
                 </el-tag>
               </template>
-              <template slot="fields" slot-scope="scope">
+              <template #fields="scope">
                 <el-popover placement="top-start" width="400" trigger="hover">
                   <div v-for="field in scope.row.fields" :key="field.key" class="field-item">
                     <span class="field-label">{{ field.label }}:</span>
                     <span class="field-type">{{ field.type }}</span>
                     <span v-if="isSensitiveField(field.key)" class="sensitive-tag">{{ $t('common.sensitive') }}</span>
                   </div>
-                  <el-button slot="reference" size="mini" type="text">{{ $t('providerManagement.viewFields') }}</el-button>
+                  <template #reference><el-button size="small" link>{{ $t('providerManagement.viewFields') }}</el-button></template>
                 </el-popover>
               </template>
-              <template slot="operations" slot-scope="scope">
-                <el-button size="mini" type="text" @click="editProvider(scope.row)">{{ $t('common.edit') }}</el-button>
-                <el-button size="mini" type="text" @click="deleteProvider(scope.row)">{{ $t('common.delete') }}</el-button>
+              <template #operations="scope">
+                <el-button size="small" link @click="editProvider(scope.row)">{{ $t('common.edit') }}</el-button>
+                <el-button size="small" link @click="deleteProvider(scope.row)">{{ $t('common.delete') }}</el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'" size="small" @click="handleSelectAll">
                     {{ isAllSelected ? $t('common.deselectAll') : $t('common.selectAll') }}
@@ -82,7 +82,7 @@
     </div>
 
     <!-- 新增/编辑供应器对话框 -->
-    <provider-dialog :title="dialogTitle" :visible.sync="dialogVisible" :form="providerForm" :model-types="modelTypes"
+    <provider-dialog :title="dialogTitle" v-model:visible="dialogVisible" :form="providerForm" :model-types="modelTypes"
       @submit="handleSubmit" @cancel="dialogVisible = false" />
 
     <el-footer>
@@ -333,11 +333,11 @@ export default {
         'TTS': 'warning',
         'LLM': 'danger',
         'Intent': 'info',
-        'Memory': '',
+        'Memory': 'primary',
         'VAD': 'primary',
         'RAG': 'warning'
       };
-      return typeMap[type] || '';
+      return typeMap[type] || 'primary';
     },
     getModelTypeLabel(type) {
       const typeItem = this.modelTypes.find(item => item.value === type);
@@ -444,7 +444,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;

@@ -1042,6 +1042,7 @@ export default {
   'modelConfig.tts': 'Text-zu-Sprache',
   'modelConfig.memory': 'Speicher',
   'modelConfig.rag': 'RAG',
+  'modelConfig.voiceprint': 'Stimmabdruck',
   'modelConfig.modelId': 'Modell-ID',
   'modelConfig.modelName': 'Modellname',
   'modelConfig.provider': 'Schnittstellentyp',

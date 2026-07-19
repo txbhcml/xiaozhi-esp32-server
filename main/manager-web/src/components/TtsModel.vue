@@ -1,5 +1,5 @@
 <template>
-  <CustomDialog :visible.sync="localVisible" :title="$t('modelConfig.voiceManagement')" width="90%"
+  <CustomDialog v-model:visible="localVisible" :title="$t('modelConfig.voiceManagement')" width="90%"
     :close-on-click-modal="true" :destroy-on-close="false" :footer="false" :append-to-body="true"
     @close="handleClose">
     <div class="scroll-wrapper">
@@ -8,30 +8,30 @@
           header-row-class-name="table-header" :fit="true" :element-loading-text="$t('voicePrint.loading')"
           element-loading-spinner="el-icon-loading" element-loading-background="rgba(0, 0, 0, 0.8)">
           <el-table-column :label="$t('ttsModel.select')" width="50" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-checkbox v-model="scope.row.selected"></el-checkbox>
             </template>
           </el-table-column>
           <el-table-column :label="$t('ttsModel.voiceCode')" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-input v-if="scope.row.editing" v-model="scope.row.voiceCode"></el-input>
               <span v-else>{{ scope.row.voiceCode }}</span>
             </template>
           </el-table-column>
           <el-table-column :label="$t('ttsModel.voiceName')" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-input v-if="scope.row.editing" v-model="scope.row.voiceName"></el-input>
               <span v-else>{{ scope.row.voiceName }}</span>
             </template>
           </el-table-column>
           <el-table-column :label="$t('ttsModel.languageType')" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-input v-if="scope.row.editing" v-model="scope.row.languageType"></el-input>
               <span v-else>{{ scope.row.languageType }}</span>
             </template>
           </el-table-column>
           <el-table-column v-if="!showReferenceColumns" :label="$t('ttsModel.preview')" align="center" class-name="audio-column">
-            <template slot-scope="scope">
+            <template #default="scope">
               <div class="custom-audio-container">
                 <el-input v-if="scope.row.editing" v-model="scope.row.voiceDemo" :placeholder="$t('ttsModel.enterMp3Url')"
                   class="audio-input">
@@ -41,39 +41,39 @@
             </template>
           </el-table-column>
           <el-table-column v-if="!showReferenceColumns" :label="$t('ttsModel.remark')" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-input v-if="scope.row.editing" type="textarea" :rows="1" autosize v-model="scope.row.remark"
                   :placeholder="$t('ttsModel.enterRemark')" class="remark-input"></el-input>
               <span v-else>{{ scope.row.remark }}</span>
             </template>
           </el-table-column>
           <el-table-column v-if="showReferenceColumns" :label="$t('ttsModel.referenceAudioPath')" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-input v-if="scope.row.editing" v-model="scope.row.referenceAudio" :placeholder="$t('ttsModel.enterReferenceAudio')"></el-input>
               <span v-else>{{ scope.row.referenceAudio }}</span>
             </template>
           </el-table-column>
           <el-table-column v-if="showReferenceColumns" :label="$t('ttsModel.referenceText')" align="center">
-            <template slot-scope="scope">
+            <template #default="scope">
               <el-input v-if="scope.row.editing" v-model="scope.row.referenceText" :placeholder="$t('ttsModel.enterReferenceText')"></el-input>
               <span v-else>{{ scope.row.referenceText }}</span>
             </template>
           </el-table-column>
           <el-table-column :label="$t('ttsModel.operation')" align="center" width="150">
-            <template slot-scope="scope">
+            <template #default="scope">
               <template v-if="!scope.row.editing">
-                <el-button type="text" size="mini" @click="startEdit(scope.row)" class="edit-btn">
+                <el-button link size="small" @click="startEdit(scope.row)" class="edit-btn">
                     {{ $t('ttsModel.edit') }}
                   </el-button>
-                  <el-button type="text" size="mini" @click="deleteRow(scope.row)" class="delete-btn">
+                  <el-button link size="small" @click="deleteRow(scope.row)" class="delete-btn">
                     {{ $t('ttsModel.delete') }}
                   </el-button>
               </template>
               <template v-else>
-                <el-button type="success" size="mini" @click="cancelEdit(scope.row)" class="save-Tts">
+                <el-button type="success" size="small" @click="cancelEdit(scope.row)" class="save-Tts">
                   {{ $t('button.cancel') }}
                 </el-button>
-                <el-button type="success" size="mini" @click="saveEdit(scope.row)" class="save-Tts">
+                <el-button type="success" size="small" @click="saveEdit(scope.row)" class="save-Tts">
                   {{ $t('ttsModel.save') }}
                 </el-button>
               </template>
@@ -181,7 +181,7 @@ export default {
     window.addEventListener('mouseup', this.stopDrag);
     window.addEventListener('mousemove', this.handleDrag);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener('resize', this.updateScrollbar);
     window.removeEventListener('mouseup', this.stopDrag);
     window.removeEventListener('mousemove', this.handleDrag);
@@ -343,7 +343,7 @@ export default {
 
     startEdit(row) {
       row.editing = true;
-      this.$set(row, 'originalData', { ...row });
+      row.originalData = { ...row };
     },
 
     cancelEdit(row) {
@@ -533,33 +533,33 @@ export default {
 
 <style lang="scss" scoped>
 /* 表格样式 */
-::v-deep .data-table .el-table__header th {
+:deep(.data-table) .el-table__header th {
   color: black;
   padding: 6px 0 !important;
 }
 
-::v-deep .data-table .el-table__row td {
+:deep(.data-table) .el-table__row td {
   padding: 8px 0 12px !important;
 }
 
-::v-deep .data-table {
+:deep(.data-table) {
   border: none !important;
 }
 
-::v-deep .data-table.el-table::before {
+:deep(.data-table.el-table::before) {
   display: none !important;
 }
 
-::v-deep .data-table .el-table__header-wrapper {
+:deep(.data-table) .el-table__header-wrapper {
   border-bottom: 2px solid #f1f2fb !important;
 }
 
-::v-deep .data-table .el-table__body-wrapper .el-table__body td {
+:deep(.data-table) .el-table__body-wrapper .el-table__body td {
   border: none !important;
 }
 
 /* 备注文本 */
-::v-deep .remark-input .el-textarea__inner {
+:deep(.remark-input) .el-textarea__inner {
   border-radius: 4px;
   border: 1px solid #e6e6e6;
   padding: 8px 12px;
@@ -569,12 +569,12 @@ export default {
   background-color: transparent !important;
 }
 
-::v-deep .remark-input .el-textarea__inner:focus {
+:deep(.remark-input) .el-textarea__inner:focus {
   border-color: #409EFF !important;
   outline: none;
 }
 
-::v-deep .remark-input .el-textarea__inner::placeholder {
+:deep(.remark-input) .el-textarea__inner::placeholder {
   color: #c0c4cc !important;
   opacity: 1;
 }
@@ -672,11 +672,11 @@ export default {
 }
 
 /* 表格单元格自适应 */
-::v-deep .el-table__body-wrapper {
+:deep(.el-table__body-wrapper) {
   overflow-x: hidden !important;
 }
 
-::v-deep .el-table td {
+:deep(.el-table) td {
   white-space: pre-wrap !important;
   word-break: break-all !important;
 }
@@ -688,19 +688,19 @@ export default {
 }
 
 /* 输入框自适应 */
-::v-deep .el-input__inner,
-::v-deep .el-textarea__inner {
+:deep(.el-input__inner),
+:deep(.el-textarea__inner) {
   width: 100% !important;
   min-width: 120px;
 }
 
 /* 音频输入框特殊处理 */
-.audio-input ::v-deep .el-input__inner {
+.audio-input :deep(.el-input__inner) {
   min-width: 200px;
 }
 
 /* 操作按钮弹性布局 */
-::v-deep .el-table__row .el-button {
+:deep(.el-table__row) .el-button {
   flex-shrink: 0;
   margin: 2px !important;
 }

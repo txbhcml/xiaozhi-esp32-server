@@ -1,6 +1,6 @@
 <template>
   <CustomDialog
-    :visible.sync="dialogVisible"
+    v-model:visible="dialogVisible"
     :title="$t('modelConfigDialog.addModel')"
     width="57%"
     class="add-model-dialog"
@@ -290,10 +290,10 @@ export default {
 <style lang="scss" scoped>
 @import '@/styles/global.scss';
 
-::v-deep .el-dialog {
+:deep(.el-dialog) {
   margin-top: 6vh !important;
 }
-::v-deep .el-dialog__body {
+:deep(.el-dialog__body) {
   max-height: 60vh;
   overflow-y: auto;
   @include scrollbar-style;
@@ -384,7 +384,7 @@ export default {
 .custom-input-bg .el-input__inner {
   height: 32px;
 }
-::v-deep .el-input__inner {
+:deep(.el-input__inner) {
   height: 32px;
 }
 </style>

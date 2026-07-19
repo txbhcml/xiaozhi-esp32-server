@@ -348,7 +348,7 @@ export default {
   flex-direction: column;
 }
 
-::v-deep .description-item .el-textarea {
+:deep(.description-item) .el-textarea {
   height: 300px;
   min-height: 200px;
   max-height: 400px;
@@ -356,7 +356,7 @@ export default {
   flex-direction: column;
 }
 
-::v-deep .description-item .el-textarea__inner {
+:deep(.description-item) .el-textarea__inner {
   height: 100% !important;
   min-height: 200px !important;
   max-height: 400px !important;
@@ -370,7 +370,7 @@ export default {
   color: #303133;
 }
 
-::v-deep .el-form-item__label {
+:deep(.el-form-item__label) {
   font-size: 12px !important;
   color: #3d4566 !important;
   font-weight: 400;
@@ -378,7 +378,7 @@ export default {
   padding-bottom: 2px;
 }
 
-::v-deep .el-textarea .el-input__count {
+:deep(.el-textarea) .el-input__count {
   color: #909399;
   background: rgba(255, 255, 255, 0.8);
   position: absolute;

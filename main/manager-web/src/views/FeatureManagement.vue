@@ -8,13 +8,13 @@
             <div class="config-header">
               <h2 class="page-title">{{ $t('header.featureManagement') }}</h2>
               <div class="header-actions">
-                <CustomButton :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'" size="medium" @click="!isSaving && toggleSelectAll()" :disabled="isSaving">
+                <CustomButton :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'"  @click="!isSaving && toggleSelectAll()" :disabled="isSaving">
                   {{ isAllSelected ? $t('featureManagement.deselectAll') : $t('featureManagement.selectAll') }}
                 </CustomButton>
-                <CustomButton icon="el-icon-refresh" size="medium" @click="handleReset" :disabled="isSaving">
+                <CustomButton icon="el-icon-refresh"  @click="handleReset" :disabled="isSaving">
                   {{ $t('featureManagement.reset') }}
                 </CustomButton>
-                <CustomButton icon="el-icon-setting" size="medium" type="confirm" @click="handleSave" :disabled="isSaving">
+                <CustomButton icon="el-icon-setting"  type="confirm" @click="handleSave" :disabled="isSaving">
                   {{ isSaving ? $t('featureManagement.saving') : $t('featureManagement.save') }}
                 </CustomButton>
               </div>
@@ -180,7 +180,7 @@ export default {
     }
   },
   
-  beforeDestroy() {
+  beforeUnmount() {
     this.removeConfigChangeListener()
   },
   
@@ -462,7 +462,7 @@ export default {
   overflow: hidden;
 }
 
-.feature-card ::v-deep .el-card__body {
+.feature-card :deep(.el-card__body) {
   padding: 14px 20px;
   display: flex;
   flex-direction: column;
@@ -520,16 +520,16 @@ export default {
   margin-left: 30px;
 }
 
-.feature-checkbox ::v-deep .el-checkbox__input {
+.feature-checkbox :deep(.el-checkbox__input) {
   transform: scale(1.5);
 }
 
-.feature-checkbox ::v-deep .el-checkbox__input.is-checked .el-checkbox__inner {
+.feature-checkbox :deep(.el-checkbox__input.is-checked) .el-checkbox__inner {
   background-color: #5778ff;
   border-color: #5778ff;
 }
 
-.feature-checkbox ::v-deep .el-checkbox__input.is-checked + .el-checkbox__label {
+.feature-checkbox :deep(.el-checkbox__input.is-checked) + .el-checkbox__label {
   color: #5778ff;
 }
 

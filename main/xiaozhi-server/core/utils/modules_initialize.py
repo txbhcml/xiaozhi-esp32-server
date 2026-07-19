@@ -130,16 +130,25 @@ def initialize_asr(config):
 
 
 def initialize_voiceprint(asr_instance, config):
-    """初始化声纹识别功能"""
+    """初始化声纹识别功能
+
+    支持两种配置格式：
+    1. 新格式（直接调用声纹 API）：config["voiceprint"] 含 type 字段
+    2. 旧格式（HTTP 调用外部服务）：config["voiceprint"] 含 url 字段
+    """
     voiceprint_config = config.get("voiceprint")
     if not voiceprint_config:
-        return False  
-
-    # 应用配置
-    if not voiceprint_config.get("url") or not voiceprint_config.get("speakers"):
-        logger.bind(tag=TAG).warning("声纹识别配置不完整")
         return False
-        
+
+    # 检查必要配置：speakers 必须有，type 或 url 至少有一个
+    if not voiceprint_config.get("speakers"):
+        logger.bind(tag=TAG).warning("声纹识别配置不完整：缺少 speakers")
+        return False
+
+    if not voiceprint_config.get("type") and not voiceprint_config.get("url"):
+        logger.bind(tag=TAG).warning("声纹识别配置不完整：需要 type 或 url")
+        return False
+
     try:
         asr_instance.init_voiceprint(voiceprint_config)
         logger.bind(tag=TAG).info("ASR模块声纹识别功能已动态启用")

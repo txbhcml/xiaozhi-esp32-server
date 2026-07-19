@@ -46,7 +46,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-::v-deep .el-pagination {
+:deep(.el-pagination) {
   .btn-next,
   .btn-prev,
   .el-pager li {

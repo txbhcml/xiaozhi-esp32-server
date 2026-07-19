@@ -1,6 +1,6 @@
 <template>
-  <CustomDialog :title="title" :visible.sync="dialogVisible" width="600px" class="knowledge-base-dialog" @close="handleClose" @confirm="handleSubmit">
-    <el-form ref="knowledgeBaseForm" :model="form" :rules="rules" label-width="100px" size="medium">
+  <CustomDialog :title="title" v-model:visible="dialogVisible" width="600px" class="knowledge-base-dialog" @close="handleClose" @confirm="handleSubmit">
+    <el-form ref="knowledgeBaseForm" :model="form" :rules="rules" label-width="100px" >
       <el-form-item :label="$t('knowledgeBaseDialog.name')" prop="name">
         <el-input v-model="form.name" :placeholder="$t('knowledgeBaseDialog.namePlaceholder')" clearable></el-input>
       </el-form-item>
@@ -102,7 +102,7 @@ export default {
 
         // 如果是新增知识库且没有设置ragModelId，则默认选择第一个RAG模型
         if (!this.form.id && !this.form.ragModelId && this.ragModels.length > 0) {
-          this.$set(this.form, 'ragModelId', this.ragModels[0].id);
+          this.form.ragModelId = this.ragModels[0].id;
         }
 
         if (this.$refs.knowledgeBaseForm) {
@@ -115,7 +115,7 @@ export default {
       if (newModels.length > 0) {
         // 如果是新增知识库且没有设置ragModelId，则默认选择第一个RAG模型
         if (!this.form.id && !this.form.ragModelId) {
-          this.$set(this.form, 'ragModelId', newModels[0].id);
+          this.form.ragModelId = newModels[0].id;
         }
       }
     }
@@ -156,7 +156,7 @@ export default {
 
           // 如果是新增知识库且没有设置ragModelId，则默认选择第一个RAG模型
           if (!this.form.id && !this.form.ragModelId && this.ragModels.length > 0) {
-            this.$set(this.form, 'ragModelId', this.ragModels[0].id);
+            this.form.ragModelId = this.ragModels[0].id;
             console.log('已设置默认RAG模型:', this.ragModels[0].id);
           }
         } else {
@@ -171,26 +171,26 @@ export default {
 
 <style lang="scss" scoped>
 .knowledge-base-dialog {
-  ::v-deep .el-dialog {
+  :deep(.el-dialog) {
     border-radius: 20px;
     overflow: hidden;
   }
 
-  ::v-deep .el-dialog__body {
+  :deep(.el-dialog__body) {
     padding: 20px 30px;
   }
 
-  ::v-deep .el-form-item {
+  :deep(.el-form-item) {
     margin-bottom: 20px;
   }
 
-  ::v-deep .el-form-item__label {
+  :deep(.el-form-item__label) {
     font-weight: 500;
     color: #34495e;
     font-size: 14px;
   }
 
-  ::v-deep .el-input {
+  :deep(.el-input) {
     .el-input__inner {
       height: 36px;
       font-size: 14px;
@@ -205,7 +205,7 @@ export default {
     }
   }
 
-  ::v-deep .el-textarea {
+  :deep(.el-textarea) {
     .el-textarea__inner {
       font-size: 14px;
       border-radius: 4px;
@@ -219,7 +219,7 @@ export default {
     }
   }
 
-  ::v-deep .el-select {
+  :deep(.el-select) {
     .el-input__inner {
       height: 36px;
       font-size: 14px;

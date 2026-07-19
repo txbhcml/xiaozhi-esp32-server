@@ -11,7 +11,7 @@
             v-model="search"
             class="search-input"
             clearable
-            @keyup.enter.native="handleSearch"
+            @keyup.enter="handleSearch"
             style="width: 240px"
           />
           <el-button class="btn-search" @click="handleSearch">
@@ -55,6 +55,9 @@
           <el-menu-item index="rag">
             <span class="menu-text">{{ $t("modelConfig.rag") }}</span>
           </el-menu-item>
+          <el-menu-item index="voiceprint">
+            <span class="menu-text">{{ $t("modelConfig.voiceprint") }}</span>
+          </el-menu-item>
         </el-menu>
 
         <!-- 右侧内容 -->
@@ -91,12 +94,12 @@
                 align="center"
               ></el-table-column>
               <el-table-column :label="$t('modelConfig.provider')" align="center">
-                <template slot-scope="scope">
+                <template #default="scope">
                   {{ scope.row.configJson.type || $t("modelConfig.unknown") }}
                 </template>
               </el-table-column>
               <el-table-column :label="$t('modelConfig.isEnabled')" align="center">
-                <template slot-scope="scope">
+                <template #default="scope">
                   <el-tooltip
                     v-if="scope.row.isDefault === 1 && scope.row.isEnabled === 1"
                     :content="$t('modelConfig.defaultModelCannotDisable')"
@@ -125,7 +128,7 @@
                 </template>
               </el-table-column>
               <el-table-column :label="$t('modelConfig.isDefault')" align="center">
-                <template slot-scope="scope">
+                <template #default="scope">
                   <el-switch
                     v-model="scope.row.isDefault"
                     active-color="#5778ff"
@@ -141,10 +144,8 @@
                 :label="$t('modelConfig.voiceManagement')"
                 align="center"
               >
-                <template slot-scope="scope">
-                  <el-button
-                    type="text"
-                    size="mini"
+                <template #default="scope">
+                  <el-button link size="small"
                     @click="openTtsDialog(scope.row)"
                     class="voice-management-btn"
                   >
@@ -157,26 +158,20 @@
                 align="center"
                 width="210px"
               >
-                <template slot-scope="scope">
-                  <el-button
-                    type="text"
-                    size="mini"
+                <template #default="scope">
+                  <el-button link size="small"
                     @click="editModel(scope.row)"
                     class="edit-btn"
                   >
                     {{ $t("modelConfig.edit") }}
                   </el-button>
-                  <el-button
-                    type="text"
-                    size="mini"
+                  <el-button link size="small"
                     @click="duplicateModel(scope.row)"
                     class="edit-btn"
                   >
                     {{ $t("modelConfig.duplicate") }}
                   </el-button>
-                  <el-button
-                    type="text"
-                    size="mini"
+                  <el-button link size="small"
                     @click="deleteModel(scope.row)"
                     class="delete-btn"
                   >
@@ -221,18 +216,18 @@
 
       <ModelEditDialog
         :modelType="activeTab"
-        :visible.sync="editDialogVisible"
+        v-model:visible="editDialogVisible"
         :modelData="editModelData"
         @save="handleModelSave"
       />
       <TtsModel
-        :visible.sync="ttsDialogVisible"
+        v-model:visible="ttsDialogVisible"
         :ttsModelId="selectedTtsModelId"
         :modelConfig="selectedModelConfig"
       />
       <AddModelDialog
         :modelType="activeTab"
-        :visible.sync="addDialogVisible"
+        v-model:visible="addDialogVisible"
         @confirm="handleAddConfirm"
       />
     </div>
@@ -564,7 +559,7 @@ export default {
   height: 23px;
 }
 
-::v-deep .el-table tr {
+:deep(.el-table) tr {
   background: transparent;
 }
 
@@ -706,14 +701,14 @@ export default {
   transform: translateY(-1px);
 }
 
-::v-deep .search-input .el-input__inner {
+:deep(.search-input) .el-input__inner {
   border-radius: 4px;
   border: 1px solid #dcdfe6;
   background-color: white;
   transition: border-color 0.2s;
 }
 
-::v-deep .search-input .el-input__inner:focus {
+:deep(.search-input) .el-input__inner:focus {
   border-color: #6b8cff;
   outline: none;
 }
@@ -724,7 +719,7 @@ export default {
 //   background-color: transparent !important;
 // }
 
-// .data-table ::v-deep .el-table__row {
+// .data-table :deep(.el-table__row) {
 //   background-color: transparent !important;
 // }
 
@@ -793,7 +788,7 @@ export default {
 //   background: linear-gradient(135deg, #3a8ee6, #5a7cff);
 // }
 
-.el-table th ::v-deep .el-table__cell {
+.el-table th :deep(.el-table__cell) {
   overflow: hidden;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -801,11 +796,11 @@ export default {
   background-color: transparent !important;
 }
 
-::v-deep .el-table .custom-selection-header .cell .el-checkbox__inner {
+:deep(.el-table) .custom-selection-header .cell .el-checkbox__inner {
   display: none !important;
 }
 
-::v-deep .el-table .custom-selection-header .cell::before {
+:deep(.el-table) .custom-selection-header .cell::before {
   content: attr(data-content);
   display: block;
   text-align: center;
@@ -828,16 +823,16 @@ export default {
 
 /* 已移除可能影响文本显示的空伪元素 */
 
-::v-deep .el-table__body .el-checkbox__inner {
+:deep(.el-table__body) .el-checkbox__inner {
   display: inline-block !important;
   background: #ffffff;
 }
 
-::v-deep .el-table thead th:not(:first-child) .cell {
+:deep(.el-table) thead th:not(:first-child) .cell {
   color: #303133 !important;
 }
 
-::v-deep .nav-panel .el-menu-item.is-active .menu-text {
+:deep(.nav-panel) .el-menu-item.is-active .menu-text {
   color: #fff !important;
 }
 
@@ -849,12 +844,12 @@ export default {
   padding-bottom: 2px;
 }
 
-::v-deep .el-checkbox__inner {
+:deep(.el-checkbox__inner) {
   border-color: #cfcfcf !important;
   transition: all 0.2s ease-in-out;
 }
 
-::v-deep .el-checkbox__input.is-checked .el-checkbox__inner {
+:deep(.el-checkbox__input.is-checked) .el-checkbox__inner {
   background-color: #5f70f3;
   border-color: #5f70f3;
 }
@@ -875,11 +870,11 @@ export default {
   transform: scale(1.05);
 }
 
-::v-deep .el-table .el-table-column--selection .cell {
+:deep(.el-table) .el-table-column--selection .cell {
   padding-left: 15px !important;
 }
 
-::v-deep .el-table .el-table__fixed-right .cell {
+:deep(.el-table) .el-table__fixed-right .cell {
   padding-right: 15px !important;
 }
 
@@ -889,7 +884,7 @@ export default {
   color: #7079aa !important;
 }
 
-::v-deep .el-table .cell {
+:deep(.el-table) .cell {
   padding-left: 10px;
   padding-right: 10px;
 }
@@ -904,7 +899,7 @@ export default {
   overflow: hidden;
 }
 
-.model-card ::v-deep .el-card__body {
+.model-card :deep(.el-card__body) {
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -961,21 +956,21 @@ export default {
 }
 
 
-::v-deep .el-loading-mask {
+:deep(.el-loading-mask) {
   background-color: rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: blur(2px);
 }
 
-::v-deep .el-loading-spinner .circular {
+:deep(.el-loading-spinner) .circular {
   width: 28px;
   height: 28px;
 }
 
-::v-deep .el-loading-spinner .path {
+:deep(.el-loading-spinner) .path {
   stroke: #6b8cff;
 }
 
-::v-deep .el-loading-text {
+:deep(.el-loading-text) {
   color: #6b8cff !important;
   font-size: 14px;
   margin-top: 8px;

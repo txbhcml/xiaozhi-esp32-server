@@ -9,7 +9,7 @@
               <h2 class="page-title">{{ $t('header.userManagement') }}</h2>
               <div class="right-operations">
                 <el-input :placeholder="$t('user.searchPhone')" v-model="searchPhone" class="search-input" clearable
-                  @keyup.enter.native="handleSearch" />
+                  @keyup.enter="handleSearch" />
                 <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">{{ $t('user.search') }}</CustomButton>
               </div>
             </div>
@@ -30,24 +30,24 @@
               @size-change="handlePageSizeChange"
               @page-change="goToPage"
             >
-              <template slot="selection" slot-scope="scope">
+              <template #selection="scope">
                 <el-checkbox v-model="scope.row.selected"></el-checkbox>
               </template>
-              <template slot="status" slot-scope="scope">
+              <template #status="scope">
                 <el-tag v-if="scope.row.status === 1" type="success">{{ $t('user.normal') }}</el-tag>
                 <el-tag v-else type="danger">{{ $t('user.disabled') }}</el-tag>
               </template>
-              <template slot="operations" slot-scope="scope">
-                <el-button size="mini" type="text" @click="resetPassword(scope.row)">{{ $t('user.resetPassword')
+              <template #operations="scope">
+                <el-button size="small" link @click="resetPassword(scope.row)">{{ $t('user.resetPassword')
                   }}</el-button>
-                <el-button size="mini" type="text" v-if="scope.row.status === 1"
+                <el-button size="small" link v-if="scope.row.status === 1"
                   @click="handleChangeStatus(scope.row, 0)">{{ $t('user.disableAccount') }}</el-button>
-                <el-button size="mini" type="text" v-if="scope.row.status === 0"
+                <el-button size="small" link v-if="scope.row.status === 0"
                   @click="handleChangeStatus(scope.row, 1)">{{ $t('user.enableAccount') }}</el-button>
-                <el-button size="mini" type="text" @click="deleteUser(scope.row)">{{ $t('user.deleteUser')
+                <el-button size="small" link @click="deleteUser(scope.row)">{{ $t('user.deleteUser')
                   }}</el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton :icon="isAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'" size="small" @click="handleSelectAll">
                     {{ isAllSelected ? $t('user.deselectAll') : $t('user.selectAll') }}
@@ -68,7 +68,7 @@
       </div>
     </div>
 
-    <view-password-dialog :visible.sync="showViewPassword" :password="currentPassword" />
+    <view-password-dialog v-model:visible="showViewPassword" :password="currentPassword" />
     <el-footer>
       <version-footer />
     </el-footer>
@@ -438,7 +438,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;

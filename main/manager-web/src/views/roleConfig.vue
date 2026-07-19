@@ -37,7 +37,7 @@
                   ref="saveTagInput"
                   size="small"
                   maxLength="20"
-                  @keyup.enter.native="handleInputConfirm"
+                  @keyup.enter="handleInputConfirm"
                   @blur="handleInputConfirm"
                 >
                 </el-input>
@@ -123,7 +123,7 @@
                       </template>
                       <el-input
                         type="textarea"
-                        rows="8"
+                        :rows="8"
                         resize="none"
                         :placeholder="$t('roleConfig.pleaseEnterContent')"
                         v-model="form.systemPrompt"
@@ -141,7 +141,7 @@
                       </template>
                       <el-input
                         type="textarea"
-                        rows="4"
+                        :rows="4"
                         resize="none"
                         v-model="form.summaryMemory"
                         maxlength="2000"
@@ -303,13 +303,13 @@
                           class="form-select"
                           @change="handleModelChange(model.type, $event)"
                         >
-                          <el-option
-                            v-for="(item, optionIndex) in modelOptions[model.type]"
-                            v-if="!item.isHidden"
-                            :key="`option-${index}-${optionIndex}`"
-                            :label="item.label"
-                            :value="item.value"
-                          />
+                          <template v-for="(item, optionIndex) in modelOptions[model.type]" :key="`option-${index}-${optionIndex}`">
+                            <el-option
+                              v-if="!item.isHidden"
+                              :label="item.label"
+                              :value="item.value"
+                            />
+                          </template>
                         </el-select>
                         <div v-if="showFunctionIcons(model.type)" class="function-icons">
                           <el-tooltip
@@ -318,12 +318,12 @@
                             effect="light"
                             placement="top"
                           >
-                            <div slot="content">
+                            <template #content><div>
                               <div><strong>{{ $t("roleConfig.functionName") }}:</strong> {{ func.name }}</div>
                             </div>
                             <div class="icon-dot">
                               {{ getFunctionDisplayChar(func.name) }}
-                            </div>
+                            </div></template>
                           </el-tooltip>
                           <el-button
                             class="edit-function-btn"
@@ -407,22 +407,21 @@
                                 "
                               >
                                 <span>{{ item.label }}</span>
-                                <template v-if="hasAudioPreview(item)">
-                                  <el-button
-                                    type="text"
-                                    :icon="
-                                      playingVoice &&
-                                      currentPlayingVoiceId === item.value &&
-                                      !isPaused
-                                        ? 'el-icon-video-pause'
-                                        : 'el-icon-video-play'
-                                    "
-                                    size="small"
-                                    @click.stop="toggleAudioPlayback(item.value)"
-                                    :loading="false"
-                                    class="play-button"
-                                  />
-                                </template>
+                                <el-button
+                                  v-if="hasAudioPreview(item)"
+                                  link
+                                  :icon="
+                                    playingVoice &&
+                                    currentPlayingVoiceId === item.value &&
+                                    !isPaused
+                                      ? 'el-icon-video-pause'
+                                      : 'el-icon-video-play'
+                                  "
+                                  size="small"
+                                  @click.stop="toggleAudioPlayback(item.value)"
+                                  :loading="false"
+                                  class="play-button"
+                                />
                               </div>
                             </el-option>
                           </el-select>
@@ -453,19 +452,19 @@
       @dialog-closed="handleDialogClosed"
     />
     <context-provider-dialog
-      :visible.sync="showContextProviderDialog"
+      v-model:visible="showContextProviderDialog"
       :providers="currentContextProviders"
       @confirm="handleUpdateContext"
     />
     <tts-advanced-settings
-      :visible.sync="showTtsAdvancedDialog"
+      v-model:visible="showTtsAdvancedDialog"
       :settings="ttsSettings"
       :checked-replacement-word-ids="checkedReplacementWordIds"
       @save="handleTtsSettingsSave"
     />
       <agent-snapshot-dialog
         v-if="$route.query.agentId"
-        :visible.sync="showSnapshotDialog"
+        v-model:visible="showSnapshotDialog"
         :agent-id="$route.query.agentId"
         :current-version-no="currentVersionNo"
         @restored="handleSnapshotRestored"
@@ -836,15 +835,11 @@ export default {
         if (model.type != "LLM") {
           Api.model.getModelNames(model.type, "", ({ data }) => {
             if (data.code === 0) {
-              this.$set(
-                this.modelOptions,
-                model.type,
-                data.data.map((item) => ({
+              this.modelOptions[model.type] = data.data.map(item => ({
                   value: item.id,
                   label: item.modelName,
                   isHidden: false,
-                }))
-              );
+                }));
 
               // 如果是意图识别选项，需要根据当前LLM类型更新可见性
               if (model.type === "Intent") {
@@ -866,7 +861,7 @@ export default {
                 });
                 this.llmModeTypeMap.set(item.id, item.type);
               });
-              this.$set(this.modelOptions, model.type, LLMdata);
+              this.modelOptions[model.type] = LLMdata;
             } else {
               this.$message.error(data.msg || i18n.t("roleConfig.fetchModelsFailed"));
             }
@@ -1462,7 +1457,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-::v-deep .el-radio-group {
+:deep(.el-radio-group) {
   .is-active {
     .el-radio-button__inner {
       &:hover {
@@ -1752,7 +1747,7 @@ export default {
   background-color: #e6ebff;
 }
 
-::v-deep .el-form-item__label {
+:deep(.el-form-item__label) {
   font-size: 12px !important;
   color: #3d4566 !important;
   font-weight: 400;
@@ -1760,7 +1755,7 @@ export default {
   padding-bottom: 2px;
 }
 
-::v-deep .el-textarea .el-input__count {
+:deep(.el-textarea) .el-input__count {
   color: #909399;
   background: none;
   position: absolute;
@@ -1816,23 +1811,23 @@ export default {
   justify-content: flex-end;
 }
 
-.chat-history-options ::v-deep .el-radio-button {
+.chat-history-options :deep(.el-radio-button) {
   border-color: #5778ff;
 }
 
-.chat-history-options ::v-deep .el-radio-button .el-radio-button__inner {
+.chat-history-options :deep(.el-radio-button) .el-radio-button__inner {
   color: #5778ff;
   border-color: #5778ff;
   background-color: transparent;
 }
 
-.chat-history-options ::v-deep .el-radio-button.is-active .el-radio-button__inner {
+.chat-history-options :deep(.el-radio-button.is-active) .el-radio-button__inner {
   background-color: #5778ff;
   border-color: #5778ff;
   color: white;
 }
 
-.chat-history-options ::v-deep .el-radio-button .el-radio-button__inner:hover {
+.chat-history-options :deep(.el-radio-button) .el-radio-button__inner:hover {
   color: #5778ff;
 }
 
@@ -1894,7 +1889,7 @@ export default {
   margin-left: 8px;
 }
 
-.context-provider-item ::v-deep .el-form-item__label {
+.context-provider-item :deep(.el-form-item__label) {
   line-height: 42px !important;
 }
 
@@ -1925,11 +1920,11 @@ export default {
   width: 100%;
 }
 
-.tts-slider ::v-deep .el-slider__input {
+.tts-slider :deep(.el-slider__input) {
   width: 80px;
 }
 
-.tts-slider ::v-deep .el-input__inner {
+.tts-slider :deep(.el-input__inner) {
   text-align: center;
   padding: 0 8px;
 }
@@ -1953,7 +1948,7 @@ export default {
 }
 .input-new-tag {
   width: 90px;
-  &::v-deep(.el-input__inner) {
+  &:deep(.el-input__inner) {
     width: 90px !important;
   }
 }

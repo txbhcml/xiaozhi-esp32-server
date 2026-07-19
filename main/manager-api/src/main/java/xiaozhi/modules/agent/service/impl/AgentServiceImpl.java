@@ -481,10 +481,10 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
                     .toList();
 
             if (!toUpdate.isEmpty()) {
-                agentPluginMappingService.updateBatchById(toUpdate);
+                agentPluginMappingService.updateBatchById(toUpdate, 1000);
             }
             if (!toInsert.isEmpty()) {
-                agentPluginMappingService.saveBatch(toInsert);
+                agentPluginMappingService.saveBatch(toInsert, 1000);
             }
 
             // 5. 删除本次不在提交列表里的插件映射
@@ -493,7 +493,7 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
                     .map(AgentPluginMapping::getId)
                     .toList();
             if (!toDelete.isEmpty()) {
-                agentPluginMappingService.removeBatchByIds(toDelete);
+                agentPluginMappingService.removeByIds(toDelete);
             }
         }
 
@@ -680,7 +680,7 @@ public class AgentServiceImpl extends BaseServiceImpl<AgentDao, AgentEntity> imp
             toInsert.add(mapping);
         }
         // 保存默认插件
-        agentPluginMappingService.saveBatch(toInsert);
+        agentPluginMappingService.saveBatch(toInsert, 1000);
         return entity.getId();
     }
 

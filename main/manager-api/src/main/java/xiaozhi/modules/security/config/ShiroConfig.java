@@ -12,6 +12,7 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.config.ShiroFilterConfiguration;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,11 +31,10 @@ import xiaozhi.modules.sys.service.SysParamsService;
 public class ShiroConfig {
 
     @Bean
-    public DefaultWebSessionManager sessionManager() {
-        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
-        sessionManager.setSessionValidationSchedulerEnabled(false);
-        sessionManager.setSessionIdUrlRewritingEnabled(false);
-
+    public SessionManager sessionManager() {
+        // 使用 Servlet 容器的 session 管理，避免 Shiro 自管理 session 导致的 UnknownSessionException
+        // 项目使用 OAuth2 token 认证，无需 Shiro 的 session 机制
+        ServletContainerSessionManager sessionManager = new ServletContainerSessionManager();
         return sessionManager;
     }
 
@@ -101,7 +101,7 @@ public class ShiroConfig {
     }
 
     @Bean("lifecycleBeanPostProcessor")
-    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
+    public static LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
         return new LifecycleBeanPostProcessor();
     }
 

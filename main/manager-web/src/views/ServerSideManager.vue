@@ -15,7 +15,7 @@
                     <span class="server-label">{{ $t('serverSideManager.wsAddress') }}</span>
                     <span class="server-value">{{ item.address }}</span>
                   </div>
-                  <el-button class="copy-button" type="text" size="small" @click="copyAddress(item.address)">{{ $t('common.copyAddress') }}</el-button>
+                  <el-button class="copy-button" link size="small" @click="copyAddress(item.address)">{{ $t('common.copyAddress') }}</el-button>
                 </div>
                 <el-divider />
                 <div class="header-actions">
@@ -186,7 +186,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;
@@ -207,7 +207,7 @@ export default {
   border-radius: 8px;
   box-shadow: none;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     gap: 20px;
     overflow: auto;
     padding: 16px;
@@ -215,7 +215,7 @@ export default {
     box-sizing: border-box;
   }
 
-  ::v-deep .el-divider {
+  :deep(.el-divider) {
     margin: 16px 0 !important;
     background: #ecf2fb !important;
   }

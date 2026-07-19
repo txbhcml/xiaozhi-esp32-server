@@ -136,9 +136,9 @@ plugins:
   # 申请地址：https://console.qweather.com/#/apps/create-key/over
   # 申请后通过这个链接可以找到自己的apihost：https://console.qweather.com/setting?lang=zh
   get_weather:
-    api_host: "mj7p3y7naa.re.qweatherapi.com"
-    api_key: "a861d0d5e7bf4ee1a83d9a9e4f96d4da"
-    default_location: "广州"
+    api_host: "mj38m2y4kx.re.qweatherapi.com"
+    api_key: "2e8e4186347243c5a0301845e830c07e"
+    default_location: "南京"
   # 获取新闻插件的配置，这里根据需要的新闻类型传入对应的url链接，默认支持社会、科技、财经新闻
   # 更多类型的新闻列表查看 https://www.chinanews.com.cn/rss/
   get_news_from_chinanews:
@@ -187,7 +187,7 @@ plugins:
 # 声纹识别配置
 voiceprint:
   # 声纹接口地址
-  url: 
+  url:
   # 说话人配置：speaker_id,名称,描述
   speakers:
     - "test1,张三,张三是一个程序员"
@@ -563,7 +563,7 @@ ASR:
     # 讯飞开放平台地址：https://www.xfyun.cn/
     # 创建应用后，在"我的应用"中获取：
     # - APPID
-    # - APISecret  
+    # - APISecret
     # - APIKey
     type: xunfei_stream
     # 必填参数 - 讯飞开放平台应用信息
@@ -601,7 +601,7 @@ ASR:
     # 热词定制文档地址：https://help.aliyun.com/zh/model-studio/custom-hot-words?
     # vocabulary_id: vocab-xxx-24ee19fa8cfb4d52902170a0xxxxxxxx  # 热词ID(可选)
     # language_hints: ["zh", "en"]  # 指定语言(可选)，支持zh、en、ja、yue、ko、de、fr、ru
-    output_dir: tmp/  
+    output_dir: tmp/
 VAD:
   SileroVAD:
     type: silero

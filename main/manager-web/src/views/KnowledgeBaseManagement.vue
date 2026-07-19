@@ -13,7 +13,7 @@
                   :placeholder="$t('knowledgeBaseManagement.searchPlaceholder')"
                   v-model="searchKbName"
                   class="search-input"
-                  @keyup.enter.native="handleSearchKb"
+                  @keyup.enter="handleSearchKb"
                   clearable
                   prefix-icon="el-icon-search"
                 />
@@ -63,7 +63,7 @@
                             :inactive-value="0"
                             active-color="#5778ff"
                             inactive-color="#DCDFE6"
-                            @click.native.stop
+                            @click.stop
                             @change="handleStatusChange(kb)"
                           ></el-switch>
                           <el-tooltip v-if="kb.errorMessage" :content="kb.errorMessage" placement="top-end" effect="dark">
@@ -103,7 +103,7 @@
     <KnowledgeBaseDialog
       ref="knowledgeBaseDialog"
       :title="dialogTitle"
-      :visible.sync="dialogVisible"
+      v-model:visible="dialogVisible"
       :form="knowledgeBaseForm"
       @submit="handleSubmit"
       @cancel="dialogVisible = false"
@@ -112,7 +112,7 @@
     <!-- Slice Dialog -->
     <CustomDialog
       :title="`${$t('knowledgeFileUpload.viewSlices')} - ${currentDocumentName}`"
-      :visible.sync="sliceDialogVisible"
+      v-model:visible="sliceDialogVisible"
       width="1200px"
       :footer="false"
     >
@@ -146,7 +146,7 @@
     <!-- Upload Dialog -->
     <CustomDialog
       :title="$t('knowledgeFileUpload.uploadDocument')"
-      :visible.sync="uploadDialogVisible"
+      v-model:visible="uploadDialogVisible"
       width="800px"
       @close="handleUploadDialogClose"
       @confirm="handleBatchUploadSubmit"
@@ -163,7 +163,7 @@
       >
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">{{ $t('knowledgeFileUpload.dragOrClick') }}</div>
-        <div class="el-upload__tip" slot="tip">{{ $t('knowledgeFileUpload.uploadTip') }}</div>
+        <template #tip><div class="el-upload__tip">{{ $t('knowledgeFileUpload.uploadTip') }}</div></template>
       </el-upload>
       <!-- 已选择文件列表 -->
       <div class="selected-files-section" v-if="selectedFilesList.length > 0">
@@ -175,7 +175,7 @@
               <span class="file-name">{{ file.name }}</span>
               <span class="file-size">{{ formatFileSize(file.size) }}</span>
             </div>
-            <el-button type="text" class="remove-btn" @click="removeSelectedFile(index)">
+            <el-button link class="remove-btn" @click="removeSelectedFile(index)">
               <i class="el-icon-close"></i>
             </el-button>
           </div>
@@ -186,7 +186,7 @@
     <!-- Retrieval Test Dialog -->
     <CustomDialog
       :title="$t('knowledgeFileUpload.retrievalTest')"
-      :visible.sync="retrievalTestDialogVisible"
+      v-model:visible="retrievalTestDialogVisible"
       width="900px"
       :close-on-click-modal="false"
       :confirm-text="$t('knowledgeFileUpload.executeTest')"
@@ -198,7 +198,7 @@
           <el-form-item :label="$t('knowledgeFileUpload.testQuestion')" required>
             <el-input
               v-model="retrievalTestForm.question"
-              @keyup.enter.native="runRetrievalTest"
+              @keyup.enter="runRetrievalTest"
               clearable
               :placeholder="$t('knowledgeFileUpload.testQuestionPlaceholder')"
             />
@@ -1210,11 +1210,11 @@ export default {
         .similarity-progress {
           margin-top: 8px;
 
-          ::v-deep(.el-progress-bar__outer) {
+          :deep(.el-progress-bar__outer) {
             border-radius: 3px;
             background-color: rgba(64, 158, 255, 0.1);
           }
-          ::v-deep(.el-progress-bar__inner) {
+          :deep(.el-progress-bar__inner) {
             border-radius: 3px;
             background: #4a7cfd;
           }

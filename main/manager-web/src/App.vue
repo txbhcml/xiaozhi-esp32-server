@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <router-view />
-    <cache-viewer v-if="isCDNEnabled" :visible.sync="showCacheViewer" />
+    <cache-viewer v-if="isCDNEnabled" v-model:visible="showCacheViewer" />
   </div>
 </template>
 
@@ -99,7 +99,7 @@ export default {
       );
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     // 只有在启用CDN时才需要移除事件监听
     if (this.isCDNEnabled) {
       document.removeEventListener('keydown', this.handleKeyDown);

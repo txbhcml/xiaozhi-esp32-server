@@ -29,7 +29,7 @@ function sendRequest() {
         _responseType: undefined, // 新增响应类型字段
         'send'() {
             // 设置语言请求头
-            const currentLang = i18n.locale;
+            const currentLang = i18n.locale || 'zh_CN';
             // 转换语言代码格式，将zh_CN转换为zh-CN
             let acceptLanguage = currentLang.replace('_', '-');
             // 为英语添加默认地区代码

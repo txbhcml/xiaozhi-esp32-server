@@ -10,7 +10,7 @@
               <h2 class="page-title">{{ $t('device.management') }}</h2>
               <div class="right-operations">
                 <el-input :placeholder="$t('device.searchPlaceholder')" v-model="searchKeyword" class="search-input"
-                  @keyup.enter.native="handleSearch" clearable />
+                  @keyup.enter="handleSearch" clearable />
                 <CustomButton icon="el-icon-search" type="confirm" @click="handleSearch">{{ $t('device.search') }}</CustomButton>
               </div>
             </div>
@@ -30,19 +30,19 @@
               @size-change="handlePageSizeChange"
               @page-change="goToPage"
             >
-              <template slot="model" slot-scope="scope">
+              <template #model="scope">
                 {{ getFirmwareTypeName(scope.row.model) }}
               </template>
-              <template slot="macAddress" slot-scope="scope">
+              <template #macAddress="scope">
                 <MacAddressMask :macAddress="scope.row.macAddress" />
               </template>
-              <template slot="deviceStatus" slot-scope="scope">
+              <template #deviceStatus="scope">
                 <el-tag v-if="scope.row.deviceStatus === 'online'" type="success">{{ $t('device.online') }}</el-tag>
                 <el-tag v-else type="danger">{{ $t('device.offline') }}</el-tag>
               </template>
-              <template slot="remark" slot-scope="scope">
-                <el-input v-show="scope.row.isEdit" v-model="scope.row.remark" size="mini" maxlength="64" show-word-limit
-                  @blur="onRemarkBlur(scope.row)" @keyup.enter.native="onRemarkEnter(scope.row)" />
+              <template #remark="scope">
+                <el-input v-show="scope.row.isEdit" v-model="scope.row.remark" size="small" maxlength="64" show-word-limit
+                  @blur="onRemarkBlur(scope.row)" @keyup.enter="onRemarkEnter(scope.row)" />
                 <span v-show="!scope.row.isEdit" class="remark-view">
                   <i class="el-icon-edit" @click="scope.row.isEdit = true" style="cursor: pointer;"></i>
                   <span @click="scope.row.isEdit = true">
@@ -50,19 +50,19 @@
                   </span>
                 </span>
               </template>
-              <template slot="otaSwitch" slot-scope="scope">
-                <el-switch v-model="scope.row.otaSwitch" size="mini" active-color="#13ce66" inactive-color="#ff4949"
+              <template #otaSwitch="scope">
+                <el-switch v-model="scope.row.otaSwitch" size="small" active-color="#13ce66" inactive-color="#ff4949"
                   @change="handleOtaSwitchChange(scope.row)"></el-switch>
               </template>
-              <template slot="operations" slot-scope="scope">
-                <el-button size="mini" type="text" @click="handleUnbind(scope.row.device_id)">
+              <template #operations="scope">
+                <el-button size="small" link @click="handleUnbind(scope.row.device_id)">
                   {{ $t('device.unbind') }}
                 </el-button>
-                <el-button v-if="isGenerate(scope.row)" size="mini" type="text" @click="handleGenertor(scope.row)">
+                <el-button v-if="isGenerate(scope.row)" size="small" link @click="handleGenertor(scope.row)">
                   {{ $t('device.deviceThemeGeneration') }}
                 </el-button>
               </template>
-              <template slot="footer-btns">
+              <template #footer-btns>
                 <div class="ctrl_btn">
                   <CustomButton :icon="isCurrentPageAllSelected ? 'el-icon-circle-close' : 'el-icon-circle-check'" size="small" @click="handleSelectAll">
                     {{ isCurrentPageAllSelected ? $t('common.deselectAll') : $t('common.selectAll') }}
@@ -84,9 +84,9 @@
       </div>
     </div>
 
-    <AddDeviceDialog :visible.sync="addDeviceDialogVisible" :agent-id="currentAgentId"
+    <AddDeviceDialog v-model:visible="addDeviceDialogVisible" :agent-id="currentAgentId"
       @refresh="fetchBindDevices(currentAgentId)" />
-    <ManualAddDeviceDialog :visible.sync="manualAddDeviceDialogVisible" :agent-id="currentAgentId"
+    <ManualAddDeviceDialog v-model:visible="manualAddDeviceDialogVisible" :agent-id="currentAgentId"
       @refresh="fetchBindDevices(currentAgentId)" />
     <el-footer>
       <version-footer />
@@ -516,7 +516,7 @@ export default {
   box-shadow: none;
   overflow: hidden;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body) {
     padding: 14px 20px;
     display: flex;
     flex-direction: column;

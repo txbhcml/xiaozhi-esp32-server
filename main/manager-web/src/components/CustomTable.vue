@@ -22,9 +22,9 @@
           align="center"
           label="选择"
         >
-          <template slot-scope="scope">
+          <template #default="scope">
             <slot
-              v-if="$scopedSlots.selection"
+              v-if="$slots.selection"
               name="selection"
               :row="scope.row"
               :$index="scope.$index"
@@ -48,10 +48,10 @@
           :align="column.align || 'center'"
           :show-overflow-tooltip="column.showOverflowTooltip !== false"
         >
-          <template slot-scope="scope">
+          <template #default="scope">
             <!-- 自定义插槽：优先使用 column.slot 指定的插槽名，否则用 column.prop 作为插槽名 -->
             <slot
-              v-if="$scopedSlots[column.slot] || $scopedSlots[column.prop]"
+              v-if="$slots[column.slot] || $slots[column.prop]"
               :name="column.slot || column.prop"
               :row="scope.row"
               :$index="scope.$index"
@@ -71,7 +71,7 @@
           align="center"
           :width="operationsWidth"
         >
-          <template slot-scope="scope">
+          <template #default="scope">
             <slot name="operations" :row="scope.row" :$index="scope.$index" />
           </template>
         </el-table-column>
@@ -191,7 +191,7 @@ export default {
   methods: {
     // 复选框变化
     handleCheckboxChange(row) {
-      this.$set(row, 'selected', !row.selected);
+      row.selected = !row.selected;
     },
     // 分页事件
     handleSizeChange(val) {

@@ -21,11 +21,6 @@
         WHERE mac_address = #{macAddress} AND target_mac = #{targetMac}
     </update>
 
-    <insert id="insert">
-        INSERT INTO ai_device_address_book (mac_address, target_mac, alias, has_permission, creator, create_date, updater, update_date)
-        VALUES (#{macAddress}, #{targetMac}, #{alias}, #{hasPermission}, #{creator}, NOW(), #{updater}, NOW())
-    </insert>
-
     <delete id="deleteByMacAddresses">
         DELETE FROM ai_device_address_book WHERE mac_address IN
         <foreach collection="macAddresses" item="mac" open="(" separator="," close=")">
