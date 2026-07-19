@@ -205,6 +205,30 @@ const routes = [
       title: '通讯录管理'
     }
   },
+  // 听写任务管理
+  {
+    path: '/dictation-task-management',
+    name: 'DictationTaskManagement',
+    component: function () {
+      return import('../views/DictationTaskManagement.vue')
+    },
+    meta: {
+      requiresAuth: true,
+      title: '听写任务'
+    }
+  },
+  // 听写记录管理
+  {
+    path: '/dictation-record-management',
+    name: 'DictationRecordManagement',
+    component: function () {
+      return import('../views/DictationRecordManagement.vue')
+    },
+    meta: {
+      requiresAuth: true,
+      title: '听写记录'
+    }
+  },
 ]
 
 // Vue Router 4: 使用 createRouter 创建路由实例

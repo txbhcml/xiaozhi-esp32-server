@@ -3,6 +3,7 @@ import admin from './module/admin.js'
 import agent from './module/agent.js'
 import device from './module/device.js'
 import dict from './module/dict.js'
+import dictation from './module/dictation.js'
 import model from './module/model.js'
 import ota from './module/ota.js'
 import timbre from "./module/timbre.js"
@@ -41,6 +42,7 @@ export default {
     timbre,
     ota,
     dict,
+    dictation,
     voiceResource,
     voiceClone,
     knowledgeBase,

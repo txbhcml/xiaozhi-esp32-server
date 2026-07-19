@@ -10,6 +10,7 @@ from core.handle.abortHandle import handleAbortMessage
 from core.handle.intentHandler import handle_user_intent
 from core.utils.output_counter import check_device_output_limit
 from core.handle.sendAudioHandle import send_stt_message, SentenceType
+from core.handle.dictationHandler import handle_dictation_interrupt
 
 TAG = __name__
 
@@ -70,6 +71,13 @@ async def startToChat(conn: "ConnectionHandler", text):
         conn.current_speaker = speaker_name
     else:
         conn.current_speaker = None
+
+    # 听写会话激活时，优先路由到听写中断处理（仅响应停止/退出命令）
+    if getattr(conn, "dictation_session", None) and conn.dictation_session.is_active:
+        await send_stt_message(conn, actual_text)
+        conn.client_abort = False
+        await handle_dictation_interrupt(conn, actual_text)
+        return
 
     if conn.need_bind:
         await check_bind_device(conn)

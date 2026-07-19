@@ -19,10 +19,6 @@ spring:
   messages:
     encoding: UTF-8
     basename: i18n/messages
-  # Spring Boot 4 默认 Jackson 3，项目使用 Jackson 2
-  http:
-    converters:
-      preferred-json-mapper: jackson2
   servlet:
     multipart:
       max-file-size: 100MB
@@ -30,6 +26,9 @@ spring:
       enabled: true
   main:
     allow-bean-definition-overriding: true
+  # 禁用 Liquibase 数据库迁移
+  liquibase:
+    enabled: false
 
 knife4j:
   enable: true

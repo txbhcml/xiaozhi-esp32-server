@@ -92,6 +92,31 @@
           }" />
           <span class="nav-text">{{ $t("header.addressBook") }}</span>
         </div>
+        <el-dropdown trigger="click" class="equipment-management more-dropdown" :class="{
+          'active-tab':
+            $route.path === '/dictation-task-management' ||
+            $route.path === '/dictation-record-management'
+        }" @visible-change="handleParamDropdownVisibleChange">
+          <span class="el-dropdown-link">
+            <img loading="lazy" alt="" src="@/assets/header/param_management.png" :style="{
+              filter:
+                $route.path === '/dictation-task-management' ||
+                  $route.path === '/dictation-record-management'
+                  ? 'brightness(0) invert(1)'
+                  : 'None',
+            }" />
+            <span class="nav-text">听写助手</span>
+            <i class="el-icon-arrow-down" :class="{ 'rotate-down': paramDropdownVisible }"></i>
+          </span>
+          <template #dropdown><el-dropdown-menu>
+            <el-dropdown-item @click="handleRouter('dictationTaskManagement')">
+              听写任务
+            </el-dropdown-item>
+            <el-dropdown-item @click="handleRouter('dictationRecordManagement')">
+              听写记录
+            </el-dropdown-item>
+          </el-dropdown-menu></template>
+        </el-dropdown>
         <el-dropdown v-if="userInfo.superAdmin" trigger="click" class="equipment-management more-dropdown" :class="{
           'active-tab':
             $route.path === '/dict-management' ||
@@ -220,6 +245,8 @@ export default {
         replacementWordManagement: "/replacement-word-management",
         serverSideManagement: "/server-side-management",
         featureManagement: "/feature-management",
+        dictationTaskManagement: "/dictation-task-management",
+        dictationRecordManagement: "/dictation-record-management",
       }
     };
   },

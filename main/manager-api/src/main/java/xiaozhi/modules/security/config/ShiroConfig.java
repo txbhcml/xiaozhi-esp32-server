@@ -94,6 +94,9 @@ public class ShiroConfig {
         filterMap.put("/agent/chat-title/**", "server");
         filterMap.put("/agent/play/**", "anon");
         filterMap.put("/voiceClone/play/**", "anon");
+        // 听写服务接口（Python 服务端通过 server secret 调用）
+        filterMap.put("/dict/active", "server");
+        filterMap.put("/dict/record/report", "server");
         filterMap.put("/**", "oauth2");
         shiroFilter.setFilterChainDefinitionMap(filterMap);
 

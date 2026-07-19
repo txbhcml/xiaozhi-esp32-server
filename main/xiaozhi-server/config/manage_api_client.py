@@ -260,6 +260,56 @@ async def lookup_address_book(caller_mac: str, nickname: str) -> Optional[Dict]:
         return None
 
 
+async def get_active_dictation_task(mac_address: str, task_name: str = None) -> Optional[Dict]:
+    """获取设备当前激活的听写任务（含单词列表）"""
+    if not ManageApiClient._instance:
+        return None
+    try:
+        params = {"macAddress": mac_address}
+        if task_name:
+            params["taskName"] = task_name
+        return await ManageApiClient._instance._execute_async_request(
+            "GET", "/dict/active", params=params
+        )
+    except Exception as e:
+        print(f"获取听写任务失败: {e}")
+        return None
+
+
+async def report_dictation_record(
+    mac_address: str,
+    device_id: str,
+    task_id: str,
+    task_name: str,
+    total_words: int,
+    words: list,
+    start_time: int,
+    end_time: int,
+    duration_seconds: int,
+) -> Optional[Dict]:
+    """上报听写记录（听写结束或中断时调用）"""
+    if not ManageApiClient._instance:
+        return None
+    try:
+        return await ManageApiClient._instance._execute_async_request(
+            "POST", "/dict/record/report",
+            json={
+                "macAddress": mac_address,
+                "deviceId": device_id,
+                "taskId": task_id,
+                "taskName": task_name,
+                "totalWords": total_words,
+                "words": words,
+                "startTime": start_time,
+                "endTime": end_time,
+                "durationSeconds": duration_seconds,
+            },
+        )
+    except Exception as e:
+        print(f"听写记录上报失败: {e}")
+        return None
+
+
 def init_service(config):
     ManageApiClient(config)
 

@@ -711,3 +711,19 @@ databaseChangeLog:
         - sqlFile:
             encoding: utf8
             path: classpath:db/changelog/202607131200.sql
+  - changeSet:
+      id: 202607191000
+      author: menglong
+      changes:
+        - sqlFile:
+            encoding: utf8
+            path: classpath:db/changelog/202607191000_dict_task.sql
+  - changeSet:
+      id: 202607191001
+      author: menglong
+      changes:
+        - sqlFile:
+            encoding: utf8
+            path: classpath:db/changelog/202607191001_dict_record.sql
+  # 注：biz_vocabulary_books / biz_vocabularies 为预置数据表，由外部数据源维护，
+  # 听写助手只读使用，不在此处创建 changeset。

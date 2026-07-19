@@ -1,0 +1,27 @@
+-- 听写任务表（小智单方面播报单词，无语音交互判定）
+CREATE TABLE `dict_task` (
+    `id` VARCHAR(32) NOT NULL COMMENT '任务ID',
+    `user_id` BIGINT NOT NULL COMMENT '所属用户ID',
+    `task_name` VARCHAR(200) NOT NULL COMMENT '任务名称',
+    `book_id` BIGINT COMMENT '来源词书ID（可为空，表示手动输入）',
+    `mode` VARCHAR(20) NOT NULL DEFAULT 'listen_en' COMMENT '听写播报模式：listen_en(播报英文单词) / listen_cn(播报中文释义)',
+    `accent` VARCHAR(10) NOT NULL DEFAULT 'us' COMMENT '口音：us(美式) / uk(英式)',
+    `interval_seconds` DECIMAL(4,1) NOT NULL DEFAULT 5.0 COMMENT '单词间隔时间（秒），供学生默写',
+    `repeat_count` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '每个单词播报次数（1~3）',
+    `speak_rate` INT NOT NULL DEFAULT 0 COMMENT '语速调整(-100~100)',
+    `introduce_words` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否在听写前介绍所有单词：0否 1是',
+    `show_example` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '单词介绍阶段是否播报例句：0否 1是',
+    `example_translate` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '单词介绍阶段是否翻译例句：0否 1是',
+    `show_synonym` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '单词介绍阶段是否提示近义词/反义词：0否 1是',
+    `words_json` JSON COMMENT '手动输入的单词列表JSON（非词书来源时使用，格式：[{"word":"apple","meaning":"苹果"}]）',
+    `selected_word_ids` JSON COMMENT '从词书挑选的单词ID列表（biz_vocabularies.id数组）',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：0禁用 1启用',
+    `sort` INT UNSIGNED DEFAULT 0 COMMENT '排序',
+    `creator` BIGINT COMMENT '创建者',
+    `create_date` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updater` BIGINT COMMENT '更新者',
+    `update_date` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_book_id` (`book_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='听写任务配置';

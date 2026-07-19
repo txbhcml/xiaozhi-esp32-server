@@ -200,6 +200,9 @@ class ConnectionHandler:
         # 标记当前是否为来电接听模式
         self.incoming_call = None
 
+        # 听写会话状态（DictationSession 实例，None 表示未在听写）
+        self.dictation_session = None
+
     async def handle_connection(self, ws: websockets.ServerConnection):
         try:
             # 获取运行中的事件循环（必须在异步上下文中）
