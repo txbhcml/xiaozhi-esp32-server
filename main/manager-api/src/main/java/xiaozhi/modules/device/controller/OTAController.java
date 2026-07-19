@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,8 +95,9 @@ public class OTAController {
 
     @SneakyThrows
     private ResponseEntity<String> createResponse(DeviceReportRespDTO deviceReportRespDTO) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        ObjectMapper objectMapper = JsonMapper.builder()
+                .changeDefaultPropertyInclusion(old -> JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL))
+                .build();
         String json = objectMapper.writeValueAsString(deviceReportRespDTO);
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity

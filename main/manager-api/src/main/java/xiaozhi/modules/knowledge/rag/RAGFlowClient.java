@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import xiaozhi.common.exception.ErrorCode;
@@ -57,11 +58,9 @@ public class RAGFlowClient {
     public RAGFlowClient(String baseUrl, String apiKey, int timeoutSeconds) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.apiKey = apiKey;
-        this.objectMapper = new ObjectMapper();
-        // [Reinforce] 兼容 RAGFlow 返回的 RFC 1123 日期格式 (如: Tue, 10 Feb 2026 10:27:35 GMT)
-        this.objectMapper
-                .setDateFormat(new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US));
-        this.objectMapper.setTimeZone(TimeZone.getTimeZone("GMT"));
+        // Jackson 3.x 使用 Builder 模式，ObjectMapper 不可变
+        this.objectMapper = JsonMapper.builder()
+                .build();
 
         // 优先从 Spring 上下文中获取池化的 RestTemplate Bean (Issue 3: 连接池化)
         RestTemplate pooledTemplate = null;

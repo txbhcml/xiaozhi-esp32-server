@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 
-import tools.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,9 +48,10 @@ public class ServerSideManageController {
     private final RedisUtils redisUtils;
     private static final ObjectMapper objectMapper;
     static {
-        objectMapper = new ObjectMapper();
-        // 忽略json字符串中存在，但pojo中不存在对应字段的情况
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // Jackson 3.x 使用 Builder 模式
+        objectMapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
     }
 
     @Operation(summary = "获取Ws服务端列表")
@@ -126,7 +128,7 @@ public class ServerSideManageController {
                     ServerActionResponseDTO response = objectMapper.readValue(jsonText, ServerActionResponseDTO.class);
                     Boolean isSuccess = ServerActionResponseDTO.isSuccess(response);
                     return isSuccess;
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     return false;
                 }
             });
