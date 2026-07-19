@@ -682,7 +682,7 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
         }
 
         // 将用户数据编码为Base64 JSON
-        String userDataJson = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userData);
+        String userDataJson = new tools.jackson.databind.ObjectMapper().writeValueAsString(userData);
         String username = Base64.getEncoder().encodeToString(userDataJson.getBytes(StandardCharsets.UTF_8));
 
         // 生成密码签名

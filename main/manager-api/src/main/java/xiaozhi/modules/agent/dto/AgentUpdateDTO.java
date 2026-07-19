@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import xiaozhi.common.utils.JsonUtils;

@@ -29,7 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import xiaozhi.common.exception.ErrorCode;

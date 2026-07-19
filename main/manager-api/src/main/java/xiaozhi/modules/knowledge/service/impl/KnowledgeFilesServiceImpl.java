@@ -19,8 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import xiaozhi.common.exception.ErrorCode;
@@ -202,7 +202,7 @@ public class KnowledgeFilesServiceImpl extends BaseServiceImpl<DocumentDao, Docu
         if (StringUtils.isNotBlank(entity.getParserConfig())) {
             try {
                 dto.setParserConfig(objectMapper.readValue(entity.getParserConfig(),
-                        new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+                        new tools.jackson.core.type.TypeReference<Map<String, Object>>() {
                         }));
             } catch (Exception e) {
                 log.warn("反序列化 ParserConfig 失败, entityId: {}, error: {}", entity.getId(), e.getMessage());
