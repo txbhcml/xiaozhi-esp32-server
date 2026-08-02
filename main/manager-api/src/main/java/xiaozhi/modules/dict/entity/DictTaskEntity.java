@@ -61,11 +61,11 @@ public class DictTaskEntity {
     private Integer showSynonym;
 
     @Schema(description = "手动输入的单词列表JSON（格式：[{\"word\":\"apple\",\"meaning\":\"苹果\"}]）")
-    @TableField(updateStrategy = FieldStrategy.IGNORED)
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String wordsJson;
 
     @Schema(description = "从词书挑选的单词ID列表JSON（biz_vocabularies.id数组）")
-    @TableField(updateStrategy = FieldStrategy.IGNORED)
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String selectedWordIds;
 
     @Schema(description = "状态：0禁用 1启用")
