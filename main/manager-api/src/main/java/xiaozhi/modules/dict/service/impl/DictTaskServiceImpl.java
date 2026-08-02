@@ -109,7 +109,6 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         } else {
             entity.setWordsJson(null);
         }
-        entity.setSelectedWordIds(null);
 
         entity.setUpdater(userId);
         entity.setUpdateDate(new Date());
@@ -208,10 +207,6 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         // 解析单词列表（统一从 words_json 反序列化）
         List<DictVocabularyVO> words = resolveWords(entity);
         vo.setWords(words);
-        vo.setSelectedWordIds(words.stream()
-                .filter(w -> w.getId() != null)
-                .map(DictVocabularyVO::getId)
-                .collect(Collectors.toList()));
         vo.setWordCount(words == null ? 0 : words.size());
         return vo;
     }

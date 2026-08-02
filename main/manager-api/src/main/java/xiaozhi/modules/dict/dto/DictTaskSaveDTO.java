@@ -54,11 +54,8 @@ public class DictTaskSaveDTO {
     @Schema(description = "单词介绍阶段是否提示近义词/反义词")
     private Boolean showSynonym;
 
-    @Schema(description = "手动输入的单词列表（非词书来源时使用）")
+    @Schema(description = "单词列表（词书单词带id，手动单词无id）")
     private List<DictVocabularyVO> words;
-
-    @Schema(description = "从词书挑选的单词ID列表（词书来源时使用）")
-    private List<Long> selectedWordIds;
 
     @Schema(description = "状态：0禁用 1启用")
     private Integer status;

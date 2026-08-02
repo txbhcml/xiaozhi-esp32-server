@@ -64,9 +64,6 @@ public class DictTaskEntity {
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String wordsJson;
 
-    @Schema(description = "已废弃，保留用于兼容旧数据")
-    private String selectedWordIds;
-
     @Schema(description = "状态：0禁用 1启用")
     private Integer status;
 

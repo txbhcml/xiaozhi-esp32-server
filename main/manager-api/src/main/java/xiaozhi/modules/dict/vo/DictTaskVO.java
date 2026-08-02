@@ -56,11 +56,8 @@ public class DictTaskVO {
     @Schema(description = "单词介绍阶段是否提示近义词/反义词：false否 true是")
     private Boolean showSynonym;
 
-    @Schema(description = "手动输入的单词列表（非词书来源时使用）")
+    @Schema(description = "单词列表（词书单词带id，手动单词无id）")
     private List<DictVocabularyVO> words;
-
-    @Schema(description = "从词书挑选的单词ID列表")
-    private List<Long> selectedWordIds;
 
     @Schema(description = "单词总数（前端列表展示用）")
     private Integer wordCount;
