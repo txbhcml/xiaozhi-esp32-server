@@ -143,24 +143,67 @@
           <el-switch v-model="form.showSynonym" />
         </el-form-item>
 
-        <el-divider content-position="left">单词来源</el-divider>
+        <el-divider content-position="left">单词列表</el-divider>
 
-        <el-form-item label="来源方式" prop="source">
-          <el-radio-group v-model="form.source" @change="onSourceChange">
-            <el-radio value="book">从词书选择</el-radio>
-            <el-radio value="manual">手动输入</el-radio>
-          </el-radio-group>
+        <el-form-item label="单词列表">
+          <div class="word-list-container">
+            <div class="word-list-toolbar">
+              <el-button size="small" type="primary" plain @click="addManualWord">+ 添加单词</el-button>
+              <el-button size="small" type="success" plain @click="openBookPicker">从词书选择</el-button>
+              <span class="word-count">共 {{ validWordCount }} 词</span>
+            </div>
+            <el-table :data="unifiedWords" border size="small" max-height="320" style="margin-top: 8px">
+              <el-table-column label="序号" type="index" width="60" align="center" />
+              <el-table-column label="英文单词" min-width="160">
+                <template #default="scope">
+                  <el-input v-model="scope.row.word" placeholder="apple" size="small" :disabled="scope.row.source === 'book'" />
+                </template>
+              </el-table-column>
+              <el-table-column label="中文释义" min-width="200">
+                <template #default="scope">
+                  <el-input v-model="scope.row.meaning" placeholder="苹果" size="small" :disabled="scope.row.source === 'book'" />
+                </template>
+              </el-table-column>
+              <el-table-column label="来源" width="90" align="center">
+                <template #default="scope">
+                  <el-tag size="small" :type="scope.row.source === 'book' ? 'success' : 'info'">
+                    {{ scope.row.source === 'book' ? '词书' : '手动' }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="80" align="center">
+                <template #default="scope">
+                  <el-button size="small" link type="danger" @click="removeUnifiedWord(scope.$index)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
         </el-form-item>
 
-        <!-- 词书选择 -->
-        <template v-if="form.source === 'book'">
-          <el-form-item label="选择词书" prop="bookId">
+        <el-divider content-position="left">状态</el-divider>
+
+        <el-form-item label="启用状态">
+          <el-switch v-model="form.statusBool" active-text="启用" inactive-text="禁用" />
+        </el-form-item>
+      </el-form>
+
+      <!-- 词书选择对话框 -->
+      <el-dialog
+        v-model="bookPickerVisible"
+        title="从词书选择单词"
+        width="700px"
+        append-to-body
+        :close-on-click-modal="false"
+        destroy-on-close
+      >
+        <div class="book-picker">
+          <div class="book-picker-toolbar">
             <el-select
-              v-model="form.bookId"
+              v-model="pickerBookId"
               placeholder="请选择词书"
               filterable
-              style="width: 320px"
-              @change="onBookChange"
+              style="width: 260px"
+              @change="onPickerBookChange"
             >
               <el-option
                 v-for="book in books"
@@ -169,88 +212,48 @@
                 :value="book.id"
               />
             </el-select>
-          </el-form-item>
-
-          <el-form-item label="选择单词">
-            <div class="word-picker">
-              <div class="word-picker-toolbar">
-                <el-input
-                  v-model="bookWordKeyword"
-                  placeholder="搜索单词"
-                  style="width: 200px"
-                  clearable
-                  @keyup.enter="searchBookWords"
-                />
-                <el-button size="small" @click="searchBookWords">搜索</el-button>
-                <span class="selected-count">已选 {{ selectedWordIds.length }} 词</span>
-              </div>
-              <el-table
-                :data="bookWords"
-                v-loading="bookWordsLoading"
-                border
-                size="small"
-                max-height="320"
-                @selection-change="onBookWordsSelectionChange"
-                :row-key="row => row.id"
-                ref="bookWordTable"
-              >
-                <el-table-column
-                  type="selection"
-                  reserve-selection
-                  width="50"
-                  align="center"
-                />
-                <el-table-column prop="word" label="单词" min-width="120" />
-                <el-table-column prop="meaning" label="中文释义" min-width="180" show-overflow-tooltip />
-                <el-table-column prop="phoneticUs" label="美式音标" min-width="120" />
-              </el-table>
-              <div class="word-picker-pagination">
-                <el-pagination
-                  background
-                  layout="total, prev, pager, next"
-                  :total="bookWordsTotal"
-                  :current-page="bookWordsCurrentPage"
-                  :page-size="bookWordsPageSize"
-                  @current-change="onBookWordsPageChange"
-                />
-              </div>
-            </div>
-          </el-form-item>
+            <el-input
+              v-model="pickerKeyword"
+              placeholder="搜索单词"
+              style="width: 180px"
+              clearable
+              @keyup.enter="searchPickerWords"
+            />
+            <el-button size="small" @click="searchPickerWords">搜索</el-button>
+          </div>
+          <el-table
+            :data="pickerWords"
+            v-loading="pickerLoading"
+            border
+            size="small"
+            max-height="360"
+            @selection-change="onPickerSelectionChange"
+            :row-key="row => row.id"
+            ref="pickerTable"
+          >
+            <el-table-column type="selection" width="50" align="center" />
+            <el-table-column prop="word" label="单词" min-width="120" />
+            <el-table-column prop="meaning" label="中文释义" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="phoneticUs" label="美式音标" min-width="120" />
+          </el-table>
+          <div class="book-picker-pagination">
+            <el-pagination
+              background
+              layout="total, prev, pager, next"
+              :total="pickerTotal"
+              :current-page="pickerCurrentPage"
+              :page-size="pickerPageSize"
+              @current-change="onPickerPageChange"
+            />
+          </div>
+        </div>
+        <template #footer>
+          <el-button @click="bookPickerVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmBookPicker">
+            确认添加（已选 {{ pickerSelected.length }} 词）
+          </el-button>
         </template>
-
-        <!-- 手动输入 -->
-        <template v-if="form.source === 'manual'">
-          <el-form-item label="单词列表">
-            <div class="manual-words">
-              <el-button size="small" type="primary" plain @click="addManualWord">+ 添加单词</el-button>
-              <el-table :data="manualWords" border size="small" style="margin-top: 8px">
-                <el-table-column label="序号" type="index" width="60" align="center" />
-                <el-table-column label="英文单词" min-width="160">
-                  <template #default="scope">
-                    <el-input v-model="scope.row.word" placeholder="apple" size="small" />
-                  </template>
-                </el-table-column>
-                <el-table-column label="中文释义" min-width="200">
-                  <template #default="scope">
-                    <el-input v-model="scope.row.meaning" placeholder="苹果" size="small" />
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" width="80" align="center">
-                  <template #default="scope">
-                    <el-button size="small" link type="danger" @click="removeManualWord(scope.$index)">删除</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </el-form-item>
-        </template>
-
-        <el-divider content-position="left">状态</el-divider>
-
-        <el-form-item label="启用状态">
-          <el-switch v-model="form.statusBool" active-text="启用" inactive-text="禁用" />
-        </el-form-item>
-      </el-form>
+      </el-dialog>
 
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -289,24 +292,33 @@ export default {
       rules: {
         taskName: [{ required: true, message: "请输入任务名称", trigger: "blur" }],
         mode: [{ required: true, message: "请选择播报模式", trigger: "change" }],
-        accent: [{ required: true, message: "请选择口音", trigger: "change" }],
-        bookId: [{ required: true, message: "请选择词书", trigger: "change" }]
+        accent: [{ required: true, message: "请选择口音", trigger: "change" }]
       },
 
       books: [],
-      bookWordKeyword: "",
-      bookWords: [],
-      bookWordsLoading: false,
-      bookWordsCurrentPage: 1,
-      bookWordsPageSize: 20,
-      bookWordsTotal: 0,
-      selectedWordIds: [],
-      selectedWordVoMap: {},
+      unifiedWords: [],
 
-      manualWords: [],
+      // 词书选择对话框
+      bookPickerVisible: false,
+      pickerBookId: undefined,
+      pickerKeyword: "",
+      pickerWords: [],
+      pickerLoading: false,
+      pickerTotal: 0,
+      pickerCurrentPage: 1,
+      pickerPageSize: 20,
+      pickerSelected: [],
 
       tableColumns: []
     };
+  },
+  computed: {
+    validWordCount() {
+      return this.unifiedWords.filter(w => {
+        if (w.source === 'book') return w.vocabId;
+        return (w.word || "").trim() && (w.meaning || "").trim();
+      }).length;
+    }
   },
   created() {
     this.initTableColumns();
@@ -327,8 +339,6 @@ export default {
         showExample: false,
         exampleTranslate: false,
         showSynonym: false,
-        source: "book",
-        bookId: undefined,
         statusBool: true
       };
     },
@@ -371,25 +381,25 @@ export default {
       });
     },
 
-    fetchBookWords(resetSelection = false) {
-      if (!this.form.bookId) {
-        this.bookWords = [];
-        this.bookWordsTotal = 0;
+    fetchPickerWords() {
+      if (!this.pickerBookId) {
+        this.pickerWords = [];
+        this.pickerTotal = 0;
         return;
       }
-      this.bookWordsLoading = true;
+      this.pickerLoading = true;
       Api.dictation.pageWordsByBook({
-        bookId: this.form.bookId,
-        word: this.bookWordKeyword,
-        page: this.bookWordsCurrentPage,
-        limit: this.bookWordsPageSize
+        bookId: this.pickerBookId,
+        word: this.pickerKeyword,
+        page: this.pickerCurrentPage,
+        limit: this.pickerPageSize
       }, ({ data }) => {
-        this.bookWordsLoading = false;
+        this.pickerLoading = false;
         if (data.code === 0) {
-          this.bookWords = data.data.list || [];
-          this.bookWordsTotal = data.data.total || 0;
+          this.pickerWords = data.data.list || [];
+          this.pickerTotal = data.data.total || 0;
           this.$nextTick(() => {
-            this.restoreBookWordSelection();
+            this.restorePickerSelection();
           });
         } else {
           this.$message.error(data.msg || "获取词书单词失败");
@@ -397,51 +407,81 @@ export default {
       });
     },
 
-    restoreBookWordSelection() {
-      if (!this.$refs.bookWordTable) return;
-      this.bookWords.forEach(row => {
-        if (row.id && this.selectedWordIds.includes(row.id)) {
-          this.$refs.bookWordTable.toggleRowSelection(row, true);
+    restorePickerSelection() {
+      if (!this.$refs.pickerTable) return;
+      const existingIds = new Set(this.unifiedWords.filter(w => w.source === 'book').map(w => w.vocabId));
+      this.pickerWords.forEach(row => {
+        if (row.id && existingIds.has(row.id)) {
+          this.$refs.pickerTable.toggleRowSelection(row, true);
         }
       });
     },
 
-    onBookChange() {
-      this.bookWordsCurrentPage = 1;
-      this.bookWordKeyword = "";
-      this.fetchBookWords();
+    openBookPicker() {
+      this.pickerBookId = undefined;
+      this.pickerKeyword = "";
+      this.pickerWords = [];
+      this.pickerTotal = 0;
+      this.pickerCurrentPage = 1;
+      this.pickerSelected = [];
+      this.bookPickerVisible = true;
     },
 
-    searchBookWords() {
-      this.bookWordsCurrentPage = 1;
-      this.fetchBookWords();
+    onPickerBookChange() {
+      this.pickerCurrentPage = 1;
+      this.pickerKeyword = "";
+      this.fetchPickerWords();
     },
 
-    onBookWordsPageChange(page) {
-      this.bookWordsCurrentPage = page;
-      this.fetchBookWords();
+    searchPickerWords() {
+      this.pickerCurrentPage = 1;
+      this.fetchPickerWords();
     },
 
-    onBookWordsSelectionChange(selection) {
-      const currentPageIds = this.bookWords.map(w => w.id).filter(Boolean);
-      const keptIds = this.selectedWordIds.filter(id => !currentPageIds.includes(id));
-      const newSelectedIds = selection.map(w => w.id).filter(Boolean);
-      this.selectedWordIds = [...new Set([...keptIds, ...newSelectedIds])];
-      selection.forEach(w => {
-        if (w.id) this.selectedWordVoMap[w.id] = w;
+    onPickerPageChange(page) {
+      this.pickerCurrentPage = page;
+      this.fetchPickerWords();
+    },
+
+    onPickerSelectionChange(selection) {
+      this.pickerSelected = selection;
+    },
+
+    confirmBookPicker() {
+      const existingIds = new Set(this.unifiedWords.filter(w => w.source === 'book').map(w => w.vocabId));
+      let added = 0;
+      this.pickerSelected.forEach(w => {
+        if (w.id && !existingIds.has(w.id)) {
+          this.unifiedWords.push({
+            word: w.word || "",
+            meaning: w.meaning || "",
+            source: 'book',
+            vocabId: w.id
+          });
+          added++;
+        }
       });
-    },
-
-    onSourceChange() {
-      // 切换来源方式时不清空已选项，由提交时统一处理
+      // 移除用户取消选中的词书单词
+      const selectedIds = new Set(this.pickerSelected.map(w => w.id));
+      this.unifiedWords = this.unifiedWords.filter(w => {
+        if (w.source !== 'book') return true;
+        // 只移除当前词书中的单词（在 pickerWords 范围内的）
+        const inPicker = this.pickerWords.some(pw => pw.id === w.vocabId);
+        if (inPicker && !selectedIds.has(w.vocabId)) return false;
+        return true;
+      });
+      if (added > 0) {
+        this.$message.success(`已添加 ${added} 个单词`);
+      }
+      this.bookPickerVisible = false;
     },
 
     addManualWord() {
-      this.manualWords.push({ word: "", meaning: "" });
+      this.unifiedWords.push({ word: "", meaning: "", source: 'manual' });
     },
 
-    removeManualWord(index) {
-      this.manualWords.splice(index, 1);
+    removeUnifiedWord(index) {
+      this.unifiedWords.splice(index, 1);
     },
 
     handleSearch() {
@@ -464,13 +504,7 @@ export default {
 
     handleAdd() {
       this.form = this.buildEmptyForm();
-      this.manualWords = [];
-      this.selectedWordIds = [];
-      this.selectedWordVoMap = {};
-      this.bookWords = [];
-      this.bookWordsTotal = 0;
-      this.bookWordsCurrentPage = 1;
-      this.bookWordKeyword = "";
+      this.unifiedWords = [];
       this.dialogTitle = "新建听写任务";
       this.dialogVisible = true;
     },
@@ -483,7 +517,7 @@ export default {
           return;
         }
         const detail = data.data;
-        const hasBookSource = (detail.selectedWordIds && detail.selectedWordIds.length > 0) || detail.bookId;
+        const bookIdSet = new Set((detail.selectedWordIds || []).map(id => Number(id)));
         this.form = {
           id: detail.id,
           taskName: detail.taskName || "",
@@ -496,30 +530,21 @@ export default {
           showExample: !!detail.showExample,
           exampleTranslate: !!detail.exampleTranslate,
           showSynonym: !!detail.showSynonym,
-          source: hasBookSource ? "book" : "manual",
-          bookId: detail.bookId || undefined,
           statusBool: detail.status === 1
         };
 
-        this.selectedWordIds = (detail.selectedWordIds || []).map(id => Number(id));
-        this.selectedWordVoMap = {};
-        this.manualWords = (detail.words || []).map(w => ({
-          word: w.word || "",
-          meaning: w.meaning || ""
-        }));
-
-        this.bookWords = [];
-        this.bookWordsTotal = 0;
-        this.bookWordsCurrentPage = 1;
-        this.bookWordKeyword = "";
+        // 统一加载单词列表，区分来源
+        this.unifiedWords = (detail.words || []).map(w => {
+          const isBook = w.id && bookIdSet.has(Number(w.id));
+          return {
+            word: w.word || "",
+            meaning: w.meaning || "",
+            source: isBook ? 'book' : 'manual',
+            vocabId: isBook ? Number(w.id) : undefined
+          };
+        });
 
         this.dialogVisible = true;
-
-        if (hasBookSource && this.form.bookId) {
-          this.$nextTick(() => {
-            this.fetchBookWords();
-          });
-        }
       });
     },
 
@@ -556,17 +581,14 @@ export default {
       this.$refs.taskForm.validate(valid => {
         if (!valid) return;
 
-        if (this.form.source === "book") {
-          if (this.selectedWordIds.length === 0) {
-            this.$message.warning("请至少选择一个单词");
-            return;
-          }
-        } else {
-          const validManual = this.manualWords.filter(w => (w.word || "").trim() && (w.meaning || "").trim());
-          if (validManual.length === 0) {
-            this.$message.warning("请至少添加一个完整单词（英文+释义）");
-            return;
-          }
+        const bookWords = this.unifiedWords.filter(w => w.source === 'book' && w.vocabId);
+        const manualWords = this.unifiedWords
+          .filter(w => w.source === 'manual' && (w.word || "").trim() && (w.meaning || "").trim())
+          .map(w => ({ word: w.word.trim(), meaning: w.meaning.trim() }));
+
+        if (bookWords.length === 0 && manualWords.length === 0) {
+          this.$message.warning("请至少添加一个单词");
+          return;
         }
 
         const payload = {
@@ -581,20 +603,11 @@ export default {
           showExample: this.form.showExample,
           exampleTranslate: this.form.exampleTranslate,
           showSynonym: this.form.showSynonym,
-          status: this.form.statusBool ? 1 : 0
+          status: this.form.statusBool ? 1 : 0,
+          bookId: null,
+          selectedWordIds: bookWords.map(w => w.vocabId),
+          words: manualWords
         };
-
-        if (this.form.source === "book") {
-          payload.bookId = this.form.bookId;
-          payload.selectedWordIds = this.selectedWordIds;
-          payload.words = [];
-        } else {
-          payload.bookId = null;
-          payload.selectedWordIds = [];
-          payload.words = this.manualWords
-            .filter(w => (w.word || "").trim() && (w.meaning || "").trim())
-            .map(w => ({ word: w.word.trim(), meaning: w.meaning.trim() }));
-        }
 
         this.saving = true;
         Api.dictation.saveTask(payload, ({ data }) => {
@@ -614,9 +627,6 @@ export default {
       this.saving = false;
       if (this.$refs.taskForm) {
         this.$refs.taskForm.clearValidate();
-      }
-      if (this.$refs.bookWordTable) {
-        this.$refs.bookWordTable.clearSelection();
       }
     }
   }
@@ -717,30 +727,36 @@ export default {
   color: #909399;
 }
 
-.word-picker {
+.word-list-container {
   width: 100%;
 }
 
-.word-picker-toolbar {
+.word-list-toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
 }
 
-.selected-count {
+.word-count {
   margin-left: auto;
   color: #5778ff;
   font-size: 13px;
 }
 
-.word-picker-pagination {
+.book-picker {
+  width: 100%;
+}
+
+.book-picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.book-picker-pagination {
   margin-top: 8px;
   display: flex;
   justify-content: flex-end;
-}
-
-.manual-words {
-  width: 100%;
 }
 </style>
