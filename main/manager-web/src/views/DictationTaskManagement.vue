@@ -156,12 +156,12 @@
               <el-table-column label="序号" type="index" width="60" align="center" />
               <el-table-column label="英文单词" min-width="160">
                 <template #default="scope">
-                  <el-input v-model="scope.row.word" placeholder="apple" size="small" :disabled="scope.row.source === 'book'" />
+                  <el-input v-model="scope.row.word" placeholder="apple" size="small" />
                 </template>
               </el-table-column>
               <el-table-column label="中文释义" min-width="200">
                 <template #default="scope">
-                  <el-input v-model="scope.row.meaning" placeholder="苹果" size="small" :disabled="scope.row.source === 'book'" />
+                  <el-input v-model="scope.row.meaning" placeholder="苹果" size="small" />
                 </template>
               </el-table-column>
               <el-table-column label="来源" width="90" align="center">

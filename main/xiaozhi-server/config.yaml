@@ -267,7 +267,7 @@ Intent:
     # 下面是加载查天气、角色切换、加载查新闻的插件示例
     functions:
       - web_search
-      - get_weather
+      # - get_weather
       - get_news_from_newsnow
       - play_music
       - start_dictation
@@ -280,7 +280,7 @@ Intent:
     functions:
       - change_role
       - web_search                  # 联网搜索
-      - get_weather
+      # - get_weather
       # - search_from_ragflow
       # - get_news_from_chinanews
       - get_news_from_newsnow

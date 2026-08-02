@@ -92,6 +92,17 @@ async def startToChat(conn: "ConnectionHandler", text):
         await handle_dictation_interrupt(conn, actual_text)
         return
 
+    # 关键词强制拦截：检测到"开始听写"等指令时，直接触发听写，绕过 LLM
+    _DICTATION_START_KEYWORDS = ["开始听写", "报听写", "听写单词", "我要听写", "默写"]
+    _filtered = actual_text.strip().replace(" ", "")
+    if any(kw in _filtered for kw in _DICTATION_START_KEYWORDS):
+        conn.logger.bind(tag=TAG).info(f"关键词触发听写: {actual_text}")
+        await send_stt_message(conn, actual_text)
+        conn.client_abort = False
+        from plugins_func.functions.dictation import start_dictation as _start_dictation_plugin
+        await _start_dictation_plugin(conn, task_name="")
+        return
+
     if conn.need_bind:
         await check_bind_device(conn)
         return

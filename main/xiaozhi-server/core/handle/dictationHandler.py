@@ -129,7 +129,11 @@ async def _begin_tts(conn: "ConnectionHandler"):
 
 
 async def _tts_text(conn: "ConnectionHandler", text: str):
-    """在当前 TTS 会话中追加一段文本（MIDDLE），不会触发设备的 start/stop"""
+    """在当前 TTS 会话中追加一段文本（MIDDLE），不会触发设备的 start/stop
+
+    使用 WHOLE_TEXT 类型，跳过 TTS 内部的标点分段逻辑，
+    整段文本直接生成一条语音，不受任何标点影响。
+    """
     if not text:
         return
     sentence_id = conn.sentence_id or str(uuid.uuid4().hex)
@@ -138,7 +142,7 @@ async def _tts_text(conn: "ConnectionHandler", text: str):
         TTSMessageDTO(
             sentence_id=sentence_id,
             sentence_type=SentenceType.MIDDLE,
-            content_type=ContentType.TEXT,
+            content_type=ContentType.WHOLE_TEXT,
             content_detail=text,
         )
     )
@@ -162,29 +166,17 @@ async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: floa
     """在当前 TTS 会话中追加文本并等待音频播放完
 
     注意：调用前必须已调用 _begin_tts 开启会话。
-    不会发送 FIRST/LAST，仅发送 MIDDLE 文本并等待播放。
+    使用 WHOLE_TEXT 直接生成整段语音，无需 FLUSH。
     """
     if not text:
         return
     await _tts_text(conn, text)
-    # 等待 TTS 文本队列处理完（文本已转为音频并放入音频队列）
-    await _wait_tts_text_drained(conn)
     # 等待音频队列和 RateController 队列都发送完
     from core.handle.sendAudioHandle import _wait_for_audio_completion
     await _wait_for_audio_completion(conn)
     # 额外等待：确保客户端播放完音频
     estimated_duration = max(0.5, len(text) * 0.12)
     await asyncio.sleep(estimated_duration + wait_after)
-
-
-async def _wait_tts_text_drained(conn: "ConnectionHandler"):
-    """等待 TTS 文本队列处理完（文本已转为音频）"""
-    for _ in range(100):  # 最多等 10 秒
-        tts = conn.tts if hasattr(conn, 'tts') and conn.tts else None
-        if tts and hasattr(tts, 'tts_text_queue'):
-            if tts.tts_text_queue.qsize() == 0:
-                return
-        await asyncio.sleep(0.1)
 
 
 # ============================================================================
@@ -233,13 +225,8 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
 
     try:
         # 开场白
-        opening = f"听写开始！本次听写共有{len(words)}个单词。请准备好纸和笔。"
-        if session.mode == DictationMode.LISTEN_EN:
-            opening += "我会读英文单词，请你把它写下来。"
-        else:
-            opening += "我会读中文意思，请你把对应的英文单词写下来。"
-        opening += "我们开始吧！"
-        await _speak_and_wait(conn, opening, wait_after=1.0)
+        opening = f"听写开始，共{len(words)}个单词。"
+        await _speak_and_wait(conn, opening, wait_after=0.5)
 
         if not session.is_active:
             return
@@ -264,31 +251,25 @@ async def _introduce_words(conn: "ConnectionHandler"):
     if not session or not session.is_active:
         return
 
-    await _speak_and_wait(conn, "下面我先给大家介绍一遍本次要听写的单词。", wait_after=0.5)
-
     for idx, word in enumerate(session.words, 1):
         if not session.is_active or session.stop_requested:
             return
-        # 1. 序号 + 中英文
-        await _speak_and_wait(conn, f"第{idx}个词，{word.word}，{word.meaning}。", wait_after=0.3)
+        # 1. 中英文
+        await _speak_and_wait(conn, f"{word.word}，{word.meaning}。", wait_after=1.0)
         # 2. 简单例句
         if session.show_example and word.example_sentence:
-            await _speak_and_wait(conn, f"例句：{word.example_sentence}", wait_after=0.3)
+            await _speak_and_wait(conn, f"例句：{word.example_sentence}", wait_after=0.5)
             if session.example_translate and word.example_translation:
-                await _speak_and_wait(conn, word.example_translation, wait_after=0.3)
+                await _speak_and_wait(conn, word.example_translation, wait_after=0.5)
         # 3. 近义词 / 反义词
         if session.show_synonym:
             tips = []
             if word.synonyms:
-                tips.append(f"近义词有：{'、'.join(word.synonyms[:3])}")
+                tips.append(f"近义词：{'、'.join(word.synonyms[:3])}")
             if word.antonyms:
-                tips.append(f"反义词有：{'、'.join(word.antonyms[:3])}")
+                tips.append(f"反义词：{'、'.join(word.antonyms[:3])}")
             if tips:
-                await _speak_and_wait(conn, "。".join(tips) + "。", wait_after=0.3)
-
-    if not session.is_active or session.stop_requested:
-        return
-    await _speak_and_wait(conn, "单词介绍完毕，现在开始听写！", wait_after=1.0)
+                await _speak_and_wait(conn, "。".join(tips) + "。", wait_after=1.0)
 
 
 async def _speak_current_word(conn: "ConnectionHandler"):
@@ -303,12 +284,6 @@ async def _speak_current_word(conn: "ConnectionHandler"):
         return
 
     session.is_speaking = True
-
-    # 序号提示
-    await _speak_and_wait(conn, f"第{session.current_word_index + 1}个。", wait_after=0.3)
-    if not session.is_active or session.stop_requested:
-        session.is_speaking = False
-        return
 
     # 按模式播报
     for i in range(session.repeat_count):
@@ -349,7 +324,7 @@ async def _finish_dictation(conn: "ConnectionHandler"):
     if not session:
         return
 
-    await _speak_and_wait(conn, "听写结束。请检查一下你的答案哦。", wait_after=1.0)
+    await _speak_and_wait(conn, "听写结束。", wait_after=0.5)
     # TTS 会话由 start_dictation 的 finally 关闭，这里不再调用 _end_tts
     await _report_and_clear(conn, end_time=time.time())
 

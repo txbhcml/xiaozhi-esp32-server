@@ -11,9 +11,11 @@ class SentenceType(Enum):
 
 class ContentType(Enum):
     # 内容类型
-    TEXT = "TEXT"  # 文本内容
+    TEXT = "TEXT"  # 文本内容（经过标点分段处理）
     FILE = "FILE"  # 文件内容
     ACTION = "ACTION"  # 动作内容
+    FLUSH = "FLUSH"  # 强制清空TTS文本缓冲区（防跨段拼接）
+    WHOLE_TEXT = "WHOLE_TEXT"  # 整段文本（跳过分段，直接生成语音，适合听写等场景）
 
 
 class InterfaceType(Enum):
