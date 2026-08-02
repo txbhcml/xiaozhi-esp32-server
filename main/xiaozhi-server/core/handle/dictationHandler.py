@@ -6,6 +6,7 @@
 3. 听写结束或中断时上报听写记录到 Java 后台
 """
 import asyncio
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -23,6 +24,15 @@ if TYPE_CHECKING:
 
 TAG = __name__
 logger = setup_logging()
+
+# 听写专用英文音色（按口音选择）
+DICTATION_EN_VOICES = {
+    "us": "en-US-JennyNeural",   # 美式女声
+    "uk": "en-GB-SoniaNeural",   # 英式女声
+}
+
+# 检测文本是否主要为英文
+_EN_TEXT_PATTERN = re.compile(r'[a-zA-Z]')
 
 
 class DictationMode(Enum):
@@ -162,21 +172,39 @@ async def _end_tts(conn: "ConnectionHandler"):
     )
 
 
-async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: float = 0.5):
+async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: float = 0.5, voice: str = None):
     """在当前 TTS 会话中追加文本并等待音频播放完
 
     注意：调用前必须已调用 _begin_tts 开启会话。
     使用 WHOLE_TEXT 直接生成整段语音，无需 FLUSH。
+    等待策略：RateController 队列清空（发送完）+ 估算播放时间（设备播完）+ 缓冲间隔
+
+    Args:
+        voice: 指定音色（如 en-US-JennyNeural），为 None 时使用当前音色。
+               通过临时替换 conn.tts.voice 实现，播完后恢复。
     """
     if not text:
         return
-    await _tts_text(conn, text)
-    # 等待音频队列和 RateController 队列都发送完
-    from core.handle.sendAudioHandle import _wait_for_audio_completion
-    await _wait_for_audio_completion(conn)
-    # 额外等待：确保客户端播放完音频
-    estimated_duration = max(0.5, len(text) * 0.12)
-    await asyncio.sleep(estimated_duration + wait_after)
+
+    # 如果指定了音色，临时替换
+    original_voice = None
+    if voice and hasattr(conn.tts, 'voice') and conn.tts.voice != voice:
+        original_voice = conn.tts.voice
+        conn.tts.voice = voice
+
+    try:
+        await _tts_text(conn, text)
+        # 1. 等待 RateController 队列清空（音频全部发送到网络）
+        from core.handle.sendAudioHandle import _wait_for_audio_completion
+        await _wait_for_audio_completion(conn)
+        # 2. 估算设备端播放时间并等待，确保设备把音频播完再发下一段
+        #    中文约 4-5 字/秒，英文约 3 词/秒，取较慢的 0.15 秒/字
+        estimated_playback = max(1.0, len(text) * 0.15)
+        await asyncio.sleep(estimated_playback + wait_after)
+    finally:
+        # 恢复原始音色
+        if original_voice:
+            conn.tts.voice = original_voice
 
 
 # ============================================================================
@@ -254,11 +282,15 @@ async def _introduce_words(conn: "ConnectionHandler"):
     for idx, word in enumerate(session.words, 1):
         if not session.is_active or session.stop_requested:
             return
-        # 1. 中英文
-        await _speak_and_wait(conn, f"{word.word}，{word.meaning}。", wait_after=1.0)
+        # 1. 英文单词（英文音色）+ 中文释义（中文音色）分开播报
+        en_voice = DICTATION_EN_VOICES.get(session.accent, DICTATION_EN_VOICES["us"])
+        await _speak_and_wait(conn, word.word, voice=en_voice, wait_after=0.5)
+        # 释义只取第一个含义（分号前的部分），避免过长导致设备内存不足
+        brief_meaning = (word.meaning or "").split("；")[0].split(";")[0]
+        await _speak_and_wait(conn, brief_meaning, wait_after=1.0)
         # 2. 简单例句
         if session.show_example and word.example_sentence:
-            await _speak_and_wait(conn, f"例句：{word.example_sentence}", wait_after=0.5)
+            await _speak_and_wait(conn, word.example_sentence, voice=en_voice, wait_after=0.5)
             if session.example_translate and word.example_translation:
                 await _speak_and_wait(conn, word.example_translation, wait_after=0.5)
         # 3. 近义词 / 反义词
@@ -286,18 +318,21 @@ async def _speak_current_word(conn: "ConnectionHandler"):
     session.is_speaking = True
 
     # 按模式播报
+    en_voice = DICTATION_EN_VOICES.get(session.accent, DICTATION_EN_VOICES["us"])
     for i in range(session.repeat_count):
         if not session.is_active or session.stop_requested:
             session.is_speaking = False
             return
         if session.mode == DictationMode.LISTEN_EN:
             text = word.word
+            voice = en_voice
         else:
             text = word.meaning or word.word
+            voice = None  # 中文音色
         # 重复时增加提示
         if session.repeat_count > 1:
             text = f"{text}。"
-        await _speak_and_wait(conn, text, wait_after=0.3)
+        await _speak_and_wait(conn, text, wait_after=0.3, voice=voice)
 
     session.is_speaking = False
 
