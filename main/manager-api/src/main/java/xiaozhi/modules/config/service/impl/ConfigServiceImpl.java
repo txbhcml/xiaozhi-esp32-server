@@ -537,11 +537,16 @@ public class ConfigServiceImpl implements ConfigService {
                         }
                     }
                     if (map.get("functions") != null) {
-                        String functionStr = (String) map.get("functions");
-                        if (StringUtils.isNotBlank(functionStr)) {
-                            String[] functions = functionStr.split(";");
-                            map.put("functions", functions);
+                        Object functionsObj = map.get("functions");
+                        // functions 可能是分号分隔的字符串，也可能已被转换为数组（缓存共享对象）
+                        if (functionsObj instanceof String) {
+                            String functionStr = (String) functionsObj;
+                            if (StringUtils.isNotBlank(functionStr)) {
+                                String[] functions = functionStr.split(";");
+                                map.put("functions", functions);
+                            }
                         }
+                        // 如果已经是数组（String[] 或 JSONArray），保持不变
                     }
                     System.out.println("map: " + map);
                 }

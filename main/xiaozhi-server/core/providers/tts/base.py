@@ -120,6 +120,22 @@ class TTSProviderBase(ABC):
     def handle_audio_file(self, file_audio: bytes, text):
         self.before_stop_play_files.append((file_audio, text))
 
+    def _get_sentence_type_for_audio(self):
+        """决定音频队列中应使用的 sentence_type。
+
+        听写会话使用单 TTS 会话模式：只在 _begin_tts 时发一次 FIRST，
+        中间所有文本生成的音频都用 MIDDLE，避免多次 FIRST 导致设备
+        ResetDecoder 清空音频缓冲区。
+        """
+        dictation_active = (
+            getattr(self.conn, "dictation_session", None) is not None
+            and self.conn.dictation_session is not None
+            and self.conn.dictation_session.is_active
+        )
+        if dictation_active:
+            return SentenceType.MIDDLE
+        return SentenceType.FIRST
+
     def to_tts_stream(self, text, opus_handler: Callable[[bytes], None] = None) -> None:
         # 保留原始文本用于显示/上报
         original_text = text
@@ -128,6 +144,7 @@ class TTSProviderBase(ABC):
         if self._correct_words_pattern:
             text = self._correct_words_pattern.sub(lambda m: self.correct_words[m.group(0)], text)
         max_repeat_time = 5
+        audio_sentence_type = self._get_sentence_type_for_audio()
         if self.delete_audio_file:
             # 需要删除文件的直接转为音频数据
             while max_repeat_time > 0:
@@ -135,7 +152,7 @@ class TTSProviderBase(ABC):
                     audio_bytes = asyncio.run(self.text_to_speak(text, None))
                     if audio_bytes:
                         # 使用原始文本用于显示/上报
-                        self.tts_audio_queue.put((SentenceType.FIRST, None, original_text, getattr(self, 'current_sentence_id', None)))
+                        self.tts_audio_queue.put((audio_sentence_type, None, original_text, getattr(self, 'current_sentence_id', None)))
                         audio_bytes_to_data_stream(
                             audio_bytes,
                             file_type=self.audio_file_type,
@@ -184,7 +201,7 @@ class TTSProviderBase(ABC):
                     logger.bind(tag=TAG).error(
                         f"语音生成失败: {original_text}，请检查网络或服务是否正常"
                     )
-                self.tts_audio_queue.put((SentenceType.FIRST, None, original_text, getattr(self, 'current_sentence_id', None)))
+                self.tts_audio_queue.put((audio_sentence_type, None, original_text, getattr(self, 'current_sentence_id', None)))
                 self._process_audio_file_stream(tmp_file, callback=opus_handler)
             except Exception as e:
                 logger.bind(tag=TAG).error(f"Failed to generate TTS file: {e}")

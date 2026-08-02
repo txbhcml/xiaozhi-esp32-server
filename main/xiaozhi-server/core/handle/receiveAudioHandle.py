@@ -18,6 +18,19 @@ TAG = __name__
 async def handleAudioMessage(conn: "ConnectionHandler", pcm_frame):
     # 当前片段是否有人说话
     have_voice = conn.vad.is_vad(conn, pcm_frame)
+
+    # 听写播报期间：忽略VAD检测，避免设备自身声音触发打断和ASR
+    dictation_active = (
+        getattr(conn, "dictation_session", None)
+        and conn.dictation_session is not None
+        and conn.dictation_session.is_active
+    )
+    if dictation_active:
+        # 仍然更新活动时间，避免超时断连
+        if have_voice:
+            conn.last_activity_time = time.time() * 1000
+        return
+
     # 如果设备刚刚被唤醒，短暂忽略VAD检测
     if hasattr(conn, "just_woken_up") and conn.just_woken_up:
         have_voice = False

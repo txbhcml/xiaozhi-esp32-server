@@ -3,7 +3,9 @@ package xiaozhi.modules.dict.entity;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
@@ -59,9 +61,11 @@ public class DictTaskEntity {
     private Integer showSynonym;
 
     @Schema(description = "手动输入的单词列表JSON（格式：[{\"word\":\"apple\",\"meaning\":\"苹果\"}]）")
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private String wordsJson;
 
     @Schema(description = "从词书挑选的单词ID列表JSON（biz_vocabularies.id数组）")
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private String selectedWordIds;
 
     @Schema(description = "状态：0禁用 1启用")

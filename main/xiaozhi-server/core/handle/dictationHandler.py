@@ -110,14 +110,15 @@ class DictationSession:
 # TTS 播报工具
 # ============================================================================
 
-async def _speak(conn: "ConnectionHandler", text: str):
-    """通过连接默认的 TTS 管道播报一段文本（FIRST/MIDDLE/LAST 三段式）"""
-    if not text:
-        return
+# 听写会话使用单 FIRST/MIDDLE/LAST 会话模式：
+# 只在开头发一次 FIRST（tts start），结尾发一次 LAST（tts stop），
+# 中间所有文本都用 MIDDLE 发送，避免反复 start/stop 导致设备 ResetDecoder 丢失音频。
+
+
+async def _begin_tts(conn: "ConnectionHandler"):
+    """开启一个 TTS 会话（发送 FIRST），设备收到 tts state=start 后进入 Speaking 状态"""
     sentence_id = str(uuid.uuid4().hex)
     conn.sentence_id = sentence_id
-
-    # FIRST 标记，开启一轮 TTS
     conn.tts.tts_text_queue.put(
         TTSMessageDTO(
             sentence_id=sentence_id,
@@ -125,7 +126,14 @@ async def _speak(conn: "ConnectionHandler", text: str):
             content_type=ContentType.ACTION,
         )
     )
-    # 文本内容
+
+
+async def _tts_text(conn: "ConnectionHandler", text: str):
+    """在当前 TTS 会话中追加一段文本（MIDDLE），不会触发设备的 start/stop"""
+    if not text:
+        return
+    sentence_id = conn.sentence_id or str(uuid.uuid4().hex)
+    conn.sentence_id = sentence_id
     conn.tts.tts_text_queue.put(
         TTSMessageDTO(
             sentence_id=sentence_id,
@@ -134,7 +142,13 @@ async def _speak(conn: "ConnectionHandler", text: str):
             content_detail=text,
         )
     )
-    # LAST 标记，结束本轮 TTS
+    conn.tts.store_tts_text(sentence_id, text)
+    conn.dialogue.put(Message(role="assistant", content=text))
+
+
+async def _end_tts(conn: "ConnectionHandler"):
+    """结束当前 TTS 会话（发送 LAST），设备收到 tts state=stop 后退出 Speaking 状态"""
+    sentence_id = conn.sentence_id or str(uuid.uuid4().hex)
     conn.tts.tts_text_queue.put(
         TTSMessageDTO(
             sentence_id=sentence_id,
@@ -142,16 +156,35 @@ async def _speak(conn: "ConnectionHandler", text: str):
             content_type=ContentType.ACTION,
         )
     )
-    # 缓存文本（用于 ASR 上报）并记录到对话历史
-    conn.tts.store_tts_text(sentence_id, text)
-    conn.dialogue.put(Message(role="assistant", content=text))
 
 
 async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: float = 0.5):
-    """播报文本并粗略等待 TTS 队列消费完（每字约 0.15 秒）"""
-    await _speak(conn, text)
-    estimated_duration = max(1.0, len(text) * 0.15)
+    """在当前 TTS 会话中追加文本并等待音频播放完
+
+    注意：调用前必须已调用 _begin_tts 开启会话。
+    不会发送 FIRST/LAST，仅发送 MIDDLE 文本并等待播放。
+    """
+    if not text:
+        return
+    await _tts_text(conn, text)
+    # 等待 TTS 文本队列处理完（文本已转为音频并放入音频队列）
+    await _wait_tts_text_drained(conn)
+    # 等待音频队列和 RateController 队列都发送完
+    from core.handle.sendAudioHandle import _wait_for_audio_completion
+    await _wait_for_audio_completion(conn)
+    # 额外等待：确保客户端播放完音频
+    estimated_duration = max(0.5, len(text) * 0.12)
     await asyncio.sleep(estimated_duration + wait_after)
+
+
+async def _wait_tts_text_drained(conn: "ConnectionHandler"):
+    """等待 TTS 文本队列处理完（文本已转为音频）"""
+    for _ in range(100):  # 最多等 10 秒
+        tts = conn.tts if hasattr(conn, 'tts') and conn.tts else None
+        if tts and hasattr(tts, 'tts_text_queue'):
+            if tts.tts_text_queue.qsize() == 0:
+                return
+        await asyncio.sleep(0.1)
 
 
 # ============================================================================
@@ -162,14 +195,16 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
     """启动听写会话（由 dictation.py 插件调用）
 
     task_config 由 Java /dict/active 接口返回，包含：
-      taskId, taskName, mode, accent, intervalSeconds, repeatCount, speakRate,
+      id, taskName, mode, accent, intervalSeconds, repeatCount, speakRate,
       introduceWords, showExample, exampleTranslate, showSynonym, words[]
     """
     words_raw = task_config.get("words") or []
     words = [DictationWord.from_dict(item) for item in words_raw]
 
     if not words:
+        await _begin_tts(conn)
         await _speak_and_wait(conn, "没有找到听写单词，请先在后台配置听写任务哦。")
+        await _end_tts(conn)
         return
 
     try:
@@ -178,7 +213,7 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
         mode = DictationMode.LISTEN_EN
 
     session = DictationSession(
-        task_id=str(task_config.get("taskId", "")),
+        task_id=str(task_config.get("id", "")),
         task_name=str(task_config.get("taskName", "")),
         mode=mode,
         accent=task_config.get("accent", "us") or "us",
@@ -193,31 +228,38 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
     )
     conn.dictation_session = session
 
-    # 开场白
-    opening = f"听写开始！本次听写共有{len(words)}个单词。请准备好纸和笔。"
-    if session.mode == DictationMode.LISTEN_EN:
-        opening += "我会读英文单词，请你把它写下来。"
-    else:
-        opening += "我会读中文意思，请你把对应的英文单词写下来。"
-    opening += "我们开始吧！"
-    await _speak_and_wait(conn, opening, wait_after=1.0)
+    # 开启 TTS 会话（只发一次 FIRST/tts start，设备进入 Speaking 状态）
+    await _begin_tts(conn)
 
-    if not session.is_active:
-        return
+    try:
+        # 开场白
+        opening = f"听写开始！本次听写共有{len(words)}个单词。请准备好纸和笔。"
+        if session.mode == DictationMode.LISTEN_EN:
+            opening += "我会读英文单词，请你把它写下来。"
+        else:
+            opening += "我会读中文意思，请你把对应的英文单词写下来。"
+        opening += "我们开始吧！"
+        await _speak_and_wait(conn, opening, wait_after=1.0)
 
-    # 单词介绍阶段
-    if session.introduce_words:
-        await _introduce_words(conn)
+        if not session.is_active:
+            return
 
-    if not session.is_active:
-        return
+        # 单词介绍阶段
+        if session.introduce_words:
+            await _introduce_words(conn)
 
-    # 逐个播报单词
-    await _speak_current_word(conn)
+        if not session.is_active:
+            return
+
+        # 逐个播报单词
+        await _speak_current_word(conn)
+    finally:
+        # 确保无论正常结束还是异常退出，都关闭 TTS 会话
+        await _end_tts(conn)
 
 
 async def _introduce_words(conn: "ConnectionHandler"):
-    """听写前的单词介绍阶段：逐个介绍所有单词（中英文+拼写+例句+近反义词）"""
+    """听写前的单词介绍阶段：逐个介绍所有单词（中英文+例句+近反义词）"""
     session = conn.dictation_session
     if not session or not session.is_active:
         return
@@ -229,15 +271,12 @@ async def _introduce_words(conn: "ConnectionHandler"):
             return
         # 1. 序号 + 中英文
         await _speak_and_wait(conn, f"第{idx}个词，{word.word}，{word.meaning}。", wait_after=0.3)
-        # 2. 字母拼写
-        spelled = "-".join(list(word.word))
-        await _speak_and_wait(conn, f"字母拼写是：{spelled}。", wait_after=0.3)
-        # 3. 简单例句
+        # 2. 简单例句
         if session.show_example and word.example_sentence:
             await _speak_and_wait(conn, f"例句：{word.example_sentence}", wait_after=0.3)
             if session.example_translate and word.example_translation:
                 await _speak_and_wait(conn, word.example_translation, wait_after=0.3)
-        # 4. 近义词 / 反义词
+        # 3. 近义词 / 反义词
         if session.show_synonym:
             tips = []
             if word.synonyms:
@@ -311,7 +350,7 @@ async def _finish_dictation(conn: "ConnectionHandler"):
         return
 
     await _speak_and_wait(conn, "听写结束。请检查一下你的答案哦。", wait_after=1.0)
-
+    # TTS 会话由 start_dictation 的 finally 关闭，这里不再调用 _end_tts
     await _report_and_clear(conn, end_time=time.time())
 
 
@@ -326,7 +365,7 @@ async def stop_dictation(conn: "ConnectionHandler", speak_hint: bool = True):
 
     if speak_hint:
         await _speak_and_wait(conn, "好的，听写已停止。", wait_after=0.5)
-
+    # TTS 会话由 start_dictation 的 finally 关闭，这里不再调用 _end_tts
     await _report_and_clear(conn, end_time=time.time())
 
 
@@ -339,6 +378,10 @@ async def _report_and_clear(conn: "ConnectionHandler", end_time: float):
     duration_seconds = int(end_time - session.start_time) if session.start_time else 0
     start_ms = int(session.start_time * 1000) if session.start_time else None
     end_ms = int(end_time * 1000)
+
+    # 清除听写会话引用
+    session.is_active = False
+    conn.dictation_session = None
 
     # 异步上报，不阻塞主流程
     try:
@@ -355,8 +398,6 @@ async def _report_and_clear(conn: "ConnectionHandler", end_time: float):
         )
     except Exception as e:
         logger.bind(tag=TAG).error(f"上报听写记录失败: {e}")
-
-    conn.dictation_session = None
 
 
 # ============================================================================
