@@ -20,14 +20,11 @@ import lombok.AllArgsConstructor;
 import xiaozhi.common.page.PageData;
 import xiaozhi.common.service.impl.BaseServiceImpl;
 import xiaozhi.modules.dict.dao.BizVocabularyBookDao;
-import xiaozhi.modules.dict.dao.BizVocabularyDao;
 import xiaozhi.modules.dict.dao.DictTaskDao;
 import xiaozhi.modules.dict.dto.DictTaskSaveDTO;
 import xiaozhi.modules.dict.entity.BizVocabularyBookEntity;
-import xiaozhi.modules.dict.entity.BizVocabularyEntity;
 import xiaozhi.modules.dict.entity.DictTaskEntity;
 import xiaozhi.modules.dict.service.DictTaskService;
-import xiaozhi.modules.dict.util.DictVocabularyParser;
 import xiaozhi.modules.dict.vo.DictTaskVO;
 import xiaozhi.modules.dict.vo.DictVocabularyVO;
 import xiaozhi.modules.security.user.SecurityUser;
@@ -41,7 +38,6 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         implements DictTaskService {
 
     private final DictTaskDao dictTaskDao;
-    private final BizVocabularyDao bizVocabularyDao;
     private final BizVocabularyBookDao bizVocabularyBookDao;
 
     @Override
@@ -107,17 +103,13 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         entity.setStatus(dto.getStatus() == null ? 1 : dto.getStatus());
         entity.setSort(dto.getSort() == null ? 0 : dto.getSort());
 
-        // 单词列表：手动输入模式时存 words_json；词书模式时存 selected_word_ids
+        // 统一用 words_json 存储所有单词（含词书单词的 id）
         if (CollUtil.isNotEmpty(dto.getWords())) {
             entity.setWordsJson(JSONUtil.toJsonStr(dto.getWords()));
         } else {
             entity.setWordsJson(null);
         }
-        if (CollUtil.isNotEmpty(dto.getSelectedWordIds())) {
-            entity.setSelectedWordIds(JSONUtil.toJsonStr(dto.getSelectedWordIds()));
-        } else {
-            entity.setSelectedWordIds(null);
-        }
+        entity.setSelectedWordIds(null);
 
         entity.setUpdater(userId);
         entity.setUpdateDate(new Date());
@@ -213,54 +205,25 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
             }
         }
 
-        // 解析单词列表
+        // 解析单词列表（统一从 words_json 反序列化）
         List<DictVocabularyVO> words = resolveWords(entity);
         vo.setWords(words);
-        vo.setSelectedWordIds(parseLongList(entity.getSelectedWordIds()));
+        vo.setSelectedWordIds(words.stream()
+                .filter(w -> w.getId() != null)
+                .map(DictVocabularyVO::getId)
+                .collect(Collectors.toList()));
         vo.setWordCount(words == null ? 0 : words.size());
         return vo;
     }
 
     /**
-     * 解析任务的单词列表：
-     * - 词书模式（selected_word_ids 非空）：按 ID 批量查询 biz_vocabularies，解析 content
-     * - 手动输入模式（words_json 非空）：直接反序列化为 DictVocabularyVO 列表
+     * 解析任务的单词列表（统一从 words_json 反序列化）
      */
     private List<DictVocabularyVO> resolveWords(DictTaskEntity entity) {
-        // 词书模式优先
-        List<Long> wordIds = parseLongList(entity.getSelectedWordIds());
-        if (CollUtil.isNotEmpty(wordIds)) {
-            LambdaQueryWrapper<BizVocabularyEntity> wrapper = new LambdaQueryWrapper<>();
-            wrapper.in(BizVocabularyEntity::getId, wordIds);
-            List<BizVocabularyEntity> entities = bizVocabularyDao.selectList(wrapper);
-            // 保持 selected_word_ids 的顺序
-            Map<Long, BizVocabularyEntity> idMap = entities.stream()
-                    .collect(Collectors.toMap(BizVocabularyEntity::getId, e -> e, (a, b) -> a));
-            List<DictVocabularyVO> result = new ArrayList<>();
-            for (Long id : wordIds) {
-                BizVocabularyEntity vocab = idMap.get(id);
-                if (vocab != null) {
-                    result.add(DictVocabularyParser.parse(vocab));
-                }
-            }
-            return result;
-        }
-        // 手动输入模式
         if (StrUtil.isNotBlank(entity.getWordsJson())) {
             return JSONUtil.toList(entity.getWordsJson(), DictVocabularyVO.class);
         }
         return new ArrayList<>();
-    }
-
-    private static List<Long> parseLongList(String json) {
-        if (StrUtil.isBlank(json)) {
-            return new ArrayList<>();
-        }
-        try {
-            return JSONUtil.toList(json, Long.class);
-        } catch (Exception e) {
-            return new ArrayList<>();
-        }
     }
 
     private static Integer toIntFlag(Boolean flag) {

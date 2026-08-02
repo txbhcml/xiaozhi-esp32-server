@@ -60,12 +60,11 @@ public class DictTaskEntity {
     @Schema(description = "单词介绍阶段是否提示近义词/反义词：0否 1是")
     private Integer showSynonym;
 
-    @Schema(description = "手动输入的单词列表JSON（格式：[{\"word\":\"apple\",\"meaning\":\"苹果\"}]）")
+    @Schema(description = "单词列表JSON（格式：[{\"id\":123,\"word\":\"apple\",\"meaning\":\"苹果\"}]，id来自词书时非空）")
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String wordsJson;
 
-    @Schema(description = "从词书挑选的单词ID列表JSON（biz_vocabularies.id数组）")
-    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    @Schema(description = "已废弃，保留用于兼容旧数据")
     private String selectedWordIds;
 
     @Schema(description = "状态：0禁用 1启用")

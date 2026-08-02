@@ -517,7 +517,6 @@ export default {
           return;
         }
         const detail = data.data;
-        const bookIdSet = new Set((detail.selectedWordIds || []).map(id => Number(id)));
         this.form = {
           id: detail.id,
           taskName: detail.taskName || "",
@@ -533,16 +532,13 @@ export default {
           statusBool: detail.status === 1
         };
 
-        // 统一加载单词列表，区分来源
-        this.unifiedWords = (detail.words || []).map(w => {
-          const isBook = w.id && bookIdSet.has(Number(w.id));
-          return {
-            word: w.word || "",
-            meaning: w.meaning || "",
-            source: isBook ? 'book' : 'manual',
-            vocabId: isBook ? Number(w.id) : undefined
-          };
-        });
+        // 统一加载单词列表，有 id 的是词书单词
+        this.unifiedWords = (detail.words || []).map(w => ({
+          word: w.word || "",
+          meaning: w.meaning || "",
+          source: w.id ? 'book' : 'manual',
+          vocabId: w.id ? Number(w.id) : undefined
+        }));
 
         this.dialogVisible = true;
       });
@@ -581,15 +577,23 @@ export default {
       this.$refs.taskForm.validate(valid => {
         if (!valid) return;
 
-        const bookWords = this.unifiedWords.filter(w => w.source === 'book' && w.vocabId);
-        const manualWords = this.unifiedWords
-          .filter(w => w.source === 'manual' && (w.word || "").trim() && (w.meaning || "").trim())
-          .map(w => ({ word: w.word.trim(), meaning: w.meaning.trim() }));
+        const validWords = this.unifiedWords.filter(w => {
+          if (w.source === 'book') return w.vocabId;
+          return (w.word || "").trim() && (w.meaning || "").trim();
+        });
 
-        if (bookWords.length === 0 && manualWords.length === 0) {
+        if (validWords.length === 0) {
           this.$message.warning("请至少添加一个单词");
           return;
         }
+
+        const words = validWords.map(w => {
+          const item = { word: w.word.trim(), meaning: w.meaning.trim() };
+          if (w.source === 'book' && w.vocabId) {
+            item.id = w.vocabId;
+          }
+          return item;
+        });
 
         const payload = {
           id: this.form.id,
@@ -604,9 +608,7 @@ export default {
           exampleTranslate: this.form.exampleTranslate,
           showSynonym: this.form.showSynonym,
           status: this.form.statusBool ? 1 : 0,
-          bookId: null,
-          selectedWordIds: bookWords.map(w => w.vocabId),
-          words: manualWords
+          words: words
         };
 
         this.saving = true;
