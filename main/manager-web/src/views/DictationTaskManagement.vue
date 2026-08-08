@@ -54,11 +54,6 @@
               <template #accent="scope">
                 {{ scope.row.accent === 'uk' ? '英式' : '美式' }}
               </template>
-              <template #introduceWords="scope">
-                <el-tag size="small" :type="scope.row.introduceWords ? 'success' : 'info'">
-                  {{ scope.row.introduceWords ? '是' : '否' }}
-                </el-tag>
-              </template>
               <template #status="scope">
                 <el-tag size="small" :type="scope.row.status === 1 ? 'success' : 'info'">
                   {{ scope.row.status === 1 ? '启用' : '禁用' }}
@@ -115,32 +110,18 @@
         </el-form-item>
 
         <el-form-item label="播报次数" prop="repeatCount">
-          <el-input-number v-model="form.repeatCount" :min="1" :max="3" :step="1" :precision="0" />
-          <span class="form-hint">每个单词重复播报 1~3 次</span>
+          <el-input-number v-model="form.repeatCount" :min="1" :step="1" :precision="0" />
+          <span class="form-hint">每个单词重复播报次数</span>
+        </el-form-item>
+
+        <el-form-item label="重复间隔(秒)" prop="repeatIntervalSeconds">
+          <el-input-number v-model="form.repeatIntervalSeconds" :min="0" :max="30" :step="1" :precision="0" />
+          <span class="form-hint">同一单词重复播报之间的间隔</span>
         </el-form-item>
 
         <el-form-item label="语速" prop="speakRate">
           <el-slider v-model="form.speakRate" :min="-100" :max="100" :step="10" style="width: 320px" />
-          <span class="form-hint">-100 慢 / 0 标准 / 100 快</span>
-        </el-form-item>
-
-        <el-divider content-position="left">单词介绍阶段</el-divider>
-
-        <el-form-item label="介绍所有单词">
-          <el-switch v-model="form.introduceWords" />
-          <span class="form-hint">听写开始前，先介绍所有单词（含拼写、例句等）</span>
-        </el-form-item>
-
-        <el-form-item label="播报例句" v-if="form.introduceWords">
-          <el-switch v-model="form.showExample" />
-        </el-form-item>
-
-        <el-form-item label="翻译例句" v-if="form.introduceWords && form.showExample">
-          <el-switch v-model="form.exampleTranslate" />
-        </el-form-item>
-
-        <el-form-item label="提示近反义词" v-if="form.introduceWords">
-          <el-switch v-model="form.showSynonym" />
+          <span class="form-hint">-100 慢 / 0 标准 / 100 快（仅对单词播报生效）</span>
         </el-form-item>
 
         <el-divider content-position="left">单词列表</el-divider>
@@ -148,7 +129,7 @@
         <el-form-item label="单词列表">
           <div class="word-list-container">
             <div class="word-list-toolbar">
-              <el-button size="small" type="primary" plain @click="addManualWord">+ 添加单词</el-button>
+              <el-button size="small" type="warning" plain @click="openBatchImport">批量导入</el-button>
               <el-button size="small" type="success" plain @click="openBookPicker">从词书选择</el-button>
               <span class="word-count">共 {{ validWordCount }} 词</span>
             </div>
@@ -220,6 +201,7 @@
               @keyup.enter="searchPickerWords"
             />
             <el-button size="small" @click="searchPickerWords">搜索</el-button>
+            <span class="picker-hint">已自动过滤已标熟的单词</span>
           </div>
           <el-table
             :data="pickerWords"
@@ -235,6 +217,17 @@
             <el-table-column prop="word" label="单词" min-width="120" />
             <el-table-column prop="meaning" label="中文释义" min-width="180" show-overflow-tooltip />
             <el-table-column prop="phoneticUs" label="美式音标" min-width="120" />
+            <el-table-column label="操作" width="80" align="center">
+              <template #default="scope">
+                <el-button
+                  size="small"
+                  link
+                  type="primary"
+                  :loading="pickerMarkingId === scope.row.id"
+                  @click="handlePickerMarkFamiliar(scope.row)"
+                >标熟</el-button>
+              </template>
+            </el-table-column>
           </el-table>
           <div class="book-picker-pagination">
             <el-pagination
@@ -251,6 +244,34 @@
           <el-button @click="bookPickerVisible = false">取消</el-button>
           <el-button type="primary" @click="confirmBookPicker">
             确认添加（已选 {{ pickerSelected.length }} 词）
+          </el-button>
+        </template>
+      </el-dialog>
+
+      <!-- 批量导入对话框 -->
+      <el-dialog
+        v-model="batchImportVisible"
+        title="批量导入单词"
+        width="600px"
+        append-to-body
+        :close-on-click-modal="false"
+        destroy-on-close
+      >
+        <el-form label-width="100px">
+          <el-form-item label="单词列表">
+            <el-input
+              v-model="batchImportText"
+              type="textarea"
+              :rows="12"
+              placeholder="每行一个英文单词，例如：&#10;apple&#10;banana&#10;orange"
+            />
+            <span class="form-hint">自动从词书查找释义，找不到的用大模型翻译；已标熟的单词会被自动过滤</span>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="batchImportVisible = false">取消</el-button>
+          <el-button type="primary" :loading="batchImporting" @click="confirmBatchImport">
+            导入（{{ batchImportWordCount }} 词）
           </el-button>
         </template>
       </el-dialog>
@@ -308,6 +329,12 @@ export default {
       pickerCurrentPage: 1,
       pickerPageSize: 20,
       pickerSelected: [],
+      pickerMarkingId: null,
+
+      // 批量导入
+      batchImportVisible: false,
+      batchImportText: "",
+      batchImporting: false,
 
       tableColumns: []
     };
@@ -318,6 +345,9 @@ export default {
         if (w.source === 'book') return w.vocabId;
         return (w.word || "").trim() && (w.meaning || "").trim();
       }).length;
+    },
+    batchImportWordCount() {
+      return this.batchImportText.split('\n').map(w => w.trim()).filter(w => w).length;
     }
   },
   created() {
@@ -334,11 +364,8 @@ export default {
         accent: "us",
         intervalSeconds: 5,
         repeatCount: 1,
+        repeatIntervalSeconds: 1,
         speakRate: 0,
-        introduceWords: false,
-        showExample: false,
-        exampleTranslate: false,
-        showSynonym: false,
         statusBool: true
       };
     },
@@ -349,7 +376,6 @@ export default {
         { prop: "mode", label: "播报模式", align: "center", slot: "mode" },
         { prop: "accent", label: "口音", align: "center", slot: "accent" },
         { prop: "wordCount", label: "单词数", align: "center" },
-        { prop: "introduceWords", label: "介绍单词", align: "center", slot: "introduceWords" },
         { prop: "status", label: "状态", align: "center", slot: "status" },
         { prop: "createDate", label: "创建时间", align: "center", minWidth: 160 }
       ];
@@ -392,7 +418,8 @@ export default {
         bookId: this.pickerBookId,
         word: this.pickerKeyword,
         page: this.pickerCurrentPage,
-        limit: this.pickerPageSize
+        limit: this.pickerPageSize,
+        excludeFamiliar: true
       }, ({ data }) => {
         this.pickerLoading = false;
         if (data.code === 0) {
@@ -447,6 +474,24 @@ export default {
       this.pickerSelected = selection;
     },
 
+    handlePickerMarkFamiliar(row) {
+      this.pickerMarkingId = row.id;
+      Api.dictation.markFamiliar({
+        vocabId: row.id,
+        word: row.word,
+        bookId: this.pickerBookId
+      }, ({ data }) => {
+        this.pickerMarkingId = null;
+        if (data.code === 0) {
+          this.$message.success(`${row.word} 已标熟`);
+          // 标熟后重新加载列表（已标熟单词会被自动过滤）
+          this.fetchPickerWords();
+        } else {
+          this.$message.error(data.msg || "标熟失败");
+        }
+      });
+    },
+
     confirmBookPicker() {
       const existingIds = new Set(this.unifiedWords.filter(w => w.source === 'book').map(w => w.vocabId));
       let added = 0;
@@ -476,10 +521,6 @@ export default {
       this.bookPickerVisible = false;
     },
 
-    addManualWord() {
-      this.unifiedWords.push({ word: "", meaning: "", source: 'manual' });
-    },
-
     removeUnifiedWord(index) {
       this.unifiedWords.splice(index, 1);
     },
@@ -503,10 +544,27 @@ export default {
     },
 
     handleAdd() {
-      this.form = this.buildEmptyForm();
-      this.unifiedWords = [];
       this.dialogTitle = "新建听写任务";
+      this.unifiedWords = [];
       this.dialogVisible = true;
+      // 先用空默认值，再尝试用当前启用任务的配置覆盖
+      this.form = this.buildEmptyForm();
+      Api.dictation.getActiveConfig(({ data }) => {
+        if (data.code === 0 && data.data) {
+          const active = data.data;
+          this.form = {
+            id: undefined,
+            taskName: "",
+            mode: active.mode || "listen_en",
+            accent: active.accent || "us",
+            intervalSeconds: active.intervalSeconds != null ? active.intervalSeconds : 5,
+            repeatCount: active.repeatCount != null ? active.repeatCount : 1,
+            repeatIntervalSeconds: active.repeatIntervalSeconds != null ? active.repeatIntervalSeconds : 1,
+            speakRate: active.speakRate != null ? active.speakRate : 0,
+            statusBool: true
+          };
+        }
+      });
     },
 
     handleEdit(row) {
@@ -524,11 +582,8 @@ export default {
           accent: detail.accent || "us",
           intervalSeconds: detail.intervalSeconds != null ? Number(detail.intervalSeconds) : 5,
           repeatCount: detail.repeatCount != null ? detail.repeatCount : 1,
+          repeatIntervalSeconds: detail.repeatIntervalSeconds != null ? Number(detail.repeatIntervalSeconds) : 1,
           speakRate: detail.speakRate || 0,
-          introduceWords: !!detail.introduceWords,
-          showExample: !!detail.showExample,
-          exampleTranslate: !!detail.exampleTranslate,
-          showSynonym: !!detail.showSynonym,
           statusBool: detail.status === 1
         };
 
@@ -536,7 +591,7 @@ export default {
         this.unifiedWords = (detail.words || []).map(w => ({
           word: w.word || "",
           meaning: w.meaning || "",
-          source: w.id ? 'book' : 'manual',
+          source: w.source || (w.id ? 'book' : 'manual'),
           vocabId: w.id ? Number(w.id) : undefined
         }));
 
@@ -588,7 +643,7 @@ export default {
         }
 
         const words = validWords.map(w => {
-          const item = { word: w.word.trim(), meaning: w.meaning.trim() };
+          const item = { word: w.word.trim(), meaning: w.meaning.trim(), source: w.source || 'manual' };
           if (w.source === 'book' && w.vocabId) {
             item.id = w.vocabId;
           }
@@ -602,11 +657,8 @@ export default {
           accent: this.form.accent,
           intervalSeconds: this.form.intervalSeconds,
           repeatCount: this.form.repeatCount,
+          repeatIntervalSeconds: this.form.repeatIntervalSeconds,
           speakRate: this.form.speakRate,
-          introduceWords: this.form.introduceWords,
-          showExample: this.form.showExample,
-          exampleTranslate: this.form.exampleTranslate,
-          showSynonym: this.form.showSynonym,
           status: this.form.statusBool ? 1 : 0,
           words: words
         };
@@ -622,6 +674,50 @@ export default {
             this.$message.error(data.msg || "保存失败");
           }
         });
+      });
+    },
+
+    openBatchImport() {
+      this.batchImportText = "";
+      this.batchImportVisible = true;
+    },
+
+    confirmBatchImport() {
+      const words = this.batchImportText.split('\n').map(w => w.trim()).filter(w => w);
+      if (words.length === 0) {
+        this.$message.warning("请输入至少一个单词");
+        return;
+      }
+
+      this.batchImporting = true;
+      Api.dictation.batchImportWords({
+        words: words
+      }, ({ data }) => {
+        this.batchImporting = false;
+        if (data.code === 0) {
+          const result = data.data || [];
+          let added = 0;
+          const existingWords = new Set(this.unifiedWords.map(w => (w.word || "").toLowerCase()));
+          result.forEach(item => {
+            if (!existingWords.has((item.word || "").toLowerCase())) {
+              this.unifiedWords.push({
+                word: item.word || "",
+                meaning: item.meaning || "",
+                source: 'manual'
+              });
+              added++;
+            }
+          });
+          const skipped = words.length - result.length;
+          let msg = `成功导入 ${added} 个单词`;
+          if (skipped > 0) {
+            msg += `，已过滤 ${skipped} 个已标熟单词`;
+          }
+          this.$message.success(msg);
+          this.batchImportVisible = false;
+        } else {
+          this.$message.error(data.msg || "批量导入失败");
+        }
       });
     },
 
@@ -754,6 +850,11 @@ export default {
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
+}
+
+.picker-hint {
+  color: #909399;
+  font-size: 12px;
 }
 
 .book-picker-pagination {

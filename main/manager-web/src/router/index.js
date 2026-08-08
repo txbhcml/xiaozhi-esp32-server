@@ -229,6 +229,16 @@ const routes = [
       title: '听写记录'
     }
   },
+  // 词书标熟
+  {
+    path: '/dictation-vocabulary-management',
+    name: 'DictationVocabularyManagement',
+    component: () => import('../views/DictationVocabularyManagement.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '词书标熟'
+    }
+  },
 ]
 
 // Vue Router 4: 使用 createRouter 创建路由实例

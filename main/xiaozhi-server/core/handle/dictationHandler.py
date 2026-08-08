@@ -1,17 +1,22 @@
 """小智听写助手 - 核心处理器
 
 小智单方面播报单词，无语音交互判定：
-1. 开场白 → (可选)单词介绍 → 逐个播报单词 → 结束语
+1. 开场白 → 逐个播报单词 → 结束语
 2. 学生在纸上默写，不对语音答案做评判
-3. 听写结束或中断时上报听写记录到 Java 后台
+3. 英文单词优先使用有道词典发音，失败时回退到 EdgeTTS
+4. 语速仅对单词播报生效，开场白/结束语使用正常语速
+5. 听写结束或中断时上报听写记录到 Java 后台
 """
 import asyncio
+import os
 import re
 import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, TYPE_CHECKING
+
+import aiohttp
 
 from config.logger import setup_logging
 from config.manage_api_client import report_dictation_record
@@ -85,11 +90,8 @@ class DictationSession:
     accent: str                          # us / uk
     interval_seconds: float              # 单词间隔（供学生默写）
     repeat_count: int                    # 每词播报次数
-    speak_rate: int                      # 语速（保留字段，未直接驱动 edge-tts）
-    introduce_words: bool                # 听写前是否介绍所有单词
-    show_example: bool                   # 介绍阶段是否播报例句
-    example_translate: bool              # 介绍阶段是否翻译例句
-    show_synonym: bool                   # 介绍阶段是否提示近义词/反义词
+    speak_rate: int                      # 语速（仅对单词播报生效）
+    repeat_interval: float               # 重复播报同一单词的间隔（秒）
     words: List[DictationWord] = field(default_factory=list)
 
     current_word_index: int = 0
@@ -172,7 +174,31 @@ async def _end_tts(conn: "ConnectionHandler"):
     )
 
 
-async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: float = 0.5, voice: str = None):
+def _apply_dictation_rate(conn: "ConnectionHandler", rate_offset: int):
+    """临时应用听写语速到 TTS 引擎
+
+    Args:
+        rate_offset: 语速偏移量，-100~100，映射为 EdgeTTS rate 格式如 +50%/-20%
+                     0 表示使用默认语速（不修改）
+    """
+    if rate_offset == 0:
+        return
+    if hasattr(conn.tts, 'speech_rate'):
+        conn.tts.speech_rate = rate_offset
+    if hasattr(conn.tts, 'edge_rate'):
+        conn.tts.edge_rate = f"{rate_offset:+}%"
+
+
+def _restore_original_rate(conn: "ConnectionHandler", original_rate: int):
+    """恢复 TTS 原始语速"""
+    if hasattr(conn.tts, 'speech_rate'):
+        conn.tts.speech_rate = original_rate
+    if hasattr(conn.tts, 'edge_rate'):
+        conn.tts.edge_rate = f"{original_rate:+}%"
+
+
+async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: float = 0.5,
+                          voice: str = None, rate: int = None):
     """在当前 TTS 会话中追加文本并等待音频播放完
 
     注意：调用前必须已调用 _begin_tts 开启会话。
@@ -182,6 +208,8 @@ async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: floa
     Args:
         voice: 指定音色（如 en-US-JennyNeural），为 None 时使用当前音色。
                通过临时替换 conn.tts.voice 实现，播完后恢复。
+        rate: 指定语速偏移（-100~100），为 None 时使用当前语速。
+              通过临时替换 conn.tts.speech_rate/edge_rate 实现，播完后恢复。
     """
     if not text:
         return
@@ -191,6 +219,12 @@ async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: floa
     if voice and hasattr(conn.tts, 'voice') and conn.tts.voice != voice:
         original_voice = conn.tts.voice
         conn.tts.voice = voice
+
+    # 如果指定了语速，临时替换（无条件设置 edge_rate，防止被其他流程重置后失效）
+    original_rate = None
+    if rate is not None and hasattr(conn.tts, 'speech_rate'):
+        original_rate = conn.tts.speech_rate
+        _apply_dictation_rate(conn, rate)
 
     try:
         await _tts_text(conn, text)
@@ -205,6 +239,9 @@ async def _speak_and_wait(conn: "ConnectionHandler", text: str, wait_after: floa
         # 恢复原始音色
         if original_voice:
             conn.tts.voice = original_voice
+        # 恢复原始语速
+        if original_rate is not None:
+            _restore_original_rate(conn, original_rate)
 
 
 # ============================================================================
@@ -216,7 +253,7 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
 
     task_config 由 Java /dict/active 接口返回，包含：
       id, taskName, mode, accent, intervalSeconds, repeatCount, speakRate,
-      introduceWords, showExample, exampleTranslate, showSynonym, words[]
+      repeatIntervalSeconds, words[]
     """
     words_raw = task_config.get("words") or []
     words = [DictationWord.from_dict(item) for item in words_raw]
@@ -232,6 +269,8 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
     except ValueError:
         mode = DictationMode.LISTEN_EN
 
+    speak_rate = int(task_config.get("speakRate", 0) or 0)
+
     session = DictationSession(
         task_id=str(task_config.get("id", "")),
         task_name=str(task_config.get("taskName", "")),
@@ -239,11 +278,8 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
         accent=task_config.get("accent", "us") or "us",
         interval_seconds=float(task_config.get("intervalSeconds", 5.0) or 5.0),
         repeat_count=int(task_config.get("repeatCount", 1) or 1),
-        speak_rate=int(task_config.get("speakRate", 0) or 0),
-        introduce_words=bool(task_config.get("introduceWords", False)),
-        show_example=bool(task_config.get("showExample", False)),
-        example_translate=bool(task_config.get("exampleTranslate", False)),
-        show_synonym=bool(task_config.get("showSynonym", False)),
+        speak_rate=speak_rate,
+        repeat_interval=float(task_config.get("repeatIntervalSeconds", 1.0) or 1.0),
         words=words,
     )
     conn.dictation_session = session
@@ -252,60 +288,87 @@ async def start_dictation(conn: "ConnectionHandler", task_config: dict):
     await _begin_tts(conn)
 
     try:
-        # 开场白
+        # 开场白（正常语速，不应用 speak_rate）
         opening = f"听写开始，共{len(words)}个单词。"
         await _speak_and_wait(conn, opening, wait_after=0.5)
 
         if not session.is_active:
             return
 
-        # 单词介绍阶段
-        if session.introduce_words:
-            await _introduce_words(conn)
-
-        if not session.is_active:
-            return
-
-        # 逐个播报单词
+        # 逐个播报单词（语速仅对单词生效）
         await _speak_current_word(conn)
     finally:
         # 确保无论正常结束还是异常退出，都关闭 TTS 会话
         await _end_tts(conn)
 
 
-async def _introduce_words(conn: "ConnectionHandler"):
-    """听写前的单词介绍阶段：逐个介绍所有单词（中英文+例句+近反义词）"""
-    session = conn.dictation_session
-    if not session or not session.is_active:
-        return
+async def _download_youdao_audio(word: str, accent: str) -> Optional[bytes]:
+    """从有道词典 API 下载单词发音 MP3
 
-    for idx, word in enumerate(session.words, 1):
-        if not session.is_active or session.stop_requested:
-            return
-        # 1. 英文单词（英文音色）+ 中文释义（中文音色）分开播报
-        en_voice = DICTATION_EN_VOICES.get(session.accent, DICTATION_EN_VOICES["us"])
-        await _speak_and_wait(conn, word.word, voice=en_voice, wait_after=0.5)
-        # 释义只取第一个含义（分号前的部分），避免过长导致设备内存不足
-        brief_meaning = (word.meaning or "").split("；")[0].split(";")[0]
-        await _speak_and_wait(conn, brief_meaning, wait_after=1.0)
-        # 2. 简单例句
-        if session.show_example and word.example_sentence:
-            await _speak_and_wait(conn, word.example_sentence, voice=en_voice, wait_after=0.5)
-            if session.example_translate and word.example_translation:
-                await _speak_and_wait(conn, word.example_translation, wait_after=0.5)
-        # 3. 近义词 / 反义词
-        if session.show_synonym:
-            tips = []
-            if word.synonyms:
-                tips.append(f"近义词：{'、'.join(word.synonyms[:3])}")
-            if word.antonyms:
-                tips.append(f"反义词：{'、'.join(word.antonyms[:3])}")
-            if tips:
-                await _speak_and_wait(conn, "。".join(tips) + "。", wait_after=1.0)
+    Args:
+        word: 英文单词
+        accent: 'us' (type=0) 或 'uk' (type=1)
+    Returns:
+        MP3 二进制数据，失败返回 None
+    """
+    youdao_type = 0 if accent == "us" else 1
+    url = f"http://dict.youdao.com/dictvoice?audio={word}&type={youdao_type}"
+    try:
+        async with aiohttp.ClientSession() as http_session:
+            async with http_session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+                    if len(data) > 100:
+                        return data
+        return None
+    except Exception as e:
+        logger.bind(tag=TAG).warning(f"有道词典下载失败: {word}, {e}")
+        return None
+
+
+async def _speak_youdao_word(conn: "ConnectionHandler", text: str, mp3_data: bytes,
+                             wait_after: float = 0.5):
+    """通过有道词典 MP3 播报单词发音
+
+    将 MP3 数据写入临时文件，通过 TTS 管线的 FILE 内容类型播放。
+    """
+    tmp_dir = conn.tts.output_file
+    os.makedirs(tmp_dir, exist_ok=True)
+    tmp_file = os.path.join(tmp_dir, f"youdao-{uuid.uuid4().hex}.mp3")
+    with open(tmp_file, "wb") as f:
+        f.write(mp3_data)
+
+    sentence_id = conn.sentence_id or str(uuid.uuid4().hex)
+    conn.sentence_id = sentence_id
+
+    # 先放入文本条目（供设备屏幕显示）
+    conn.tts.tts_audio_queue.put((SentenceType.MIDDLE, None, text, sentence_id))
+    conn.tts.store_tts_text(sentence_id, text)
+    conn.dialogue.put(Message(role="assistant", content=text))
+
+    # 通过 FILE 内容类型让 TTS 线程将 MP3 转为 opus 并发送
+    conn.tts.tts_text_queue.put(
+        TTSMessageDTO(
+            sentence_id=sentence_id,
+            sentence_type=SentenceType.MIDDLE,
+            content_type=ContentType.FILE,
+            content_file=tmp_file,
+        )
+    )
+
+    # 等待音频发送和播放完成
+    from core.handle.sendAudioHandle import _wait_for_audio_completion
+    await _wait_for_audio_completion(conn)
+    estimated_playback = max(1.0, len(text) * 0.3)
+    await asyncio.sleep(estimated_playback + wait_after)
 
 
 async def _speak_current_word(conn: "ConnectionHandler"):
-    """播报当前单词（单方面播报，不等待学生回答）"""
+    """播报当前单词（单方面播报，不等待学生回答）
+
+    语速仅对单词播报生效（通过 _speak_and_wait 的 rate 参数传入）。
+    英文单词模式优先使用有道词典发音，失败时回退到 EdgeTTS。
+    """
     session = conn.dictation_session
     if not session or not session.is_active:
         return
@@ -317,29 +380,41 @@ async def _speak_current_word(conn: "ConnectionHandler"):
 
     session.is_speaking = True
 
-    # 按模式播报
     en_voice = DICTATION_EN_VOICES.get(session.accent, DICTATION_EN_VOICES["us"])
+
     for i in range(session.repeat_count):
         if not session.is_active or session.stop_requested:
             session.is_speaking = False
             return
+
         if session.mode == DictationMode.LISTEN_EN:
-            text = word.word
-            voice = en_voice
+            # 英文单词模式：优先有道词典发音
+            youdao_mp3 = await _download_youdao_audio(word.word, session.accent)
+            if youdao_mp3:
+                await _speak_youdao_word(conn, word.word, youdao_mp3, wait_after=0.3)
+            else:
+                # 回退到 EdgeTTS（应用语速）
+                await _speak_and_wait(conn, word.word, wait_after=0.3,
+                                      voice=en_voice, rate=session.speak_rate)
         else:
+            # 中文释义模式：使用 EdgeTTS（应用语速）
             text = word.meaning or word.word
-            voice = None  # 中文音色
-        # 重复时增加提示
-        if session.repeat_count > 1:
-            text = f"{text}。"
-        await _speak_and_wait(conn, text, wait_after=0.3, voice=voice)
+            await _speak_and_wait(conn, text, wait_after=0.3, rate=session.speak_rate)
+
+        # 重复播报间的间隔（非最后一次重复时等待）
+        if i < session.repeat_count - 1:
+            try:
+                await asyncio.sleep(session.repeat_interval)
+            except asyncio.CancelledError:
+                session.is_speaking = False
+                return
 
     session.is_speaking = False
 
     if not session.is_active or session.stop_requested:
         return
 
-    # 间隔等待（供学生默写）
+    # 单词间隔等待（供学生默写）
     try:
         await asyncio.sleep(session.interval_seconds)
     except asyncio.CancelledError:

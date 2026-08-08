@@ -105,7 +105,12 @@ class AudioRateController:
                 self.queue.popleft()
                 try:
                     await message_callback()
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
+                    if self._is_connection_closed_error(e):
+                        self.logger.bind(tag=TAG).debug(f"连接已关闭，停止发送消息: {e}")
+                        raise asyncio.CancelledError("连接已关闭")
                     self.logger.bind(tag=TAG).error(f"发送消息失败: {e}")
                     raise
 
@@ -141,7 +146,12 @@ class AudioRateController:
                 self.play_position += self.frame_duration
                 try:
                     await send_audio_callback(opus_packet)
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
+                    if self._is_connection_closed_error(e):
+                        self.logger.bind(tag=TAG).debug(f"连接已关闭，停止发送音频: {e}")
+                        raise asyncio.CancelledError("连接已关闭")
                     self.logger.bind(tag=TAG).error(f"发送音频失败: {e}")
                     raise
 
@@ -149,6 +159,18 @@ class AudioRateController:
         self.queue_empty_event.set()
         self.queue_has_data_event.clear()
         self._last_queue_empty_time = time.monotonic()  # 记录队列清空时间
+
+    @staticmethod
+    def _is_connection_closed_error(e: Exception) -> bool:
+        """判断异常是否由 WebSocket 连接关闭引起（无需报 ERROR）"""
+        msg = str(e).lower()
+        return any(kw in msg for kw in [
+            "no close frame",
+            "connection closed",
+            "closed",
+            "connection reset",
+            "broken pipe",
+        ])
 
     def start_sending(self, send_audio_callback):
         """

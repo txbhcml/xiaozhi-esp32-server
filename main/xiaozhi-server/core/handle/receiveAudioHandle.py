@@ -185,11 +185,6 @@ async def check_bind_device(conn: "ConnectionHandler"):
         text = f"请登录控制面板，输入{conn.bind_code}，绑定设备。"
         await send_stt_message(conn, text)
 
-        # TTS 未初始化时只发送文本
-        if conn.tts is None or not hasattr(conn.tts, 'tts_audio_queue'):
-            conn.logger.bind(tag=TAG).warning("TTS 未初始化，跳过音频播放")
-            return
-
         # 播放提示音
         music_path = "config/assets/bind_code.wav"
         opus_packets = await audio_to_data(music_path)
@@ -211,12 +206,6 @@ async def check_bind_device(conn: "ConnectionHandler"):
         conn.client_abort = False
         text = f"没有找到该设备的版本信息，请正确配置 OTA地址，然后重新编译固件。"
         await send_stt_message(conn, text)
-
-        # TTS 未初始化时只发送文本
-        if conn.tts is None or not hasattr(conn.tts, 'tts_audio_queue'):
-            conn.logger.bind(tag=TAG).warning("TTS 未初始化，跳过音频播放")
-            return
-
         music_path = "config/assets/bind_not_found.wav"
         opus_packets = await audio_to_data(music_path)
         conn.tts.tts_audio_queue.put((SentenceType.LAST, opus_packets, text))

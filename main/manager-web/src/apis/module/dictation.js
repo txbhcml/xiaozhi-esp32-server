@@ -48,6 +48,23 @@ export default {
             }).send()
     },
 
+    // 获取当前用户启用的听写任务配置（用于新建任务默认值）
+    getActiveConfig(callback) {
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/dict/task/active-config`)
+            .method('GET')
+            .success((res) => {
+                RequestService.clearRequestTime()
+                callback(res)
+            })
+            .networkFail((err) => {
+                console.error('获取启用任务配置失败:', err)
+                RequestService.reAjaxFun(() => {
+                    this.getActiveConfig(callback)
+                })
+            }).send()
+    },
+
     // 创建/更新听写任务（id 为空时创建，非空时更新）
     saveTask(data, callback) {
         RequestService.sendRequest()
@@ -184,7 +201,8 @@ export default {
         const queryParams = new URLSearchParams({
             word: params.word || '',
             page: params.page || 1,
-            limit: params.limit || 20
+            limit: params.limit || 20,
+            excludeFamiliar: params.excludeFamiliar === true ? 'true' : 'false'
         }).toString();
         RequestService.sendRequest()
             .url(`${getServiceUrl()}/dict/vocabulary/book/${params.bookId}/word/page?${queryParams}`)
@@ -218,6 +236,105 @@ export default {
                 console.error('批量查询单词失败:', err)
                 RequestService.reAjaxFun(() => {
                     this.listWordsByIds(ids, callback)
+                })
+            }).send()
+    },
+
+    // 批量导入单词（词书查找 + LLM翻译）
+    batchImportWords(data, callback) {
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/dict/vocabulary/batch-import`)
+            .method('POST')
+            .data(data)
+            .success((res) => {
+                RequestService.clearRequestTime()
+                callback(res)
+            })
+            .networkFail((err) => {
+                console.error('批量导入单词失败:', err)
+                RequestService.reAjaxFun(() => {
+                    this.batchImportWords(data, callback)
+                })
+            }).send()
+    },
+
+    // ==================== 词书标熟 ====================
+
+    // 分页查询词书单词（含标熟状态）
+    pageWordsWithFamiliar(params, callback) {
+        const queryParams = new URLSearchParams({
+            word: params.word || '',
+            page: params.page || 1,
+            limit: params.limit || 20
+        }).toString();
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/dict/vocabulary/book/${params.bookId}/word/familiar?${queryParams}`)
+            .method('GET')
+            .success((res) => {
+                RequestService.clearRequestTime()
+                callback(res)
+            })
+            .networkFail((err) => {
+                console.error('查询词书单词失败:', err)
+                RequestService.reAjaxFun(() => {
+                    this.pageWordsWithFamiliar(params, callback)
+                })
+            }).send()
+    },
+
+    // 分页查询当前用户所有标熟单词（跨词书）
+    pageFamiliarWords(params, callback) {
+        const queryParams = new URLSearchParams({
+            word: params.word || '',
+            page: params.page || 1,
+            limit: params.limit || 20
+        }).toString();
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/dict/familiar/page?${queryParams}`)
+            .method('GET')
+            .success((res) => {
+                RequestService.clearRequestTime()
+                callback(res)
+            })
+            .networkFail((err) => {
+                console.error('查询标熟单词失败:', err)
+                RequestService.reAjaxFun(() => {
+                    this.pageFamiliarWords(params, callback)
+                })
+            }).send()
+    },
+
+    // 标熟单词
+    markFamiliar(data, callback) {
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/dict/familiar`)
+            .method('POST')
+            .data(data)
+            .success((res) => {
+                RequestService.clearRequestTime()
+                callback(res)
+            })
+            .networkFail((err) => {
+                console.error('标熟单词失败:', err)
+                RequestService.reAjaxFun(() => {
+                    this.markFamiliar(data, callback)
+                })
+            }).send()
+    },
+
+    // 取消标熟
+    unmarkFamiliar(id, callback) {
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/dict/familiar/${id}`)
+            .method('DELETE')
+            .success((res) => {
+                RequestService.clearRequestTime()
+                callback(res)
+            })
+            .networkFail((err) => {
+                console.error('取消标熟失败:', err)
+                RequestService.reAjaxFun(() => {
+                    this.unmarkFamiliar(id, callback)
                 })
             }).send()
     }

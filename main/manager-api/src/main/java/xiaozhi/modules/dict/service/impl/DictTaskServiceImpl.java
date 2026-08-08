@@ -1,7 +1,9 @@
 package xiaozhi.modules.dict.service.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,16 +16,17 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 
 import lombok.AllArgsConstructor;
 import xiaozhi.common.page.PageData;
 import xiaozhi.common.service.impl.BaseServiceImpl;
 import xiaozhi.modules.dict.dao.BizVocabularyBookDao;
 import xiaozhi.modules.dict.dao.DictTaskDao;
+import xiaozhi.modules.dict.dao.DictTaskWordDao;
 import xiaozhi.modules.dict.dto.DictTaskSaveDTO;
 import xiaozhi.modules.dict.entity.BizVocabularyBookEntity;
 import xiaozhi.modules.dict.entity.DictTaskEntity;
+import xiaozhi.modules.dict.entity.DictTaskWordEntity;
 import xiaozhi.modules.dict.service.DictTaskService;
 import xiaozhi.modules.dict.vo.DictTaskVO;
 import xiaozhi.modules.dict.vo.DictVocabularyVO;
@@ -39,6 +42,7 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
 
     private final DictTaskDao dictTaskDao;
     private final BizVocabularyBookDao bizVocabularyBookDao;
+    private final DictTaskWordDao dictTaskWordDao;
 
     @Override
     public PageData<DictTaskVO> page(Map<String, Object> params) {
@@ -58,8 +62,60 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
             wrapper.eq(DictTaskEntity::getStatus, Integer.parseInt(status));
         }
         dictTaskDao.selectPage(page, wrapper);
-        List<DictTaskVO> voList = page.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        List<DictTaskEntity> records = page.getRecords();
+        List<DictTaskVO> voList = new ArrayList<>(records.size());
+        // 批量查询每个任务的单词数，避免 N+1
+        if (!records.isEmpty()) {
+            List<String> taskIds = records.stream().map(DictTaskEntity::getId).collect(Collectors.toList());
+            Map<String, Long> countMap = countWordsByTaskIds(taskIds);
+            for (DictTaskEntity entity : records) {
+                DictTaskVO vo = new DictTaskVO();
+                vo.setId(entity.getId());
+                vo.setUserId(entity.getUserId());
+                vo.setTaskName(entity.getTaskName());
+                vo.setBookId(entity.getBookId());
+                vo.setMode(entity.getMode());
+                vo.setAccent(entity.getAccent());
+                vo.setIntervalSeconds(entity.getIntervalSeconds());
+                vo.setRepeatCount(entity.getRepeatCount());
+                vo.setSpeakRate(entity.getSpeakRate());
+                vo.setRepeatIntervalSeconds(entity.getRepeatIntervalSeconds());
+                vo.setIntroduceWords(toBoolFlag(entity.getIntroduceWords()));
+                vo.setShowExample(toBoolFlag(entity.getShowExample()));
+                vo.setExampleTranslate(toBoolFlag(entity.getExampleTranslate()));
+                vo.setShowSynonym(toBoolFlag(entity.getShowSynonym()));
+                vo.setStatus(entity.getStatus());
+                vo.setSort(entity.getSort());
+                vo.setCreateDate(entity.getCreateDate());
+                vo.setUpdateDate(entity.getUpdateDate());
+                vo.setWordCount(countMap.getOrDefault(entity.getId(), 0L).intValue());
+                if (entity.getBookId() != null) {
+                    BizVocabularyBookEntity book = bizVocabularyBookDao.selectById(entity.getBookId());
+                    if (book != null) {
+                        vo.setBookName(book.getName());
+                    }
+                }
+                voList.add(vo);
+            }
+        }
         return new PageData<>(voList, page.getTotal());
+    }
+
+    /**
+     * 批量统计多个任务的单词数
+     */
+    private Map<String, Long> countWordsByTaskIds(List<String> taskIds) {
+        Map<String, Long> result = new HashMap<>();
+        if (CollUtil.isEmpty(taskIds)) {
+            return result;
+        }
+        LambdaQueryWrapper<DictTaskWordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(DictTaskWordEntity::getTaskId, taskIds);
+        List<DictTaskWordEntity> all = dictTaskWordDao.selectList(wrapper);
+        for (DictTaskWordEntity w : all) {
+            result.merge(w.getTaskId(), 1L, Long::sum);
+        }
+        return result;
     }
 
     @Override
@@ -96,19 +152,13 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         entity.setIntervalSeconds(dto.getIntervalSeconds());
         entity.setRepeatCount(dto.getRepeatCount() == null ? 1 : dto.getRepeatCount());
         entity.setSpeakRate(dto.getSpeakRate() == null ? 0 : dto.getSpeakRate());
+        entity.setRepeatIntervalSeconds(dto.getRepeatIntervalSeconds() == null ? new BigDecimal("1.0") : dto.getRepeatIntervalSeconds());
         entity.setIntroduceWords(toIntFlag(dto.getIntroduceWords()));
         entity.setShowExample(toIntFlag(dto.getShowExample()));
         entity.setExampleTranslate(toIntFlag(dto.getExampleTranslate()));
         entity.setShowSynonym(toIntFlag(dto.getShowSynonym()));
         entity.setStatus(dto.getStatus() == null ? 1 : dto.getStatus());
         entity.setSort(dto.getSort() == null ? 0 : dto.getSort());
-
-        // 统一用 words_json 存储所有单词（含词书单词的 id）
-        if (CollUtil.isNotEmpty(dto.getWords())) {
-            entity.setWordsJson(JSONUtil.toJsonStr(dto.getWords()));
-        } else {
-            entity.setWordsJson(null);
-        }
 
         entity.setUpdater(userId);
         entity.setUpdateDate(new Date());
@@ -117,6 +167,47 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
             dictTaskDao.updateById(entity);
         } else {
             dictTaskDao.insert(entity);
+        }
+
+        // 单词列表存入附表：先删后插
+        LambdaQueryWrapper<DictTaskWordEntity> delWrapper = new LambdaQueryWrapper<>();
+        delWrapper.eq(DictTaskWordEntity::getTaskId, entity.getId());
+        dictTaskWordDao.delete(delWrapper);
+        if (CollUtil.isNotEmpty(dto.getWords())) {
+            int sort = 0;
+            List<DictTaskWordEntity> wordEntities = new ArrayList<>();
+            for (DictVocabularyVO w : dto.getWords()) {
+                if (StrUtil.isBlank(w.getWord())) {
+                    continue;
+                }
+                DictTaskWordEntity we = new DictTaskWordEntity();
+                we.setTaskId(entity.getId());
+                we.setVocabId(w.getId());
+                we.setWord(w.getWord());
+                we.setMeaning(w.getMeaning());
+                we.setSource("book".equalsIgnoreCase(w.getSource()) ? "book" : "manual");
+                we.setSort(sort++);
+                we.setCreateDate(new Date());
+                wordEntities.add(we);
+            }
+            if (!wordEntities.isEmpty()) {
+                for (DictTaskWordEntity we : wordEntities) {
+                    dictTaskWordDao.insert(we);
+                }
+            }
+        }
+
+        // 同一用户只能有一个启用的听写任务：启用当前任务时，禁用其它任务
+        if (Integer.valueOf(1).equals(entity.getStatus())) {
+            LambdaQueryWrapper<DictTaskEntity> disableWrapper = new LambdaQueryWrapper<>();
+            disableWrapper.eq(DictTaskEntity::getUserId, userId)
+                    .eq(DictTaskEntity::getStatus, 1)
+                    .ne(DictTaskEntity::getId, entity.getId());
+            DictTaskEntity disable = new DictTaskEntity();
+            disable.setStatus(0);
+            disable.setUpdater(userId);
+            disable.setUpdateDate(new Date());
+            dictTaskDao.update(disable, disableWrapper);
         }
 
         return toVO(entity);
@@ -133,6 +224,10 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         if (!entity.getUserId().equals(userId)) {
             throw new RuntimeException("无权删除此听写任务");
         }
+        // 删除附表单词
+        LambdaQueryWrapper<DictTaskWordEntity> delWrapper = new LambdaQueryWrapper<>();
+        delWrapper.eq(DictTaskWordEntity::getTaskId, id);
+        dictTaskWordDao.delete(delWrapper);
         dictTaskDao.deleteById(id);
     }
 
@@ -153,6 +248,19 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         update.setUpdater(userId);
         update.setUpdateDate(new Date());
         dictTaskDao.updateById(update);
+
+        // 同一用户只能有一个启用的听写任务
+        if (Integer.valueOf(1).equals(status)) {
+            LambdaQueryWrapper<DictTaskEntity> disableWrapper = new LambdaQueryWrapper<>();
+            disableWrapper.eq(DictTaskEntity::getUserId, userId)
+                    .eq(DictTaskEntity::getStatus, 1)
+                    .ne(DictTaskEntity::getId, id);
+            DictTaskEntity disable = new DictTaskEntity();
+            disable.setStatus(0);
+            disable.setUpdater(userId);
+            disable.setUpdateDate(new Date());
+            dictTaskDao.update(disable, disableWrapper);
+        }
     }
 
     @Override
@@ -187,6 +295,7 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
         vo.setIntervalSeconds(entity.getIntervalSeconds());
         vo.setRepeatCount(entity.getRepeatCount());
         vo.setSpeakRate(entity.getSpeakRate());
+        vo.setRepeatIntervalSeconds(entity.getRepeatIntervalSeconds());
         vo.setIntroduceWords(toBoolFlag(entity.getIntroduceWords()));
         vo.setShowExample(toBoolFlag(entity.getShowExample()));
         vo.setExampleTranslate(toBoolFlag(entity.getExampleTranslate()));
@@ -204,21 +313,34 @@ public class DictTaskServiceImpl extends BaseServiceImpl<DictTaskDao, DictTaskEn
             }
         }
 
-        // 解析单词列表（统一从 words_json 反序列化）
-        List<DictVocabularyVO> words = resolveWords(entity);
+        // 单词列表从附表读取
+        List<DictVocabularyVO> words = resolveWords(entity.getId());
         vo.setWords(words);
-        vo.setWordCount(words == null ? 0 : words.size());
+        vo.setWordCount(words.size());
         return vo;
     }
 
     /**
-     * 解析任务的单词列表（统一从 words_json 反序列化）
+     * 从附表查询任务单词列表
      */
-    private List<DictVocabularyVO> resolveWords(DictTaskEntity entity) {
-        if (StrUtil.isNotBlank(entity.getWordsJson())) {
-            return JSONUtil.toList(entity.getWordsJson(), DictVocabularyVO.class);
+    private List<DictVocabularyVO> resolveWords(String taskId) {
+        if (StrUtil.isBlank(taskId)) {
+            return new ArrayList<>();
         }
-        return new ArrayList<>();
+        LambdaQueryWrapper<DictTaskWordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DictTaskWordEntity::getTaskId, taskId)
+                .orderByAsc(DictTaskWordEntity::getSort);
+        List<DictTaskWordEntity> entities = dictTaskWordDao.selectList(wrapper);
+        List<DictVocabularyVO> words = new ArrayList<>(entities.size());
+        for (DictTaskWordEntity e : entities) {
+            DictVocabularyVO vo = new DictVocabularyVO();
+            vo.setId(e.getVocabId());
+            vo.setWord(e.getWord());
+            vo.setMeaning(e.getMeaning());
+            vo.setSource(e.getSource());
+            words.add(vo);
+        }
+        return words;
     }
 
     private static Integer toIntFlag(Boolean flag) {

@@ -95,13 +95,15 @@
         <el-dropdown trigger="click" class="equipment-management more-dropdown" :class="{
           'active-tab':
             $route.path === '/dictation-task-management' ||
-            $route.path === '/dictation-record-management'
+            $route.path === '/dictation-record-management' ||
+            $route.path === '/dictation-vocabulary-management'
         }" @visible-change="handleParamDropdownVisibleChange">
           <span class="el-dropdown-link">
             <img loading="lazy" alt="" src="@/assets/header/param_management.png" :style="{
               filter:
                 $route.path === '/dictation-task-management' ||
-                  $route.path === '/dictation-record-management'
+                  $route.path === '/dictation-record-management' ||
+                  $route.path === '/dictation-vocabulary-management'
                   ? 'brightness(0) invert(1)'
                   : 'None',
             }" />
@@ -114,6 +116,9 @@
             </el-dropdown-item>
             <el-dropdown-item @click="handleRouter('dictationRecordManagement')">
               听写记录
+            </el-dropdown-item>
+            <el-dropdown-item @click="handleRouter('dictationVocabularyManagement')">
+              词书标熟
             </el-dropdown-item>
           </el-dropdown-menu></template>
         </el-dropdown>
@@ -247,6 +252,7 @@ export default {
         featureManagement: "/feature-management",
         dictationTaskManagement: "/dictation-task-management",
         dictationRecordManagement: "/dictation-record-management",
+        dictationVocabularyManagement: "/dictation-vocabulary-management",
       }
     };
   },

@@ -38,11 +38,14 @@ public class DictTaskVO {
     @Schema(description = "单词间隔时间（秒）")
     private BigDecimal intervalSeconds;
 
-    @Schema(description = "每个单词播报次数（1~3）")
+    @Schema(description = "每个单词播报次数")
     private Integer repeatCount;
 
     @Schema(description = "语速调整(-100~100)")
     private Integer speakRate;
+
+    @Schema(description = "重复播报同一单词的间隔（秒）")
+    private BigDecimal repeatIntervalSeconds;
 
     @Schema(description = "是否在听写前介绍所有单词：false否 true是")
     private Boolean introduceWords;

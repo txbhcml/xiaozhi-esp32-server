@@ -19,6 +19,9 @@ public class DictVocabularyVO {
     @Schema(description = "英文单词")
     private String word;
 
+    @Schema(description = "来源：book(词书) / manual(手动输入)")
+    private String source;
+
     @Schema(description = "中文释义（取 content.trans[0].tranCn）")
     private String meaning;
 
@@ -45,4 +48,16 @@ public class DictVocabularyVO {
 
     @Schema(description = "记忆方法（取 content.remMethod.val）")
     private String remMethod;
+
+    @Schema(description = "是否已标熟")
+    private Boolean familiar;
+
+    @Schema(description = "标熟记录ID（dict_familiar_words.id，未标熟时为空）")
+    private Long familiarId;
+
+    @Schema(description = "所属词书ID（跨词书标熟列表用）")
+    private Long bookId;
+
+    @Schema(description = "所属词书名称（跨词书标熟列表用）")
+    private String bookName;
 }

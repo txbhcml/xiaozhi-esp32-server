@@ -81,4 +81,12 @@ public class DictTaskController {
         dictTaskService.updateStatus(id, status);
         return new Result<>();
     }
+
+    @GetMapping("/active-config")
+    @Operation(summary = "获取当前用户启用的听写任务配置（用于新建任务默认值）")
+    @RequiresPermissions("sys:role:normal")
+    public Result<DictTaskVO> getActiveConfig() {
+        return new Result<DictTaskVO>().ok(dictTaskService.getActiveTask(
+                xiaozhi.modules.security.user.SecurityUser.getUserId(), null));
+    }
 }
